@@ -1,0 +1,74 @@
+{
+	"linuxtv-ext-header": {
+		"repository": "bsp/ref/linuxtv-ext-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"alsa-ext-broadcast-header": {
+		"repository": "bsp/ref/alsa-ext-broadcast-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"alsa-ext-extinput-header": {
+		"repository": "bsp/ref/alsa-ext-extinput-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"alsa-ext-renderer-header": {
+		"repository": "bsp/ref/alsa-ext-renderer-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"alsa-ext-soundengine-header": {
+		"repository": "bsp/ref/alsa-ext-soundengine-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"dvbv5-ext-header": {
+		"repository": "bsp/ref/dvbv5-ext-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"v4l2-ext-broadcast-header": {
+		"repository": "bsp/ref/v4l2-ext-broadcast-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"v4l2-ext-extinput-header": {
+		"repository": "bsp/ref/v4l2-ext-extinput-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"v4l2-ext-renderer-header": {
+		"repository": "bsp/ref/v4l2-ext-renderer-header",
+		"part": "part2",
+		"build": true,
+		"fetch": ""
+	},
+	"hal-libs-header": {
+		"repository": "bsp/ref/hal-libs-header",
+		"part": "part3",
+		"build": true,
+		"fetch": ""
+	},
+	"hal-libs-broadcast-header": {
+		"repository": "bsp/ref/hal-libs-broadcast-header",
+		"part": "part3",
+		"build": true,
+		"fetch": ""
+	},
+	"socts": {
+		"repository": "bsp/socts",
+		"part": "part4",
+		"build": true,
+		"fetch": ""
+	}
+}

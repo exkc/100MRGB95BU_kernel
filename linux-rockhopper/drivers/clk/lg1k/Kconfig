@@ -1,0 +1,19 @@
+config COMMON_CLK_AIOPLLSS
+	tristate "Clock driver for AIOPLLSS-based LG1K SoCs"
+	default y if ARCH_LG1K
+	help
+	  This driver supports clocking subsystem on LG Electronics LG1k SoCs
+	  with integrated AIOPLLSS.
+
+config COMMON_CLK_LG1K
+	tristate "Clock driver for LG1K SoCs"
+	default y if ARCH_LG1K
+	select LG1K_PMS
+	help
+	  This driver supports clocking subsystem on LG Electronics LG1k SoCs.
+
+config COMMON_CLK_LG1313
+	tristate "Clock driver for LG1313 CPU-PLL"
+	default y if ARCH_LG1K
+	help
+	  This driver supports clocking subsystem on LGE DTV SoC LG1313.

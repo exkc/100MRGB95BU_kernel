@@ -1,0 +1,58 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T tnr_l_ud_default_m19[] =
+{
+	/* nd tnr */
+    {0x3140, 0x094ECB51},    // TNR_CTRL_00
+    {0x3144, 0x01042000},    // TNR_CTRL_01
+    {0x3148, 0x0820493F},    // TNR_CTRL_02
+    {0x314C, 0x00000000},    // TNR_CTRL_03
+    {0x3150, 0x00000000},    // TNR_CTRL_04
+    {0x3154, 0x01FFFF12},    // TNR_CTRL_05
+    {0x3158, 0xF4A21818},    // TNR_CTRL_06
+    {0x315C, 0x00000110},    // TNR_CTRL_07
+    {0x3160, 0x30105610},    // TNR_CTRL_08
+    {0x3164, 0x01C81010},    // TNR_CTRL_09
+    {0x316C, 0xC0001883},    // TNR_CTRL_11
+    {0x3180, 0x80C81060},    // TNR_CTRL_16
+    {0x3184, 0x01E000B4},    // TNR_CTRL_17
+    {0x3188, 0x92949219},    // TNR_CTRL_18
+    {0x318C, 0x11000000},    // TNR_CTRL_19
+    {0x3190, 0x20101008},    // TNR_CTRL_20
+    {0x3194, 0x00000002},    // TNR_CTRL_21
+    {0x31A0, 0x802D3523},    // TNR_CTRL_24
+    {0x31B4, 0x1458FF02},    // TNR_CTRL_29
+    {0x31B8, 0x0020FF20},    // TNR_CTRL_30
+    {0x31BC, 0x18E44438},    // TNR_CTRL_31
+    {0x31E0, 0x00000900},    // TNR_CTRL_32
+    {0x31E4, 0x00021001},    // TNR_CTRL_33
+    {0x32E0, 0x00013737},    // MMD_CTRL
+    {0x33D0, 0x0808006C},    // TNR_CTRL_40
+    {0x33D4, 0x30108020},    // TNR_CTRL_41
+    {0x33D8, 0x50901000},    // TNR_CTRL_42
+    {0x33DC, 0x40FF1800},    // TNR_CTRL_43
+    {0x33E0, 0xA0FF3C00},    // TNR_CTRL_44
+    {0x33E4, 0xC8FF3000},    // TNR_CTRL_45
+    {0x33E8, 0x70002000},    // TNR_CTRL_46
+    {0x33EC, 0x70001800},    // TNR_CTRL_47
+    {0x33F0, 0x00000000},    // TNR_CTRL_48
+    {0x3498, 0x00000200},    // TNR_ETC_CTRL_02
+    {0x34A0, 0x00800040},    // TNR_CTRL_56
+    {0x34A4, 0x00FF00C0},    // TNR_CTRL_57
+    {0x34A8, 0x06400080},    // TNR_CTRL_58
+    {0x34AC, 0x14000C20},    // TNR_CTRL_59
+    {0x34B0, 0x40400040},    // TNR_CTRL_60
+    {0x34B4, 0xFF408040},    // TNR_CTRL_61
+};

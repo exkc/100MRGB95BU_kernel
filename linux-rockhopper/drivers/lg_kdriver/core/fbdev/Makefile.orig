@@ -1,0 +1,103 @@
+# SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+# Copyright(c) 2013 by LG Electronics Inc.
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+#   ---------------------------------------------------------------------------#
+#                                                                              #
+#	FILE NAME	:	makefile                                                   #
+#	VERSION		:	1.0                                                        #
+#	AUTHOR		:	raxis
+#	DATE        :	2010.02.01
+#	DESCRIPTION	:	Makefile for building fbdev module                      #
+#******************************************************************************#
+include $(KDRV_TOP_DIR)/modules.mk
+
+fbdev_MODULE			:= fbdev
+
+ifeq ($(INCLUDE_KDRV_FBDEV), YES)
+
+#-------------------------------------------------------------------------------
+# TODO: define your driver source file
+#-------------------------------------------------------------------------------
+kdrv_fbdev-objs		:= fbdev_cfg.o
+kdrv_fbdev-objs		+= fbdev_drv.o
+kdrv_fbdev-objs		+= fbdev_proc.o
+kdrv_fbdev-objs     += fbdev_module.o
+#kdrv_fbdev-objs     += fbdev_fbc_tool.o
+kdrv_fbdev-objs     += fbdev_drm.o
+
+ifeq ($(INCLUDE_M17_CHIP_KDRV), YES)
+kdrv_fbdev-objs     += ../../chip/m17/fbdev/fbdev_drv_m17.o
+kdrv_fbdev-objs		+= ../../chip/m17/fbdev/fbdev_hw_m17_cmn.o
+kdrv_fbdev-objs		+= ../../chip/m17/fbdev/fbdev_proc_m17.o
+endif
+
+ifeq ($(INCLUDE_O18_CHIP_KDRV), YES)
+kdrv_fbdev-objs     += ../../chip/o18/fbdev/fbdev_drv_o18.o
+kdrv_fbdev-objs		+= ../../chip/o18/fbdev/fbdev_hw_o18_cmn.o
+kdrv_fbdev-objs		+= ../../chip/o18/fbdev/fbdev_proc_o18.o
+endif
+
+ifeq ($(INCLUDE_M19_CHIP_KDRV), YES)
+kdrv_fbdev-objs     += ../../chip/m19/fbdev/fbdev_drv_m19.o
+kdrv_fbdev-objs		+= ../../chip/m19/fbdev/fbdev_hw_m19_cmn.o
+kdrv_fbdev-objs		+= ../../chip/m19/fbdev/fbdev_proc_m19.o
+endif
+
+ifeq ($(INCLUDE_O20_CHIP_KDRV), YES)
+kdrv_fbdev-objs     += ../../chip/o20/fbdev/fbdev_drv_o20.o
+kdrv_fbdev-objs		+= ../../chip/o20/fbdev/fbdev_hw_o20_cmn.o
+kdrv_fbdev-objs		+= ../../chip/o20/fbdev/fbdev_proc_o20.o
+endif
+
+ifeq ($(INCLUDE_E60_CHIP_KDRV), YES)
+kdrv_fbdev-objs		+= ../../chip/e60/fbdev/fbdev_e60_cmm.o
+kdrv_fbdev-objs		+= ../../chip/e60/fbdev/fbdev_proc_e60.o
+kdrv_fbdev-objs     += ../../chip/e60/fbdev/fbdev_drv_e60.o
+kdrv_fbdev-objs		+= ../../chip/e60/fbdev/fbdev_hw_e60_cmn.o
+endif
+
+ifeq ($(INCLUDE_O22_CHIP_KDRV), YES)
+kdrv_fbdev-objs		+= ../../chip/o22/fbdev/fbdev_drv_o22.o
+kdrv_fbdev-objs		+= ../../chip/o22/fbdev/fbdev_proc_o22.o
+kdrv_fbdev-objs		+= ../../chip/o22/fbdev/fbdev_hw_o22_cmn.o
+endif
+
+ifeq ($(INCLUDE_M23_CHIP_KDRV), YES)
+kdrv_fbdev-objs		+= ../../chip/m23/fbdev/fbdev_drv_m23.o
+kdrv_fbdev-objs		+= ../../chip/m23/fbdev/fbdev_proc_m23.o
+kdrv_fbdev-objs		+= ../../chip/m23/fbdev/fbdev_hw_m23_cmn.o
+endif
+
+else
+kdrv_fbdev-objs		+= dummy_fbdev.o
+endif
+
+#-------------------------------------------------------------------------------
+# TODO: define your driver specific CFLAGS
+#-------------------------------------------------------------------------------
+kdrv_fbdev-CFLAGS	+= $(call cond_assign, PIONEER, PLATFORM, -DFBDEV_PIONEER_PLATFORM)
+kdrv_fbdev-CFLAGS	+=
+kdrv_fbdev-CFLAGS	+=
+
+kdrv_fbdev-CFLAGS	+= $(call cond_define, GRAPHICS_DRM_BACKEND, GRAPHICS_DRM_BACKEND)
+
+#-------------------------------------------------------------------------------
+# DO NOT change the below part
+#-------------------------------------------------------------------------------
+EXTRA_CFLAGS		+= $(kdrv_fbdev-CFLAGS)
+
+ifeq ($(KDRV_GLOBAL_LINK), YES)
+# KDRV_MODULE_OBJS is used for KDRV_GLOBAL_LINK mode
+KDRV_MODULE_OBJS	+= $(addprefix $(fbdev_MODULE)/,$(kdrv_fbdev-objs))
+else
+obj-m				:= kdrv_fbdev.o
+endif

@@ -1,0 +1,15 @@
+config CEC_LG1K
+	bool "cec controller drivers for LG1K DTV SoCs"
+	depends on V4L_PLATFORM_DRIVERS
+	select CEC_CORE
+	help
+	  Select this to enable the cec controller drivers for LG1K
+	  DTV SoCs. Currently supports LG1211, LG1212, LG1313, and
+	  LG1314.
+
+config VIDEO_LG1K
+	bool "V4L2 video driver for LG1k DTV SoCs"
+	select V4L2_MEM2MEM_DEV
+	select VIDEOBUF2_DMA_CONTIG
+	help
+	  Enable v4l2 video driver for LG1k DTV SoCs.

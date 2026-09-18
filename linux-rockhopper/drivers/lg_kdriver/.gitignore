@@ -1,0 +1,11 @@
+*.o
+*.ko
+*.mod.c
+*~
+*.mod
+*.cmd
+.tmp_versions
+modules.order
+Module.symvers
+tags
+cscope.out

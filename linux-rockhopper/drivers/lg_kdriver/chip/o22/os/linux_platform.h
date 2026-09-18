@@ -1,0 +1,124 @@
+/*
+    SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+    Copyright(c) 2013 by LG Electronics Inc.
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    version 2 as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+*/
+
+#ifndef ___LINUX_PLATFORM_H__
+#define ___LINUX_PLATFORM_H__
+
+/* base addres definition generated from O22_AddressMap.xlsx */
+
+#define O22_EPHY_IP_TOP_BASE             0XC4100000
+#define O22_GPU_IP_TOP_BASE              0XC4250000
+#define O22_LNE_TLE_IP_TOP_BASE          0XC4D00000
+#define O22_LBUS_IP_TOP_BASE             0XC6000000
+#define O22_M0_NOR_IP_TOP_BASE           0XC67C0000
+#define O22_M0_TZC_IP_TOP_BASE           0XC67D0000
+#define O22_EMMC_IP_TOP_BASE             0XC8040000
+#define O22_CPU_VBI_IP_TOP_BASE          0XC8860000
+#define O22_CPU_DSC_IP_TOP_BASE          0XC88A0000
+#define O22_CPU_HDMI_IP_TOP_BASE         0XC8900000
+#define O22_HDMI_PHY_IP_TOP_BASE         0XC8940000
+#define O22_USB_SS0_IP_TOP_BASE          0XCA000000
+#define O22_USB_SS1_IP_TOP_BASE          0XCA080000
+#define O22_USB_SS2_IP_TOP_BASE          0XCA100000
+#define O22_USB_HS0_IP_TOP_BASE          0XCA180000
+#define O22_EDID_IP_TOP_BASE             0XCA400000
+#define O22_DBB_IP_TOP_BASE              0XCA800000
+#define O22_CPU_QOS_IP_TOP_BASE          0XCAA00000
+#define O22_GFX_IP_TOP_BASE              0XCAA40000
+#define O22_CPU_TE_IP_TOP_BASE           0XCAB00000
+#define O22_UART0_PQE_MCU_BASE           0XCC000000
+#define O22_WATCH_DOG0_PQE_MCU_BASE      0XCC020000
+#define O22_UART1_PQE_MCU_BASE           0XCC040000
+#define O22_WATCH_DOG1_PQE_MCU_BASE      0XCC060000
+#define O22_MCU_RC_ARM_IPC_PQE_MCU_BASE  0XCC080000
+#define O22_GENERAL_IPC_PQE_MCU_BASE     0XCC0A0000
+#define O22_EDMA_PQE_MCU_BASE            0XCC0C0000
+#define O22_I2C_PQE_MCU_BASE             0XCC0E0000
+#define O22_ME1_IP_TOP_BASE              0XCC300000
+#define O22_FMS_IP_TOP_BASE              0XCC340000
+#define O22_DNSR_IP_TOP_BASE             0XCC380000
+#define O22_DNNR_IP_TOP_BASE             0XCC3A0000
+#define O22_LNE_TLE0_IP_TOP_BASE         0XCC3C0000
+#define O22_LED_IP_TOP_BASE              0XCC400000
+#define O22_TCON_IP_TOP_BASE             0XCC440000
+#define O22_VSD_IP_TOP_BASE              0XCC460000
+#define O22_CCO_IP_TOP_BASE              0XCC480000
+#define O22_FMC_IP_TOP_BASE              0XCC4C0000
+#define O22_GSC_IP_TOP_BASE              0XCC500000
+#define O22_ND0_IP_TOP_BASE              0XCC800000
+#define O22_CVI_IP_TOP_BASE              0XCC840000
+#define O22_MCU_VBI_IP_TOP_BASE          0XCC860000
+#define O22_DNE_IP_TOP_BASE              0XCC880000
+#define O22_MCU_DSC_IP_TOP_BASE          0XCC8A0000
+#define O22_IMX_IP_TOP_BASE              0XCC8C0000
+#define O22_MCU_HDMI_IP_TOP_BASE         0XCC900000
+#define O22_ME0_IP_TOP_BASE              0XCC9C0000
+#define O22_ND1_IP_TOP_BASE              0XCCC00000
+#define O22_SRE_IP_TOP_BASE              0XCCC40000
+#define O22_VDO_IP_TOP_BASE              0XCCC80000
+#define O22_HDR_IP_TOP_BASE              0XCCCC0000
+#define O22_MCU_BASE                     0XCE000000
+#define O22_UART_VDEC_MCU_BASE           0XCE010000
+#define O22_G1_PDEC_BS_VDEC_MCU_BASE     0XCE020000
+#define O22_HEVC_VDEC_MCU_BASE           0XCE030000
+#define O22_VD2_IP_TOP_BASE              0XCE400000
+#define O22_VENC_IP_TOP_BASE             0XCE440000
+#define O22_AUD_IP_TOP_BASE              0XCE480000
+#define O22_VD0_IP_TOP_BASE              0XCE800000
+#define O22_VD3_IP_TOP_BASE              0XCE880000
+#define O22_MCU_TE_IP_TOP_BASE           0XCEB00000
+#define O22_VD1_IP_TOP_BASE              0XCEC00000
+#define O22_WOV_BASE                     0XF2000000
+#define O22_AUD_BASE                     0XF2800000
+#define O22_M1_NOR_IP_TOP_BASE           0XF3000000
+#define O22_M1_TZC_IP_TOP_BASE           0XF3010000
+#define O22_ICOD_IP_TOP_BASE             0XF30B0000
+
+#define O22_PERI_BASE		(0xfe000000)
+#define O22_I2C0_BASE		(O22_PERI_BASE+0x300000)
+#define O22_I2C1_BASE		(O22_PERI_BASE+0x400000)
+#define O22_I2C2_BASE		(O22_PERI_BASE+0x500000)
+#define O22_I2C3_BASE		(O22_PERI_BASE+0x600000)
+#define O22_SPI0_BASE		(O22_PERI_BASE+0x800000)
+#define O22_SPI1_BASE		(O22_PERI_BASE+0x900000)
+
+#define	O22_I2C_BASE		(0xf9000000)
+#define O22_I2C4_BASE		(O22_I2C_BASE+0x000000)
+#define O22_I2C5_BASE		(O22_I2C_BASE+0x100000)
+#define O22_I2C6_BASE		(O22_I2C_BASE+0x200000)
+#define O22_I2C7_BASE		(O22_I2C_BASE+0x300000)
+#define O22_I2C8_BASE		(O22_I2C_BASE+0x400000)
+#define O22_I2C9_BASE		(O22_I2C_BASE+0x500000)
+
+#define O22_GPIO_BASE		(0xfd000000)
+#define O22_GPIO0_BASE		(O22_GPIO_BASE+0x400000)
+#define O22_GPIO1_BASE		(O22_GPIO_BASE+0x410000)
+#define O22_GPIO2_BASE		(O22_GPIO_BASE+0x420000)
+#define O22_GPIO3_BASE		(O22_GPIO_BASE+0x430000)
+#define O22_GPIO4_BASE		(O22_GPIO_BASE+0x440000)
+#define O22_GPIO5_BASE		(O22_GPIO_BASE+0x450000)
+#define O22_GPIO6_BASE		(O22_GPIO_BASE+0x460000)
+#define O22_GPIO7_BASE		(O22_GPIO_BASE+0x470000)
+#define O22_GPIO8_BASE		(O22_GPIO_BASE+0x480000)
+#define O22_GPIO9_BASE		(O22_GPIO_BASE+0x490000)
+#define O22_GPIO10_BASE		(O22_GPIO_BASE+0x4a0000)
+#define O22_GPIO11_BASE		(O22_GPIO_BASE+0x4b0000)
+#define O22_GPIO12_BASE		(O22_GPIO_BASE+0x4c0000)
+#define O22_GPIO13_BASE		(O22_GPIO_BASE+0x4d0000)
+#define O22_GPIO14_BASE		(O22_GPIO_BASE+0x4e0000)
+#define O22_GPIO15_BASE		(O22_GPIO_BASE+0x4f0000)
+#define O22_GPIO16_BASE		(O22_GPIO_BASE+0x500000)
+#define O22_GPIO17_BASE		(O22_GPIO_BASE+0x510000)
+
+#endif

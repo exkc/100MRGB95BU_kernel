@@ -1,0 +1,157 @@
+#!/bin/sh
+if [ $# -lt 2 ]
+then
+echo "Usage: $0 <cmm file> <out file>"
+exit 1
+fi
+
+# check file
+if [ ! -f $1 ]; then
+echo "$1 is not exist"
+exit 65
+fi
+
+TMP_NAME=.conv.tmp
+
+IS_SOURCE=`expr match "$2" ".*\.[c|h]$"`
+OUT_NAME=`echo $2 | gawk 'BEGIN { FS="."} {print $1}'`
+
+# preprocessing
+sed '
+# remove leading spaces
+s/^[[:blank:]]*//
+
+# remove CR
+s///g
+
+# process special case
+s/.*\[LST:\(.*\)\].*/lst \1/ig
+
+# remove lines starting with // or ;
+/^[[:blank:]]*\(\/\/\|;\)/d
+
+# remove all trailing // or ;
+s/\(\/\/\|;\).*//
+
+# remove empty lines
+/^$/d
+
+# remove lines only unsed in T32
+/.*\[T32\]/id
+
+' $1 > ${TMP_NAME}.0
+
+# convert to lowercase
+tr '[A-Z]' '[a-z]' < ${TMP_NAME}.0 > ${TMP_NAME}.1
+
+sed '
+
+# process data set command
+# B::DATA.SET SD:0xC00000C0 %LONG 0x80000053	=> set 0xc0000000 0x80000053
+# D.S ANSD:0xFD010300 %le %long 0x24020000	=> set 0xfd010300 0x24020000
+/^\(b::\)\?\(data\|d\).\(set\|s\)[[:blank:]]/ {
+	s/^[^[:blank:]]*/set/
+		s/\%long//g
+		s/\%le//g
+		s/[aznsdxi]\+:\(0x[[:xdigit:]]\+:\|[[:digit:]]\+:\)\?\(0x[[:xdigit:]]\+\|[[:digit:]]\+\)/\2/
+}
+
+# process wait command
+# wait 1ms	==> wait 1 1000
+# wait 1s	==> wait 1 10000000
+/^wait[[:blank:]]/ {
+	s/\([[:digit:]]\+\)ms/\1 1000/
+		s/\([[:digit:]]\+\)s/\1 1000000/
+			s/\([[:digit:]]\+\)us/\1 1/
+}
+
+' ${TMP_NAME}.1 > ${TMP_NAME}.2
+
+printf "\
+/*\n\
+ * SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA\n\
+ * Copyright(c) 2025 by LG Electronics Inc.\n\
+ *\n\
+ * This program is free software; you can redistribute it and/or\n\
+ * modify it under the terms of the GNU General Public License\n\
+ * version 2 as published by the Free Software Foundation.\n\
+ *\n\
+ * This program is distributed in the hope that it will be useful,\n\
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n\
+ * GNU General Public License for more details.\n\
+ */\n\n" > $2
+
+if [ "$IS_SOURCE" -eq 0 ]; then
+awk '
+BEGIN {
+}
+
+/^set/ {
+#    print $0
+	str_cnt = split($2, addr, "+")
+
+	if (str_cnt == 1)
+		_addr = strtonum(addr[1])
+	else if (str_cnt == 2)
+		_addr = strtonum(addr[1]) + strtonum(addr[2])
+	else
+	{
+		print "check cmm, Can`t parse" > "/dev/stderr"
+		exit 4
+	}
+
+	printf "0x0 0x%08x 0x%08x 0xffffffff\n", _addr, strtonum($3)
+}
+
+/^wait/ {
+#	print $0
+	printf "0x3 0x00000000 0x%08x 0xffffffff\n", $2 * $3
+}
+
+/^lst/ {
+	printf "%s %s %s %s\n", $2, $3, $4, $5
+}
+' ${TMP_NAME}.2 >> $2
+else
+awk -v array_name=$OUT_NAME '
+BEGIN {
+	printf "static reg_param_t shadow_rom_cmm[] = {\n", array_name
+}
+
+/^set/ {
+#    print $0
+	str_cnt = split($2, addr, "+")
+
+	if (str_cnt == 1)
+		_addr = strtonum(addr[1])
+	else if (str_cnt == 2)
+		_addr = strtonum(addr[1]) + strtonum(addr[2])
+	else
+	{
+		print "check cmm, Can`t parse" > "/dev/stderr"
+		exit 4
+	}
+
+	printf "\t{0x%08x, 0x%08x},\n", _addr, strtonum($3)
+
+}
+
+/^wait/ {
+#       print $0
+	printf "\t{0x00000001, 0x%08x},\n", $2 * $3
+}
+
+/^lst/ {
+	printf "\t{%s, %s, %s, %s},\n", $2, $3, $4, $5
+}
+
+END {
+	printf "};\n"
+}
+' ${TMP_NAME}.2 >> $2
+fi
+
+rm -f ${TMP_NAME}.*
+
+exit 0

@@ -1,0 +1,35 @@
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = source
+BUILDDIR      = build
+HEADER        ?= ""
+FETCH         ?= ""
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile clean
+
+clean:
+	rm -rf source/api xml
+	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+version:
+	mkdir -p build
+#	gcc -include ../linux/linuxtv-ext-ver.h version.c -o build/a.out
+#	build/a.out > build/version.txt
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+
+%: Makefile
+	python3 source/git-download.py --header $(HEADER) --fetch $(FETCH)
+	python3 source/overall-release-notes.py --header $(HEADER)
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	python3 source/sub-caption.py

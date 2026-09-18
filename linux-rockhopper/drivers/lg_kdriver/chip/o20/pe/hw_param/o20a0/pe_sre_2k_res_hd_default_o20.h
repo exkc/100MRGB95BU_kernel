@@ -1,0 +1,207 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T sre_2k_res_hd_default_o20[] =
+{
+    {0x87F0, 0x00000000},      // SHP_DP_CTRL_00
+    {0x8800, 0x0620031B},      // SHP_FD_CTRL_00
+    {0x8804, 0x0E000404},      // SHP_FD_CTRL_01
+    {0x8808, 0x10021002},      // SHP_FD_CTRL_02
+    {0x880C, 0xFFFF1800},      // SHP_FD_CTRL_03
+    {0x8810, 0x20800400},      // SHP_FD_CTRL_04
+    {0x8814, 0x50FF1000},      // SHP_FD_CTRL_05
+    {0x8818, 0x32FF0040},      // SHP_FD_CTRL_06
+    {0x881C, 0x00000000},      // SHP_FD_CTRL_07
+    {0x8820, 0x40C00018},      // SHP_FD_CTRL_08
+    {0x8824, 0x20201000},      // SHP_FD_CTRL_09
+    {0x8828, 0x80903060},      // SHP_FD_CTRL_0A
+    {0x882C, 0x00000010},      // SHP_FD_CTRL_0B
+    {0x8830, 0x00200000},      // SHP_FD_CTRL_0C
+    {0x8834, 0x40002005},      // SHP_FD_CTRL_0D
+    {0x8838, 0x06200000},      // SHP_FD_CTRL_0E
+    {0x883C, 0x22800B40},      // SHP_FD_CTRL_0F
+    {0x8840, 0xBBFF7DC4},      // SHP_FD_CTRL_10
+    {0x8844, 0x00000003},      // SHP_FD_CTRL_11
+    {0x8848, 0x00000820},      // SHP_FD_CTRL_12
+    {0x884C, 0xC0701002},      // SHP_FD_CTRL_13
+    {0x8850, 0x2E000800},      // SHP_FD_CTRL_14
+    {0x8854, 0x00000003},      // SHP_FD_CTRL_15
+    {0x8858, 0x28000A82},      // SHP_FD_CTRL_16
+    {0x8860, 0x00000001},      // SHP_MP_CTRL_00
+    {0x8864, 0x14202020},      // SHP_MP_CTRL_01
+    {0x8868, 0x00002000},      // SHP_MP_CTRL_02
+    {0x886C, 0x88F00F00},      // SHP_MP_CTRL_03
+    {0x8870, 0x00601000},      // SHP_MP_CTRL_04
+    {0x8874, 0x00010401},      // SHP_MP_CTRL_05
+    {0x8878, 0x00804010},      // SHP_MP_CTRL_06
+    {0x887C, 0xC0A08050},      // SHP_MP_CTRL_07
+    {0x8880, 0x50C06020},      // SHP_MP_CTRL_08
+    {0x8884, 0x20C0A080},      // SHP_MP_CTRL_09
+    {0x8888, 0x0000C060},      // SHP_MP_CTRL_0A
+    {0x888C, 0x00000007},      // SHP_MP_CTRL_0B
+    {0x8890, 0x08081820},      // SHP_MP_CTRL_0C
+    {0x8894, 0x0000F001},      // SHP_APL_CTRL_00
+    {0x88A0, 0xFFFF4010},      // SHP_LC_CTRL_00
+    {0x88A4, 0x20204030},      // SHP_LC_CTRL_01
+    {0x88A8, 0xFF303000},      // SHP_LC_CTRL_02
+    {0x88AC, 0x00000007},      // SHP_LC_CTRL_03
+    {0x88B0, 0x02040101},      // SHP_LC_CTRL_04
+    {0x88C0, 0x1E060001},      // SHP_DER_CTRL_00
+    {0x88C4, 0x01060604},      // SHP_DER_CTRL_01
+    {0x88C8, 0x00040400},      // SHP_DER_CTRL_02
+    {0x88CC, 0x00065008},      // SHP_DER_CTRL_03
+    {0x88D0, 0x00000008},      // SHP_DER_CTRL_04
+    {0x88D4, 0x00000000},      // SHP_DER_CTRL_05
+    {0x88D8, 0x30021800},      // SHP_DER_CTRL_06
+    {0x88DC, 0x90C06006},      // SHP_DER_CTRL_07
+    {0x88E0, 0x00000001},      // SHP_SP_CTRL_00
+    {0x88E4, 0x00101010},      // SHP_SP_CTRL_01
+    {0x88E8, 0x00002800},      // SHP_SP_CTRL_02
+    {0x88EC, 0x20000000},      // SHP_SP_CTRL_03
+    {0x88F0, 0x00401000},      // SHP_SP_CTRL_04
+    {0x88F4, 0x00030201},      // SHP_SP_CTRL_05
+    {0x88F8, 0x00FF100E},      // SHP_SP_CTRL_06
+    {0x88FC, 0xC0A08050},      // SHP_SP_CTRL_07
+    {0x8900, 0x50C06020},      // SHP_SP_CTRL_08
+    {0x8904, 0x20C0A080},      // SHP_SP_CTRL_09
+    {0x8908, 0x0000C060},      // SHP_SP_CTRL_0A
+    {0x890C, 0x00000007},      // SHP_SP_CTRL_0B
+    {0x8910, 0x02080C20},      // SHP_SP_CTRL_0C
+    {0x8920, 0x00002015},      // SHP_PTI_CTRL_00
+    {0x8924, 0x00008001},      // SHP_PTI_CTRL_01
+    {0x8928, 0x00000003},      // SHP_PTI_CTRL_02
+    {0x892C, 0x0C101018},      // SHP_PTI_CTRL_03
+    {0x8930, 0x00042041},      // SHP_STI_CTRL_00
+    {0x8940, 0x20000011},      // SHP_TGEN_CTRL_00
+    {0x8944, 0x04080810},      // SHP_TGEN_CTRL_01
+    {0x8948, 0x003F05FF},      // SHP_TGEN_CTRL_02
+    {0x894C, 0x000048AB},      // SHP_TGEN_CTRL_03
+    {0x8954, 0x02021F04},      // SHP_TGEN_CTRL_04
+    {0x8958, 0x001F0050},      // SHP_TGEN_CTRL_05
+    {0x895C, 0x1A000000},      // SHP_TGEN_CTRL_06
+    {0x8960, 0x1A000000},      // SHP_TGEN_CTRL_07
+    {0x8964, 0x3F801F1F},      // SHP_TGEN_CTRL_08
+    {0x8968, 0x48ABCDFF},      // SHP_TGEN_CTRL_09
+    {0x896C, 0x00000007},      // SHP_TGEN_CTRL_0A
+    {0x8970, 0x0C100000},      // SHP_TGEN_CTRL_0B
+    {0x8974, 0x00000100},      // SHP_SNR_CTRL_00
+    {0x8980, 0x00000001},      // SHP_DCTP_CTRL_00
+    {0x8984, 0x0FED0F99},      // SHP_DCTP_CTRL_01
+    {0x8988, 0x025B0046},      // SHP_DCTP_CTRL_02
+    {0x898C, 0x002B0FF1},      // SHP_DCTP_CTRL_03
+    {0x8990, 0x0FDC0FE1},      // SHP_DCTP_CTRL_04
+    {0x8994, 0x0F680050},      // SHP_DCTP_CTRL_05
+    {0x8998, 0x04DD0EA8},      // SHP_DCTP_CTRL_06
+    {0x899C, 0x0FB10F17},      // SHP_DCTP_CTRL_07
+    {0x89A0, 0x0FF80002},      // SHP_DCTP_CTRL_08
+    {0x89A4, 0x0F630059},      // SHP_DCTP_CTRL_09
+    {0x89A8, 0x04FE0E92},      // SHP_DCTP_CTRL_0A
+    {0x89AC, 0x0FAE0F08},      // SHP_DCTP_CTRL_0B
+    {0x89B0, 0x0FFA0004},      // SHP_DCTP_CTRL_0C
+    {0x89B4, 0x0F580063},      // SHP_DCTP_CTRL_0D
+    {0x89B8, 0x05160E86},      // SHP_DCTP_CTRL_0E
+    {0x89BC, 0x0FA90F00},      // SHP_DCTP_CTRL_0F
+    {0x89C0, 0x0FFA0007},      // SHP_DCTP_CTRL_10
+    {0x89C4, 0x0F680050},      // SHP_DCTP_CTRL_11
+    {0x89C8, 0x04DD0EA8},      // SHP_DCTP_CTRL_12
+    {0x89CC, 0x0FB10F17},      // SHP_DCTP_CTRL_13
+    {0x89D0, 0x0FF80002},      // SHP_DCTP_CTRL_14
+    {0x89D4, 0x0FB50005},      // SHP_DCTP_CTRL_15
+    {0x89D8, 0x03940F62},      // SHP_DCTP_CTRL_16
+    {0x89DC, 0x0FD70F93},      // SHP_DCTP_CTRL_17
+    {0x89E0, 0x0FF30FF4},      // SHP_DCTP_CTRL_18
+    {0x89E4, 0x80402000},      // SHP_DCTP_CTRL_19
+    {0x89E8, 0x0000FFC4},      // SHP_DCTP_CTRL_1A
+    {0x89EC, 0x00000000},      // SHP_DCTP_CTRL_1B
+    {0x89F0, 0x60001830},      // SHP_DCTP_CTRL_1C
+    {0x89F4, 0x000000c0},      // SHP_DCTP_CTRL_1D
+    {0x89F8, 0x00000007},      // SHP_DCTP_CTRL_1E
+    {0x89FC, 0x20200000},      // SHP_DCTP_CTRL_1F
+    {0x8A00, 0x00000001},      // SHP_NNTG_CTRL_00
+    {0x8A04, 0x00002B38},      // SHP_NNTG_CTRL_01
+    {0x8A08, 0xBDE6E338},      // SHP_NNTG_CTRL_02
+    {0x8A0C, 0xD9F201CB},      // SHP_NNTG_CTRL_03
+    {0x8A10, 0x1598773A},      // SHP_NNTG_CTRL_04
+    {0x8A14, 0x82D28A5C},      // SHP_NNTG_CTRL_05
+    {0x8A2C, 0x00C0608C},      // SHP_NNTG_CTRL_06
+    {0x8A30, 0x0E150158},      // SHP_NNTG_CTRL_07
+    {0x8A34, 0x01F20FEE},      // SHP_NNTG_CTRL_08
+    {0x8A38, 0x0E11011F},      // SHP_NNTG_CTRL_09
+    {0x8A3C, 0x03200120},      // SHP_NNTG_CTRL_0A
+    {0x8A40, 0x0A200620},      // SHP_NNTG_CTRL_0B
+    {0x8A44, 0x40402080},      // SHP_NNTG_CTRL_0C
+    {0x8A48, 0xC0008040},      // SHP_NNTG_CTRL_0D
+    {0x8A4C, 0x40200820},      // SHP_NNTG_CTRL_0E
+    {0x8A50, 0x00000004},      // SHP_NNTG_CTRL_0F
+    {0x8A54, 0x080C0000},      // SHP_NNTG_CTRL_10
+    {0x8A60, 0x00000080},      // SHP_DP_SUM_CTRL_00
+    {0x8A64, 0x10280000},      // SHP_DP_SUM_CTRL_01
+    {0x8A68, 0xFFFF4060},      // SHP_DP_SUM_CTRL_02
+    {0x8AC0, 0x02320C41},      // SHP_FD_REGION_TEXT_00
+    {0x8AC4, 0x10c00080},      // SHP_FD_REGION_TEXT_01
+    {0x8AC8, 0xc08040c0},      // SHP_FD_REGION_TEXT_02
+    {0x8ACC, 0x0000FF01},      // SHP_FD_TMAP_TEMP_00
+    {0x8AD0, 0x28200A00},      // SHP_FD_TMAP_TEMP_01
+    {0x8AD4, 0x50803C60},      // SHP_FD_TMAP_TEMP_02
+    {0x8AD8, 0x08D000C0},      // SHP_FD_TMAP_TEMP_03
+    {0x8ADC, 0x30F010E0},      // SHP_FD_TMAP_TEMP_04
+    {0x8AE0, 0x80C060D0},      // SHP_FD_TMAP_TEMP_05
+    {0x8AE4, 0x08700080},      // SHP_FD_TMAP_TEMP_06
+    {0x8AE8, 0x18501060},      // SHP_FD_TMAP_TEMP_07
+    {0x8AEC, 0x40002040},      // SHP_FD_TMAP_TEMP_08
+    {0x8AF0, 0x00000000},      // SHP_FD_TMAP_TEMP_09
+    {0x8AF4, 0x086F077F},      // SHP_FD_TMAP_TEMP_0A
+    {0x8AF8, 0x00000780},      // SHP_FD_TMAP_TEMP_0B
+    {0x8AFC, 0x04380EFF},      // SHP_FD_TMAP_TEMP_0C
+    {0x8B00, 0x80100179},      // SHP_DJ_CTRL_00
+    {0x8B04, 0x00800000},      // SHP_DJ_CTRL_01
+    {0x8B08, 0x00001010},      // SHP_DJ_CTRL_02
+    {0x8B0C, 0x80100840},      // SHP_DJ_CTRL_03
+    {0x8B10, 0x00000000},      // SHP_DJ_CTRL_04
+    {0x8B14, 0x00000000},      // SHP_DJ_CTRL_05
+    {0x8B18, 0x00000040},      // SHP_DJ_CTRL_06
+    {0x8B1C, 0x00155550},      // SHP_DJ_CTRL_07
+    {0x8B20, 0x00000040},      // SHP_DJ_CTRL_08
+    {0x8B24, 0x002AA040},      // SHP_DJ_CTRL_09
+    {0x8B28, 0x002AA040},      // SHP_DJ_CTRL_0A
+    {0x8B2C, 0x000AA040},      // SHP_DJ_CTRL_0B
+    {0x8B30, 0x000000E4},      // SHP_DJ_CTRL_0C
+    {0x8B34, 0x00005540},      // SHP_DJ_CTRL_0D
+    {0x8B38, 0x00205542},      // SHP_DJ_CTRL_0E
+    {0x8B3C, 0x00081508},      // SHP_DJ_CTRL_0F
+    {0x8B40, 0x00020420},      // SHP_DJ_CTRL_10
+    {0x8B44, 0x00008080},      // SHP_DJ_CTRL_11
+    {0x8B48, 0x00002A00},      // SHP_DJ_CTRL_12
+    {0x8B4C, 0x00002A00},      // SHP_DJ_CTRL_13
+    {0x8B50, 0x00000008},      // SHP_DJ_CTRL_14
+    {0x8B54, 0x00002800},      // SHP_DJ_CTRL_15
+    {0x8B58, 0x00050A00},      // SHP_DJ_CTRL_16
+    {0x8B5C, 0x00054280},      // SHP_DJ_CTRL_17
+    {0x8B60, 0x000550A0},      // SHP_DJ_CTRL_18
+    {0x8B64, 0x00054280},      // SHP_DJ_CTRL_19
+    {0x8B68, 0x00050A00},      // SHP_DJ_CTRL_1A
+    {0x8B6C, 0x00002800},      // SHP_DJ_CTRL_1B
+    {0x8B70, 0x00000004},      // SHP_DJ_CTRL_1C
+    {0x8B74, 0x00FF0618},      // SHP_DJ_CTRL_1D
+    {0x8B78, 0x00FF0414},      // SHP_DJ_CTRL_1E
+    {0x8B7C, 0x00FF0920},      // SHP_DJ_CTRL_1F
+    {0x8B80, 0x00011400},      // SHP_DJ_CTRL_20
+    {0x8B90, 0x00000000},      // SHP_DB_CTRL_00
+    {0x8B94, 0x00000000},      // SHP_DB_CTRL_01
+    {0x9C34, 0x28801400}, // SR_MERGE_MMD_05
+    {0x9C38, 0xA0DC8264}, // SR_MERGE_MMD_06
+    {0x9C90, 0x01000021}  // SR_MERGE_BLEND_00
+};
+
+                                                                                                                                                                                    

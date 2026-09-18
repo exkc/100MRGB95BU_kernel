@@ -1,0 +1,3193 @@
+/*
+ * SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+ * Copyright(c) 2013 by LG Electronics Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+
+/** @file pe_cmg_hw_o20.c
+ *
+ *  driver for picture enhance color management functions. ( used only within kdriver )
+ *	
+ *	@author			Seung-Jun,Youm(sj.youm@lge.com)
+ *  @modifier		Srinivasan Shanmugam (srinivasan.shanmugam@lge.com)
+ *	@version		0.1
+ *	@note
+ *	@date			2012.03.15
+ *  @modified date  2015.05.24 for SWMD
+ *	@see
+ */
+
+/*----------------------------------------------------------------------------------------
+	Control Constants
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	File Inclusions
+----------------------------------------------------------------------------------------*/
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/semaphore.h>
+#include <linux/interrupt.h>
+#include <asm/io.h>
+
+#include "base_types.h"
+#include "os_util.h"
+#include "debug_util.h"
+
+#include "pe_hw_o20.h"
+#include "pe_reg_o20.h"
+#include "pe_fwi_o20.h"
+#include "pe_inf_o20.h"
+#include "pe_cmg_hw_o20.h"
+
+/*----------------------------------------------------------------------------------------
+	Constant Definitions
+----------------------------------------------------------------------------------------*/
+/* Enabling this macro will DISABLE LGSI code refactoring changes, so enable only if there is
+any issue in LGSI refactored code. This provision is only for cross checking with original
+source. It can be removed in the next version of the code*/
+
+/*----------------------------------------------------------------------------------------
+	Macro Definitions
+----------------------------------------------------------------------------------------*/
+#define PE_CMG_HW_O20_ERROR	printk
+
+#define PE_CMG_HW_O20_DBG_PRINT(fmt,args...)	\
+	if(_g_cmg_hw_o20_trace) printk("[%x,%x][%s,%d] "fmt,PE_CHIP_VER,g_pe_kdrv_ver_mask,__F__,__L__,##args)
+#define PE_CMG_HW_O20_CHECK_CODE(_checker,_action,fmt,args...)	\
+	{if(_checker){PE_CMG_HW_O20_ERROR(fmt,##args);_action;}}
+
+/*----------------------------------------------------------------------------------------
+	Type Definitions
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	External Function Prototype Declarations
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	External Variables
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	global Functions
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	global Variables
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	Static Function Prototypes Declarations
+----------------------------------------------------------------------------------------*/
+static void PE_CMG_HW_O20_Init_CenRegister(void);
+static void PE_CMG_HW_O20_SetCenRegionCtrlReg(UINT32 i_ui32RegionNum, UINT32 i_ui32wdata);
+static void PE_CMG_HW_O20_CEGetRegGain(UINT32 i_ui32RegionNum, UINT32 *o_ui32RegGain);
+static void PE_CMG_HW_O20_COGetRegGain(UINT32 i_ui32RegionNum, UINT32 *o_ui32RegGain);
+
+/*----------------------------------------------------------------------------------------
+	Static Variables
+----------------------------------------------------------------------------------------*/
+static UINT32 _g_cmg_hw_o20_trace=0x0;	//default should be off.
+static PE_CMG_HW_O20_SETTINGS_T _g_pe_cmg_hw_o20_info;
+static UINT32 _g_cmg_hw_o20_pre_dse_lut[(PE_CMG_HW_O20_LUT_MAX-1)];	///<previous dse lut
+
+/*========================================================================================
+	Implementation Group
+========================================================================================*/
+/**
+ * init color management
+ *
+ * @param   *pstParams [in] PE_CFG_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_Init(PE_CFG_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count = 0;
+	int i=0;
+	UINT32 *p_pre_dse_lut = _g_cmg_hw_o20_pre_dse_lut;
+	UINT32 dse_lut_data[32] = {\
+		   0,  64, 128, 192, 256, 320, 384, 448, 512, \
+		 576, 640, 704, 768, 832, 896, 960,1023,1023, \
+		1023,1023,1023,1023,1023,1023,1023,1023,1023, \
+		1023,1023,1023,1023,1023};
+	do{
+		CHECK_KNULL(pstParams);
+		memset(&_g_pe_cmg_hw_o20_info,0x0,sizeof(PE_CMG_HW_O20_SETTINGS_T));
+		/*WA. adjust target saturation*/ 
+		_g_pe_cmg_hw_o20_info.org_target_sat = 0x80;
+		if(PE_KDRV_VER_O20)
+		{
+			PE_CMG_HW_O20_Init_CenRegister();
+			PE_CEO_PE1_O20_QWr02(pe1_cen_ctrl_00,reg_cen_bypass,0x1,demo_mode,0x0);
+			/* dse lut init */
+			if (!pstParams->resume_mode)	//normal init
+			{
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ia_ctrl);
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ctrl_02);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x0);	//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_ai,			0x1);	//ai 0:disable, 1:enable
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_address,	0x0);	//address
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for(count=0;count<32;count++)
+				{
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,	hif_dse_wdata_y,dse_lut_data[count]);	//y data
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,	hif_dse_wdata_x,dse_lut_data[count]);	//x data
+					PE_CEO_PE1_O20_WrFL(pe1_dse_ia_data);
+				}
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_02,	hif_dse_wdata_y_32nd,1023);	//y data
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_02,	hif_dse_wdata_x_32nd,1023);	//x data
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ctrl_02);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x1);		//0:clear, 1:enable
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x1);		//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for (i=0;i<(PE_CMG_HW_O20_LUT_MAX-1);i++)
+				{
+					p_pre_dse_lut[i] = ((dse_lut_data[i]<<16)&0x3ff0000)|(dse_lut_data[i]&0x3ff);
+				}
+				if(_g_cmg_hw_o20_trace)
+				{
+					PE_CMG_HW_O20_DBG_PRINT("\n init\n");
+					PE_CMG_HW_O20_DBG_PRINT("\n   [ i]    x,    y\n");
+					for (i=0;i<(PE_CMG_HW_O20_LUT_MAX-1);i++)
+					{
+						PE_CMG_HW_O20_DBG_PRINT("   [%02d] %4d, %4d\n", \
+							i, (p_pre_dse_lut[i]>>16)&0x3ff, p_pre_dse_lut[i]&0x3ff);
+					}
+				}
+			}
+			else
+			{
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ia_ctrl);
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ctrl_02);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x0);	//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_ai,			0x1);	//ai 0:disable, 1:enable
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_address,	0x0);	//address
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for(count=0;count<32;count++)
+				{
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,	hif_dse_wdata_y,GET_BITS(p_pre_dse_lut[count],0,10));	//y data
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,	hif_dse_wdata_x,GET_BITS(p_pre_dse_lut[count],16,10));
+					PE_CEO_PE1_O20_WrFL(pe1_dse_ia_data);
+				}
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_02,	hif_dse_wdata_y_32nd,1023);	//y data
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_02,	hif_dse_wdata_x_32nd,1023);	//x data
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ctrl_02);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x1);		//0:clear, 1:enable
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x1);		//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				if(_g_cmg_hw_o20_trace)
+				{
+					PE_CMG_HW_O20_DBG_PRINT("\n resume init\n");
+					PE_CMG_HW_O20_DBG_PRINT("\n   [ i]    x,    y\n");
+					for (i=0;i<(PE_CMG_HW_O20_LUT_MAX-1);i++)
+					{
+						PE_CMG_HW_O20_DBG_PRINT("   [%02d] %4d, %4d\n", \
+							i, (p_pre_dse_lut[i]>>16)&0x3ff, p_pre_dse_lut[i]&0x3ff);
+					}
+				}
+			}
+			#if 1	/* F20_APB */
+			do {
+				if (pstParams->resume_mode == 1)	break;//if qsm,skip
+
+				/* addr */
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s0.uaddr32,0xF0342700);
+				for (i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data0[i].uaddr32,0xF0342704);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s1.uaddr32,0xF0342700);
+				for (i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data1[i].uaddr32,0xF0342704);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s2.uaddr32,0xF0342700);
+				for (i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data2[i].uaddr32,0xF0342704);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s3.uaddr32,0xF0342700);
+				for (i=0; i<16; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data3[i].uaddr32,0xF0342704);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s6.uaddr32,0xF0342700);
+				for (i=0; i<6; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data6[i].uaddr32,0xF0342704);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_e.uaddr32,0xF0342700);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_00.uaddr32,0xF03426D0);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_01.uaddr32,0xF03426D4);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_02.uaddr32,0xF03426D8);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_04.uaddr32,0xF03426E0);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_05.uaddr32,0xF03426E4);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_06.uaddr32,0xF03426E8);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_07.uaddr32,0xF03426EC);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_ctrl_s.uaddr32,0xF0342708);
+				for(i=0; i<32; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_data[i].uaddr32,0xF034270C);
+				}
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_ctrl_e.uaddr32,0xF0342708);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_00.uaddr32,0xF03430B0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_01.uaddr32,0xF03430B4);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_02.uaddr32,0xF03430B8);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_00.uaddr32,0xF03430C0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_01.uaddr32,0xF03430C4);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_02.uaddr32,0xF03430C8);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_03.uaddr32,0xF03430CC);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_04.uaddr32,0xF03430D0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_05.uaddr32,0xF03430D4);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_06.uaddr32,0xF03430D8);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_07.uaddr32,0xF03430DC);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_08.uaddr32,0xF03430E0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_09.uaddr32,0xF03430E4);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_10.uaddr32,0xF03430E8);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_11.uaddr32,0xF03430EC);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_12.uaddr32,0xF03430F0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_13.uaddr32,0xF03430F4);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_14.uaddr32,0xF03430F8);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_15.uaddr32,0xF03430FC);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_01.uaddr32,0xF0343034);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_02.uaddr32,0xF0343038);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_03.uaddr32,0xF034303C);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_04.uaddr32,0xF0343040);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_00.uaddr32,0xF0343050);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_01.uaddr32,0xF0343054);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_02.uaddr32,0xF0343058);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_03.uaddr32,0xF034305C);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_04.uaddr32,0xF0343060);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_05.uaddr32,0xF0343064);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_06.uaddr32,0xF0343068);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_07.uaddr32,0xF034306C);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_08.uaddr32,0xF0343070);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_09.uaddr32,0xF0343074);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_10.uaddr32,0xF0343078);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_11.uaddr32,0xF034307C);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_12.uaddr32,0xF0343080);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_13.uaddr32,0xF0343084);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_14.uaddr32,0xF0343088);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_15.uaddr32,0xF034308C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_ctrl_s.uaddr32,0xF034277C);
+				for (i=0; i<32; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_data[i].uaddr32,0xF0342780);
+				}
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_ctrl_e.uaddr32,0xF034277C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ctrl_01.uaddr32,0xF0342774);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ctrl_02.uaddr32,0xF0342778);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt0.uaddr32,0xF034278C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt1.uaddr32,0xF0342790);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt2.uaddr32,0xF0342794);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt3.uaddr32,0xF0342798);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt4.uaddr32,0xF034279C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt5.uaddr32,0xF03427A0);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt6.uaddr32,0xF03427A4);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt7.uaddr32,0xF03427A8);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt0.uaddr32,0xF03427AC);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt1.uaddr32,0xF03427B0);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt2.uaddr32,0xF03427B4);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt3.uaddr32,0xF03427B8);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt4.uaddr32,0xF03427BC);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt5.uaddr32,0xF03427C0);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt6.uaddr32,0xF03427C4);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt7.uaddr32,0xF03427C8);
+
+				/* init */
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s0.udata32,0x00001000);
+				for(i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data0[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s1.udata32,0x00001100);
+				for(i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data1[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s2.udata32,0x00001200);
+				for(i=0; i<128; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data2[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s3.udata32,0x00001300);
+				for(i=0; i<16; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data3[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_s6.udata32,0x00001600);
+				for(i=0; i<6; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data6[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_ctrl_e.udata32,0x00008000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_00.udata32,0x000000AC);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_01.udata32,0x00000000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_02.udata32,0x00008080);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_04.udata32,0x00000000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_05.udata32,0x00000000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_06.udata32,0x00000000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_07.udata32,0x00000000);
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_ctrl_s.udata32,0x00001000);
+				for(i=0; i<32; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_data[i].udata32,0x00000000);
+				}
+				PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_ctrl_e.udata32,0x00008000);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_00.udata32,0x00000100);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_01.udata32,0x00C0C0C0);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_ctrl_02.udata32,0x00400000);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_00.udata32,0x000000FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_01.udata32,0x006400FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_02.udata32,0x011C00FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_03.udata32,0x01AA00FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_04.udata32,0x023800FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_05.udata32,0x02C600FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_06.udata32,0x035400FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_07.udata32,0x03FF00FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_08.udata32,0x06FF00FF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_09.udata32,0x12FF0DFF);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_10.udata32,0x198C14DC);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_11.udata32,0x20001D3C);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_12.udata32,0x64643C00);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_13.udata32,0x8CC87896);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_14.udata32,0xBEFFA0E6);
+				PE_CHPI_APB0_F20_QWr(cw0.pe1_cw_crgn_ctrl_15.udata32,0xFFA0FAFF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_01.udata32,0x40400000);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_02.udata32,0xFFFF8080);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_03.udata32,0x40400000);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_cc_ctrl_04.udata32,0xFFFF8080);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_00.udata32,0x01F10000);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_01.udata32,0x020000BE);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_02.udata32,0x020D00F0);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_03.udata32,0x021400FF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_04.udata32,0x022800FF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_05.udata32,0x023000FF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_06.udata32,0x023F00A0);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_07.udata32,0x024D0000);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_08.udata32,0x2D6E2000);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_09.udata32,0x46FF39C8);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_10.udata32,0x66FF53FF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_11.udata32,0x7FFF7DFF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_12.udata32,0x328C0F00);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_13.udata32,0x64FF50FF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_14.udata32,0xD278AFFF);
+				PE_CHPI_APB0_F20_QWr(vsp0.pe1_vsp_crgn_ctrl_15.udata32,0xE600DC3C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_ctrl_s.udata32,0x00001000);
+				for(i=0; i<32; i++)
+				{
+					PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_data[i].udata32,p_pre_dse_lut[i]);
+				}
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_ctrl_e.udata32,0x00008100);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ctrl_01.udata32,0x80000321);
+				PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ctrl_02.udata32,0x03FF03FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt0.udata32,0x00003C00);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt1.udata32,0x0000C88C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt2.udata32,0x000140FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt3.udata32,0x000190FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt4.udata32,0x0002BCFF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt5.udata32,0x00034878);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt6.udata32,0x0003703C);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_y_region_pt7.udata32,0x00039800);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt0.udata32,0x0001F100);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt1.udata32,0x000200BE);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt2.udata32,0x00020DF0);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt3.udata32,0x000214FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt4.udata32,0x000228FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt5.udata32,0x000230FF);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt6.udata32,0x00023FA0);
+				PE_CHPI_APB0_F20_QWr(dse0.pe_dse_h_region_pt7.udata32,0x00024000);
+
+				/* header */
+				PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN0);
+				PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN1);
+				PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CW0);
+				PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_VSP0);
+				PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_DSE0);
+
+				PE_PRINT_NOTI("[APB][CMG]done(resume:%d)\n",pstParams->resume_mode);
+				PE_INF_HW_O20_BACKUP_CHPI0("[APB][CMG]done(resume:%d)",pstParams->resume_mode);
+			} while(0);
+			#endif
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen initial param
+ *
+ * @param   void
+ * @return  void
+ * @see
+ * @author
+ */
+static void PE_CMG_HW_O20_Init_CenRegister(void)
+{
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 i = 0;
+
+	/* hue */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00001000);
+	for(i=0; i<(LX_PE_CMG_REGION_NUM*LX_PE_CMG_TBLPOINT); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_ia_data,0x00000000);
+	}
+	/* saturation */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00001100);
+	for(i=0; i<(LX_PE_CMG_REGION_NUM*LX_PE_CMG_TBLPOINT); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_ia_data,0x00000000);
+	}
+	/* value */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00001200);
+	for(i=0; i<(LX_PE_CMG_REGION_NUM*LX_PE_CMG_TBLPOINT); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_ia_data,0x00000000);
+	}
+	/* region debug color */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00001300);
+	for(i=0; i<(LX_PE_CMG_REGION_NUM); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_ia_data,0x00000000);
+	}
+	/* global delta gain */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00001600);
+	for(i=0; i<(LX_PE_CMG_DELTANUM); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_ia_data,0x00000000);
+	}
+	/* normal mode */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ia_ctrl,	0x00008000);
+
+	/* region delta gain */
+	PE_CEO_PE1_O20_QWr(pe1_cen_delta_ia_ctrl,	0x00001000);
+	for(i=0; i<(LX_PE_CMG_REGION_NUM*LX_PE_CMG_DELTA_SETNUM); i++)
+	{
+		PE_CEO_PE1_O20_QWr(pe1_cen_delta_ia_data,0x00000000);
+	}
+	/* normal mode */
+	PE_CEO_PE1_O20_QWr(pe1_cen_delta_ia_ctrl,	0x00008000);
+
+	/* master gain */
+	PE_CEO_PE1_O20_QWr(pe1_cen_ctrl_04,	0x00000000);
+	PE_CEO_PE1_O20_QWr(pe1_cen_ctrl_05,	0x00000000);
+	PE_CEO_PE1_O20_QWr(pe1_cen_ctrl_06,	0x00000000);
+	PE_CEO_PE1_O20_QWr(pe1_cen_ctrl_07,	0x00000000);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return;
+}
+/**
+ * debug setting
+ *
+ * @param   *pstParams [in] LX_PE_DBG_SETTINGS_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetDebugSettings(LX_PE_DBG_SETTINGS_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	do{
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		PE_CMG_HW_O20_DBG_PRINT("wid:%d,type:0x%x,[0x%x]print:0x%x,bypass:0x%x\n",\
+			pstParams->win_id,pstParams->type,(0x1<<PE_ITEM_PKTMODL(CMG)),\
+			pstParams->print_lvl,pstParams->bypass);
+		/* set print level */
+		if(pstParams->type&LX_PE_DBG_LV)
+		{
+			_g_cmg_hw_o20_trace = (pstParams->print_lvl & (0x1<<PE_ITEM_PKTMODL(CMG)))? 0x1:0x0;
+		}
+		/* set bypass */
+		if(pstParams->type&LX_PE_DBG_BY)
+		{
+			if(PE_KDRV_VER_O20)
+			{
+				if(pstParams->bypass & (0x1<<PE_ITEM_PKTMODL(CMG)))
+				{
+					PE_CMG_HW_O20_DBG_PRINT("cen bypass.\n");
+					if(PE_CHECK_WIN0(pstParams->win_id))
+					{
+						PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_00,	reg_cen_bypass,	0x0);	//CEN block OFF
+					}
+				}
+				else
+				{
+					PE_CMG_HW_O20_DBG_PRINT("cen on.\n");
+					if(PE_CHECK_WIN0(pstParams->win_id))
+					{
+						PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_00,	reg_cen_bypass,	0x1);	//CEN block ON
+					}
+				}
+			}
+			else
+			{
+				PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+			}
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen enable
+ *
+ * @param   *pstParams [in] LX_PE_CMG_ENABLE_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenEnable(LX_PE_CMG_ENABLE_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		PE_CMG_HW_O20_DBG_PRINT(" set[%d]: cen enable:%d\n",pstParams->win_id,pstParams->enable);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_00,	reg_cen_bypass,	GET_BITS(pstParams->enable,0,1));
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get cen enable
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_ENABLE_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenEnable(LX_PE_CMG_ENABLE_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_00,	reg_cen_bypass,	pstParams->enable);
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_00,	reg_cen_bypass,	pstParams->enable);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+		PE_CMG_HW_O20_DBG_PRINT(" get[%d]: cen enable:%d\n",pstParams->win_id,pstParams->enable);
+	} while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen region enable
+ *
+ * @param   *pstParams [in] LX_PE_CMG_REGION_ENABLE_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenRegionEnable(LX_PE_CMG_REGION_ENABLE_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 wdata=0;
+	UINT32 count=0;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		for(count=0;count<LX_PE_CMG_REGION_NUM;count++)
+		{
+			if(pstParams->enable[count])
+				wdata |= (0x1<<(count+LX_PE_CMG_REGION_NUM));
+			else
+				wdata &= ~(0x1<<(count+LX_PE_CMG_REGION_NUM));
+
+			if(pstParams->show_region[count])
+				wdata |= (0x1<<(count));
+			else
+				wdata &= ~(0x1<<(count));
+		}
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CEO_PE1_O20_QWr(pe1_cen_ctrl_01,wdata);
+				#if 1	/* F20_APB */
+				do {
+					PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_ctrl_01.udata32,wdata);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN1);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get cen region enable
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_REGION_ENABLE_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenRegionEnable(LX_PE_CMG_REGION_ENABLE_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 rdata=0;
+	UINT32 count=0;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				PE_CE_PE1_O20_RdFL(pe1_cen_ctrl_01);
+				rdata = PE_CE_PE1_O20_Rd(pe1_cen_ctrl_01);
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				PE_CO_PE1_O20_RdFL(pe1_cen_ctrl_01);
+				rdata = PE_CO_PE1_O20_Rd(pe1_cen_ctrl_01);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+		for(count=0;count<LX_PE_CMG_REGION_NUM;count++)
+		{
+			if(rdata & (0x1<<(count+LX_PE_CMG_REGION_NUM)))
+				pstParams->enable[count] = 1;
+			else
+				pstParams->enable[count] = 0;
+
+			if(rdata & (0x1<<(count)))
+				pstParams->show_region[count] = 1;
+			else
+				pstParams->show_region[count] = 0;
+		}
+	} while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen region
+ *
+ * @param   *pstParams [in] LX_PE_CMG_REGION_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenRegion(LX_PE_CMG_REGION_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count=0;
+	UINT32 start_addr=0;
+	UINT32 x_wdata,y_wdata;
+	UINT32 set_flag=0;
+	PE_CMG_HW_O20_SETTINGS_T *pInfo=&_g_pe_cmg_hw_o20_info;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		PE_CMG_HW_O20_CHECK_CODE(pstParams->region_num>LX_PE_CMG_REGION_MAX,ret=RET_ERROR;break,\
+			"[%s,%d] region_num(%d) is out of range.\n",__F__,__L__,pstParams->region_num);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				set_flag = 0;
+				/* check double setting */
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					if(pInfo->rgn_set[pstParams->region_num].hue_x[count]!=pstParams->hue_x[count] || \
+						pInfo->rgn_set[pstParams->region_num].hue_g[count]!=pstParams->hue_g[count] || \
+						pInfo->rgn_set[pstParams->region_num].sat_x[count]!=pstParams->sat_x[count] || \
+						pInfo->rgn_set[pstParams->region_num].sat_g[count]!=pstParams->sat_g[count] || \
+						pInfo->rgn_set[pstParams->region_num].val_x[count]!=pstParams->val_x[count] || \
+						pInfo->rgn_set[pstParams->region_num].val_g[count]!=pstParams->val_g[count])
+					{
+						set_flag=1;
+						break;
+					}
+				}
+				if(set_flag)
+				{
+					PE_CMG_HW_O20_DBG_PRINT(" set region : num:%d\n", pstParams->region_num);
+					PE_CEO_PE1_O20_QWr03(pe1_cen_ia_ctrl,	hif_cen_enable,      0x0, 	//[15] 0:host access, 1:normal mode
+																hif_cen_ai,      0x1,	//[12] ai 0:disable, 1:enable
+																hif_cen_address, 0x0);	//[7:0] address
+					start_addr = pstParams->region_num*LX_PE_CMG_TBLPOINT;
+					/* H color region table : 000 */
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);			//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+
+					for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+					{
+						/* hue_x,x_wdata : 0~1024(0~720 degree) */
+						x_wdata = (UINT32)GET_BITS(pstParams->hue_x[count],0,10);
+						y_wdata = GET_BITS(pstParams->hue_g[count],0,7);	// 0~127
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_x_wdata, 	x_wdata);	//[25:16] x data
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_y_wdata, 	y_wdata);	//[9:0] y data
+						PE_CEO_PE1_O20_WrFL(pe1_cen_ia_data);
+					}
+					/* S color region table : 001 */
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x1);			//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+					for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+					{
+						x_wdata = GET_BITS(pstParams->sat_x[count],0,7);	// 0~100
+						y_wdata = GET_BITS(pstParams->sat_g[count],0,7);	// 0~127
+
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_x_wdata, 	x_wdata);	//[25:16] x data
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_y_wdata, 	y_wdata);	//[9:0] y data
+						PE_CEO_PE1_O20_WrFL(pe1_cen_ia_data);
+					}
+					/* V color region table : 010 */
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x2);			//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+
+					for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+					{
+						x_wdata = GET_BITS(pstParams->val_x[count],0,8);	// 0~255
+						y_wdata = GET_BITS(pstParams->val_g[count],0,7);	// 0~127
+
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_x_wdata, 	x_wdata);	//[25:16] x data
+						PE_CEO_PE1_O20_Wr01(pe1_cen_ia_data,	hif_cen_y_wdata, 	y_wdata);	//[9:0] y data
+						PE_CEO_PE1_O20_WrFL(pe1_cen_ia_data);
+					}
+					/* normal operation */
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+					for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+					{
+						pInfo->rgn_set[pstParams->region_num].hue_x[count]=pstParams->hue_x[count];
+						pInfo->rgn_set[pstParams->region_num].hue_g[count]=pstParams->hue_g[count];
+						pInfo->rgn_set[pstParams->region_num].sat_x[count]=pstParams->sat_x[count];
+						pInfo->rgn_set[pstParams->region_num].sat_g[count]=pstParams->sat_g[count];
+						pInfo->rgn_set[pstParams->region_num].val_x[count]=pstParams->val_x[count];
+						pInfo->rgn_set[pstParams->region_num].val_g[count]=pstParams->val_g[count];
+					}
+					#if 1	/* F20_APB */
+					do {
+						/* H color region table : 000 */
+						for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+						{
+							/* hue_x,x_wdata : 0~1024(0~720 degree) */
+							x_wdata = (UINT32)GET_BITS(pstParams->hue_x[count],0,10);
+							y_wdata = GET_BITS(pstParams->hue_g[count],0,7);	// 0~127
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data0[start_addr+count].hif_cen_x_wdata,x_wdata);	//[25:16] x data
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data0[start_addr+count].hif_cen_y_wdata,y_wdata);	//[9:0] y data
+							PE_CHPI_APB0_F20_WrFL(cen0.pe1_cen_ia_data0[start_addr+count].udata32);
+						}
+						/* S color region table : 001 */
+						for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+						{
+							x_wdata = GET_BITS(pstParams->sat_x[count],0,7);	// 0~100
+							y_wdata = GET_BITS(pstParams->sat_g[count],0,7);	// 0~127
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data1[start_addr+count].hif_cen_x_wdata,x_wdata);	//[25:16] x data
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data1[start_addr+count].hif_cen_y_wdata,y_wdata);	//[9:0] y data
+							PE_CHPI_APB0_F20_WrFL(cen0.pe1_cen_ia_data1[start_addr+count].udata32);
+						}
+						/* V color region table : 010 */
+						for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+						{
+							x_wdata = GET_BITS(pstParams->val_x[count],0,8);	// 0~255
+							y_wdata = GET_BITS(pstParams->val_g[count],0,7);	// 0~127
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data2[start_addr+count].hif_cen_x_wdata,x_wdata);	//[25:16] x data
+							PE_CHPI_APB0_F20_Wr(cen0.pe1_cen_ia_data2[start_addr+count].hif_cen_y_wdata,y_wdata);	//[9:0] y data
+							PE_CHPI_APB0_F20_WrFL(cen0.pe1_cen_ia_data2[start_addr+count].udata32);
+						}
+						PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN0);
+					} while(0);
+					#endif
+				}
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get cen region
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_REGION_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenRegion(LX_PE_CMG_REGION_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 count=0;
+	UINT32 start_addr=0;
+	UINT32 x_wdata=0,y_wdata=0;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		PE_CMG_HW_O20_CHECK_CODE(pstParams->region_num>LX_PE_CMG_REGION_MAX,ret=RET_ERROR;break,\
+			"[%s,%d] region_num(%d) is out of range.\n",__F__,__L__,pstParams->region_num);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		start_addr = pstParams->region_num*LX_PE_CMG_TBLPOINT;
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				PE_CE_PE1_O20_RdFL(pe1_cen_ia_ctrl);
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x0);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x1);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+
+				/* H color region table : 000 */
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);		//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CE_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+					/* x_wdata,hue_x 0~1024 (0~720 degree) */
+					pstParams->hue_x[count] = (UINT16)GET_BITS(x_wdata,0,10);
+					pstParams->hue_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* S color region table : 001 */
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x1);		//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CE_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+					pstParams->sat_x[count] = (UINT8)GET_BITS(x_wdata,0,7);	// 0~100
+					pstParams->sat_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* V color region table : 010 */
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x2);		//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CE_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CE_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+
+					pstParams->val_x[count] = (UINT8)GET_BITS(x_wdata,0,8);	// 0~255
+					pstParams->val_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* normal operation */
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				PE_CO_PE1_O20_RdFL(pe1_cen_ia_ctrl);
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x0);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x1);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+
+				/* H color region table : 000 */
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);		//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CO_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+					/* x_wdata,hue_x 0~1024 (0~720 degree) */
+					pstParams->hue_x[count] = (UINT16)GET_BITS(x_wdata,0,10);
+					pstParams->hue_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* S color region table : 001 */
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x1);		//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CO_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+					pstParams->sat_x[count] = (UINT8)GET_BITS(x_wdata,0,7);	// 0~100
+					pstParams->sat_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* V color region table : 010 */
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x2);		//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	start_addr); //[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_TBLPOINT;count++)
+				{
+					PE_CO_PE1_O20_RdFL(pe1_cen_ia_data);
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_x_wdata,	x_wdata);	//[25:16] x data
+					PE_CO_PE1_O20_Rd01(pe1_cen_ia_data,	hif_cen_y_wdata,	y_wdata);	//[9:0] y data
+
+					pstParams->val_x[count] = (UINT8)GET_BITS(x_wdata,0,8);	// 0~255
+					pstParams->val_g[count] = (UINT8)GET_BITS(y_wdata,0,7);	// 0~127
+				}
+				/* normal operation */
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen region ctrl
+ *
+ * @param   *pstParams [in] LX_PE_CMG_REGION_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenRegionCtrl(LX_PE_CMG_REGION_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count=0;
+	UINT32 start_addr=0;
+	UINT32 delta[3];		// -128 ~ 127, hsv or gbr
+	UINT32 wdata=0;
+	UINT32 region_num=0;
+	PE_CMG_HW_O20_SETTINGS_T *pInfo=&_g_pe_cmg_hw_o20_info;
+
+	do {
+		CHECK_KNULL(pstParams);
+
+		PE_CHECK_WINID(pstParams->win_id);
+
+		PE_CMG_HW_O20_CHECK_CODE(pstParams->region_num>LX_PE_CMG_REGION_MAX,ret=RET_ERROR;break,\
+			"[%s,%d] region_num(%d) is out of range.\n",__F__,__L__,pstParams->region_num);
+
+		PE_CMG_HW_O20_DBG_PRINT(" set: path:%d num:%d, m_g:%d, delta(hsvgbr):%d,%d,%d,%d,%d,%d\n",\
+				pstParams->win_id,pstParams->region_num,pstParams->master_gain,\
+				pstParams->region_delta[0],pstParams->region_delta[1],pstParams->region_delta[2],\
+				pstParams->region_delta[3],pstParams->region_delta[4],pstParams->region_delta[5]);
+
+		region_num = pstParams->region_num;
+
+		if(PE_KDRV_VER_O20) 
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+
+				/* region delta */
+				if(pInfo->rgn_ctrl[region_num].region_delta[0]!=pstParams->region_delta[0] || \
+					pInfo->rgn_ctrl[region_num].region_delta[1]!=pstParams->region_delta[1] || \
+					pInfo->rgn_ctrl[region_num].region_delta[2]!=pstParams->region_delta[2] || \
+					pInfo->rgn_ctrl[region_num].region_delta[3]!=pstParams->region_delta[3] || \
+					pInfo->rgn_ctrl[region_num].region_delta[4]!=pstParams->region_delta[4] || \
+					pInfo->rgn_ctrl[region_num].region_delta[5]!=pstParams->region_delta[5])
+				{
+
+					PE_CMG_HW_O20_DBG_PRINT(" set delta\n");
+
+					start_addr = region_num*LX_PE_CMG_DELTA_SETNUM;
+
+					PE_CEO_PE1_O20_RdFL(pe1_cen_delta_ia_ctrl);
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x0);	//[15] 0:host access, 1:normal mode
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x1);	//[12] ai 0:disable, 1:enable
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,start_addr);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+					for(count=0;count<LX_PE_CMG_DELTA_SETNUM;count++) 
+					{
+
+						wdata=0;
+
+						delta[0] = GET_BITS(pstParams->region_delta[count*3],0,8);		// -128 ~ 127
+						delta[1] = GET_BITS(pstParams->region_delta[count*3+1],0,8);	// -128 ~ 127
+						delta[2] = GET_BITS(pstParams->region_delta[count*3+2],0,8);	// -128 ~ 127
+
+						wdata = (delta[0]<<16)|(delta[1]<<8)|(delta[2]);
+
+						PE_CEO_PE1_O20_Wr(pe1_cen_delta_ia_data,	wdata);
+						PE_CEO_PE1_O20_WrFL(pe1_cen_delta_ia_data);
+					}
+
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x1);	//[15] 0:host access, 1:normal mode
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x0);	//[12] ai 0:disable, 1:enable
+					PE_CEO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,0x0);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+					pInfo->rgn_ctrl[region_num].region_delta[0]=pstParams->region_delta[0];
+					pInfo->rgn_ctrl[region_num].region_delta[1]=pstParams->region_delta[1];
+					pInfo->rgn_ctrl[region_num].region_delta[2]=pstParams->region_delta[2];
+					pInfo->rgn_ctrl[region_num].region_delta[3]=pstParams->region_delta[3];
+					pInfo->rgn_ctrl[region_num].region_delta[4]=pstParams->region_delta[4];
+					pInfo->rgn_ctrl[region_num].region_delta[5]=pstParams->region_delta[5];
+					#if 1	/* F20_APB */
+					do {
+						for(count=0;count<LX_PE_CMG_DELTA_SETNUM;count++)
+						{
+							wdata=0;
+							delta[0] = GET_BITS(pstParams->region_delta[count*3],0,8);		// -128 ~ 127
+							delta[1] = GET_BITS(pstParams->region_delta[count*3+1],0,8);	// -128 ~ 127
+							delta[2] = GET_BITS(pstParams->region_delta[count*3+2],0,8);	// -128 ~ 127
+							wdata = (delta[0]<<16)|(delta[1]<<8)|(delta[2]);
+							PE_CHPI_APB0_F20_QWr(cen1.pe1_cen_delta_ia_data[start_addr+count].udata32,wdata);
+						}
+						PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN1);
+					} while(0);
+					#endif
+				}
+
+				/* region gain */
+				if(pInfo->rgn_ctrl[region_num].master_gain!=pstParams->master_gain) {
+
+					PE_CMG_HW_O20_DBG_PRINT(" set master_gain\n");
+
+					wdata = GET_BITS(pstParams->master_gain,0,8);	// 0~128~255
+
+					PE_CMG_HW_O20_SetCenRegionCtrlReg(region_num, wdata);
+
+					pInfo->rgn_ctrl[region_num].master_gain=pstParams->master_gain;
+				}
+			}
+		}
+		else 
+		{
+
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+
+/**
+ * get cen region ctrl
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_REGION_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenRegionCtrl(LX_PE_CMG_REGION_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 count=0;
+	UINT32 start_addr=0;
+	UINT32 re_mgain=0;
+	UINT32 re_delta[LX_PE_CMG_DELTA_SETNUM];	// hsv or gbr
+
+	do {
+
+		CHECK_KNULL(pstParams);
+
+		PE_CHECK_WINID(pstParams->win_id);
+
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id)) {
+
+				/* region delta */
+				start_addr = pstParams->region_num*LX_PE_CMG_DELTA_SETNUM;
+				PE_CE_PE1_O20_RdFL(pe1_cen_delta_ia_ctrl);
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x0);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x1);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,start_addr);	//[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+				for(count=0;count<LX_PE_CMG_DELTA_SETNUM;count++) {
+
+					PE_CE_PE1_O20_RdFL(pe1_cen_delta_ia_data);
+					re_delta[count] = PE_CE_PE1_O20_Rd(pe1_cen_delta_ia_data);
+				}
+
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x1);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x0);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,0x0);	//[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+				/* region gain */
+				PE_CMG_HW_O20_CEGetRegGain(pstParams->region_num, &re_mgain);
+
+				pstParams->master_gain = (UINT8)GET_BITS(re_mgain,0,8);	// region master gain, 0~128~255
+				pstParams->region_delta[0] = (SINT8)GET_BITS(re_delta[0],16,8);	// h, -128 ~ 127
+				pstParams->region_delta[1] = (SINT8)GET_BITS(re_delta[0],8,8);	// s, -128 ~ 127
+				pstParams->region_delta[2] = (SINT8)GET_BITS(re_delta[0],0,8);	// v, -128 ~ 127
+				pstParams->region_delta[3] = (SINT8)GET_BITS(re_delta[1],16,8);	// g, -128 ~ 127
+				pstParams->region_delta[4] = (SINT8)GET_BITS(re_delta[1],8,8);	// b, -128 ~ 127
+				pstParams->region_delta[5] = (SINT8)GET_BITS(re_delta[1],0,8);	// r, -128 ~ 127
+			}
+
+			if(PE_CHECK_WIN1(win_id)) {
+
+				/* region delta */
+				start_addr = pstParams->region_num*LX_PE_CMG_DELTA_SETNUM;
+				PE_CO_PE1_O20_RdFL(pe1_cen_delta_ia_ctrl);
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x0);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x1);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,start_addr);	//[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+				for(count=0;count<LX_PE_CMG_DELTA_SETNUM;count++) {
+
+					PE_CO_PE1_O20_RdFL(pe1_cen_delta_ia_data);
+					re_delta[count] = PE_CO_PE1_O20_Rd(pe1_cen_delta_ia_data);
+				}
+
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_enable, 0x1);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_ai, 	0x0);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_delta_ia_ctrl,	hif_cen_delta_address,0x0);	//[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_delta_ia_ctrl);
+
+				/* region gain */
+				PE_CMG_HW_O20_COGetRegGain(pstParams->region_num, &re_mgain);
+
+				pstParams->master_gain = (UINT8)GET_BITS(re_mgain,0,8);	// region master gain, 0~128~255
+				pstParams->region_delta[0] = (SINT8)GET_BITS(re_delta[0],16,8);	// h, -128 ~ 127
+				pstParams->region_delta[1] = (SINT8)GET_BITS(re_delta[0],8,8);	// s, -128 ~ 127
+				pstParams->region_delta[2] = (SINT8)GET_BITS(re_delta[0],0,8);	// v, -128 ~ 127
+				pstParams->region_delta[3] = (SINT8)GET_BITS(re_delta[1],16,8);	// g, -128 ~ 127
+				pstParams->region_delta[4] = (SINT8)GET_BITS(re_delta[1],8,8);	// b, -128 ~ 127
+				pstParams->region_delta[5] = (SINT8)GET_BITS(re_delta[1],0,8);	// r, -128 ~ 127
+			}
+		}
+		else
+		{
+
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+
+		PE_CMG_HW_O20_DBG_PRINT(" Get: path:%d num:%d, m_g:%d, delta(hsvgbr):%d,%d,%d,%d,%d,%d\n",\
+				pstParams->win_id,pstParams->region_num,pstParams->master_gain,\
+				pstParams->region_delta[0],pstParams->region_delta[1],pstParams->region_delta[2],\
+				pstParams->region_delta[3],pstParams->region_delta[4],pstParams->region_delta[5]);
+
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+
+/**
+ * set cen global ctrl
+ *
+ * @param   *pstParams [in] LX_PE_CMG_GLOBAL_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenGlobalCtrl(LX_PE_CMG_GLOBAL_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count=0;
+	UINT32 wdata=0;	// h,s,v,g,b,r
+	PE_CMG_HW_O20_SETTINGS_T *pInfo=&_g_pe_cmg_hw_o20_info;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				/* check double setting */
+				if(pInfo->gbl_ctrl.global_delta[0]!=pstParams->global_delta[0] || \
+					pInfo->gbl_ctrl.global_delta[1]!=pstParams->global_delta[1] || \
+					pInfo->gbl_ctrl.global_delta[2]!=pstParams->global_delta[2] || \
+					pInfo->gbl_ctrl.global_delta[3]!=pstParams->global_delta[3] || \
+					pInfo->gbl_ctrl.global_delta[4]!=pstParams->global_delta[4] || \
+					pInfo->gbl_ctrl.global_delta[5]!=pstParams->global_delta[5])
+				{
+					/* global master gain : 110 */
+					PE_CEO_PE1_O20_RdFL(pe1_cen_ia_ctrl);
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x0);	//[15] 0:host access, 1:normal mode
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x1);	//[12] ai 0:disable, 1:enable
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x6);	//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+					for(count=0;count<LX_PE_CMG_DELTANUM;count++)
+					{
+						wdata = GET_BITS(pstParams->global_delta[count],0,10);	// -512 ~ 511, [0]h [1]s [2]v [3]g [4]b [5]r
+						PE_CEO_PE1_O20_Wr(pe1_cen_ia_data,	wdata);
+						PE_CEO_PE1_O20_WrFL(pe1_cen_ia_data);
+					}
+					/* normal operation */
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+					PE_CEO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+					PE_CEO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+					pInfo->gbl_ctrl.global_delta[0]=pstParams->global_delta[0];
+					pInfo->gbl_ctrl.global_delta[1]=pstParams->global_delta[1];
+					pInfo->gbl_ctrl.global_delta[2]=pstParams->global_delta[2];
+					pInfo->gbl_ctrl.global_delta[3]=pstParams->global_delta[3];
+					pInfo->gbl_ctrl.global_delta[4]=pstParams->global_delta[4];
+					pInfo->gbl_ctrl.global_delta[5]=pstParams->global_delta[5];
+					#if 1	/* F20_APB */
+					do {
+						/* global master gain : 110 */
+						for(count=0;count<LX_PE_CMG_DELTANUM;count++)
+						{
+							wdata = GET_BITS(pstParams->global_delta[count],0,10);	// -512 ~ 511, [0]h [1]s [2]v [3]g [4]b [5]r
+							PE_CHPI_APB0_F20_QWr(cen0.pe1_cen_ia_data6[count].udata32,wdata);
+						}
+						PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN0);
+					} while(0);
+					#endif
+				}
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get cen global ctrl
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_GLOBAL_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenGlobalCtrl(LX_PE_CMG_GLOBAL_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 count=0;
+	UINT32 rdata=0;	// h,s,v,g,b,r
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				/* global master gain : 110 */
+				PE_CE_PE1_O20_RdFL(pe1_cen_ia_ctrl);
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x0);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x1);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x6);	//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_DELTANUM;count++)
+				{
+					PE_CE_PE1_O20_RdFL(pe1_cen_ia_data);
+					rdata = PE_CE_PE1_O20_Rd(pe1_cen_ia_data);
+					pstParams->global_delta[count] = (SINT16)PE_CONVHEX2DEC(rdata,9);// -512 ~ 511, [0]h [1]s [2]v [3]g [4]b [5]r
+				}
+				/* normal operation */
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+				PE_CE_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CE_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				/* global master gain : 110 */
+				PE_CO_PE1_O20_RdFL(pe1_cen_ia_ctrl);
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x0);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x1);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x6);	//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+				for(count=0;count<LX_PE_CMG_DELTANUM;count++)
+				{
+					PE_CO_PE1_O20_RdFL(pe1_cen_ia_data);
+					rdata = PE_CO_PE1_O20_Rd(pe1_cen_ia_data);
+					pstParams->global_delta[count] = (SINT16)PE_CONVHEX2DEC(rdata,9);// -512 ~ 511, [0]h [1]s [2]v [3]g [4]b [5]r
+				}
+				/* normal operation */
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_enable, 	0x1);	//[15] 0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai, 		0x0);	//[12] ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_ai_sel, 	0x0);	//[10:8]
+				PE_CO_PE1_O20_Wr01(pe1_cen_ia_ctrl,	hif_cen_address,	0x0);	//[7:0] address
+				PE_CO_PE1_O20_WrFL(pe1_cen_ia_ctrl);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set cen color ctrl
+ *
+ * @param   *pstParams [in] LX_PE_CMG_COLOR_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetCenColorCtrl(LX_PE_CMG_COLOR_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		PE_CMG_HW_O20_DBG_PRINT("set pstParams[%d] : sat:%d\n", \
+			pstParams->win_id,pstParams->saturation);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_02, ihsv_sgain,	GET_BITS(pstParams->saturation,0,8));//[7:0] reg_ihsv_sgain
+				#if 1	/* F20_APB */
+				do {
+					PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_02.ihsv_sgain,GET_BITS(pstParams->saturation,0,8));//[7:0] reg_ihsv_sgain
+					PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_02.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN1);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get cen color ctrl
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_COLOR_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetCenColorCtrl(LX_PE_CMG_COLOR_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 rdata=0;
+	do {
+		CHECK_KNULL(pstParams);
+		PE_CHECK_WINID(pstParams->win_id);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_02, ihsv_sgain,	rdata);	//[7:0] reg_ihsv_sgain
+				pstParams->saturation=(UINT16)rdata;
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_02, ihsv_sgain,	rdata);	//[7:0] reg_ihsv_sgain
+				pstParams->saturation=(UINT16)rdata;
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+		PE_CMG_HW_O20_DBG_PRINT("get pstParams[%d] : sat:%d\n",pstParams->win_id,pstParams->saturation);
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set clear white
+ *
+ * @param   *pstParams [in] LX_PE_CMG_CW_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetClearWhiteCtrl(LX_PE_CMG_CW_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	PE_REG_O20_HW_OPT_T hw_opt = PE_REG_O20_GetDispOpt();
+	do{
+		CHECK_KNULL(pstParams);
+		PE_CMG_HW_O20_DBG_PRINT("set[%d] en:%d, yc:%d, x:%d,%d,%d,%d,%d\n"\
+			" y:%d,%d,%d,%d,%d, sel:0x%x, g:%d\n", \
+			pstParams->win_id, pstParams->cw_en, \
+			pstParams->gain_sel, pstParams->gain_x[0], \
+			pstParams->gain_x[1], pstParams->gain_x[2], pstParams->gain_x[3], \
+			pstParams->gain_x[4], pstParams->gain_y[0], pstParams->gain_y[1], \
+			pstParams->gain_y[2], pstParams->gain_y[3], pstParams->gain_y[4], \
+			pstParams->region_sel, pstParams->region_gain);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				if (hw_opt.external_chip==0)
+				{
+					PE_CEO_PE1_O20_QWr01(pe1_cw_ctrl_00, reg_cw_en,				GET_BITS(pstParams->cw_en,0,1));
+				}
+				else
+				{
+					PE_CEO_PE1_O20_QWr01(pe1_cw_ctrl_00, reg_cw_en,				0x0);
+				}
+				#if 0
+				PE_CEO_PE1_O20_QWr04(pe1_cw_ctrl_00, reg_cw_en,				GET_BITS(pstParams->cw_en,0,1),\
+														cw_gain_selection,	GET_BITS(pstParams->gain_sel,0,1),\
+														reg_cw_y4,			GET_BITS(pstParams->gain_y[4],0,8),\
+														reg_cw_x4,			GET_BITS(pstParams->gain_x[4],0,8));
+				PE_CEO_PE1_O20_QWr04(pe1_cw_ctrl_03, reg_cw_y0,			GET_BITS(pstParams->gain_y[0],0,8),\
+														reg_cw_x0,			GET_BITS(pstParams->gain_x[0],0,8),\
+														reg_cw_y1,			GET_BITS(pstParams->gain_y[1],0,8),\
+														reg_cw_x1,			GET_BITS(pstParams->gain_x[1],0,8));
+				PE_CEO_PE1_O20_QWr04(pe1_cw_ctrl_02, reg_cw_y2,			GET_BITS(pstParams->gain_y[2],0,8),\
+														reg_cw_x2,			GET_BITS(pstParams->gain_x[2],0,8),\
+														reg_cw_y3,			GET_BITS(pstParams->gain_y[3],0,8),\
+														reg_cw_x3,			GET_BITS(pstParams->gain_x[3],0,8));
+				#endif
+				PE_CEO_PE1_O20_RdFL(pe1_cw_ctrl_04);
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region0_sel,	GET_BITS(pstParams->region_sel,0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region1_sel,	GET_BITS(pstParams->region_sel,1,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region2_sel,	GET_BITS(pstParams->region_sel,2,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region3_sel,	GET_BITS(pstParams->region_sel,3,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region4_sel,	GET_BITS(pstParams->region_sel,4,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region5_sel,	GET_BITS(pstParams->region_sel,5,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region6_sel,	GET_BITS(pstParams->region_sel,6,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region7_sel,	GET_BITS(pstParams->region_sel,7,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region8_sel,	GET_BITS(pstParams->region_sel,8,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region9_sel,	GET_BITS(pstParams->region_sel,9,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region10_sel,	GET_BITS(pstParams->region_sel,10,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region11_sel,	GET_BITS(pstParams->region_sel,11,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region12_sel,	GET_BITS(pstParams->region_sel,12,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region13_sel,	GET_BITS(pstParams->region_sel,13,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region14_sel,	GET_BITS(pstParams->region_sel,14,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region15_sel,	GET_BITS(pstParams->region_sel,15,1));
+				PE_CEO_PE1_O20_Wr01(pe1_cw_ctrl_04,	color_region_gain,	GET_BITS(pstParams->region_gain,0,8));
+				PE_CEO_PE1_O20_WrFL(pe1_cw_ctrl_04);
+				#if 1	/* F20_APB */
+				do {
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_00.reg_cw_en,GET_BITS(pstParams->cw_en,0,1));
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_ctrl_00.udata32);
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region0_sel, GET_BITS(pstParams->region_sel,0,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region1_sel, GET_BITS(pstParams->region_sel,1,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region2_sel, GET_BITS(pstParams->region_sel,2,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region3_sel, GET_BITS(pstParams->region_sel,3,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region4_sel, GET_BITS(pstParams->region_sel,4,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region5_sel, GET_BITS(pstParams->region_sel,5,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region6_sel, GET_BITS(pstParams->region_sel,6,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region7_sel, GET_BITS(pstParams->region_sel,7,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region8_sel, GET_BITS(pstParams->region_sel,8,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region9_sel, GET_BITS(pstParams->region_sel,9,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region10_sel,GET_BITS(pstParams->region_sel,10,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region11_sel,GET_BITS(pstParams->region_sel,11,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region12_sel,GET_BITS(pstParams->region_sel,12,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region13_sel,GET_BITS(pstParams->region_sel,13,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region14_sel,GET_BITS(pstParams->region_sel,14,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region15_sel,GET_BITS(pstParams->region_sel,15,1));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_02.color_region_gain, GET_BITS(pstParams->region_gain,0,8));
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_ctrl_02.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CW0);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get clear white
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_CW_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetClearWhiteCtrl(LX_PE_CMG_CW_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	UINT32 sel_data;
+	do{
+		CHECK_KNULL(pstParams);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				if(pstParams->region_gain==0)	pstParams->region_gain=1;
+				PE_CE_PE1_O20_QRd01(pe1_cw_ctrl_00,reg_cw_en,             (pstParams->cw_en));
+				#if 0
+				PE_CE_PE1_O20_QRd04(pe1_cw_ctrl_00,reg_cw_en,             (pstParams->cw_en),\
+                                                     cw_gain_selection, (pstParams->gain_sel),\
+                                                     reg_cw_y4,         (pstParams->gain_y[4]),\
+                                                     reg_cw_x4,         (pstParams->gain_x[4]));
+				PE_CE_PE1_O20_QRd04(pe1_cw_ctrl_03,reg_cw_y0,         (pstParams->gain_y[0]),\
+                                                     reg_cw_x0,         (pstParams->gain_x[0]),\
+                                                     reg_cw_y1,         (pstParams->gain_y[1]),\
+                                                     reg_cw_x1,         (pstParams->gain_x[1]));
+				PE_CE_PE1_O20_QRd04(pe1_cw_ctrl_02,reg_cw_y2,         (pstParams->gain_y[2]),\
+                                                     reg_cw_x2,         (pstParams->gain_x[2]),\
+                                                     reg_cw_y3,         (pstParams->gain_y[3]),\
+                                                     reg_cw_x3,         (pstParams->gain_x[3]));
+				#endif
+				PE_CE_PE1_O20_RdFL(pe1_cw_ctrl_04);
+				sel_data = PE_CE_PE1_O20_Rd(pe1_cw_ctrl_04);
+				pstParams->region_sel = GET_BITS(sel_data,0,16);	//[15:0]
+				PE_CE_PE1_O20_Rd01(pe1_cw_ctrl_04,color_region_gain, (pstParams->region_gain));
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				if(pstParams->region_gain==0)	pstParams->region_gain=1;
+				PE_CO_PE1_O20_QRd01(pe1_cw_ctrl_00,reg_cw_en,             (pstParams->cw_en));
+				#if 0
+				PE_CO_PE1_O20_QRd04(pe1_cw_ctrl_00,reg_cw_en,             (pstParams->cw_en),\
+                                                     cw_gain_selection, (pstParams->gain_sel),\
+                                                     reg_cw_y4,         (pstParams->gain_y[4]),\
+                                                     reg_cw_x4,         (pstParams->gain_x[4]));
+				PE_CO_PE1_O20_QRd04(pe1_cw_ctrl_03,reg_cw_y0,         (pstParams->gain_y[0]),\
+                                                     reg_cw_x0,         (pstParams->gain_x[0]),\
+                                                     reg_cw_y1,         (pstParams->gain_y[1]),\
+                                                     reg_cw_x1,         (pstParams->gain_x[1]));
+				PE_CO_PE1_O20_QRd04(pe1_cw_ctrl_02,reg_cw_y2,         (pstParams->gain_y[2]),\
+                                                     reg_cw_x2,         (pstParams->gain_x[2]),\
+                                                     reg_cw_y3,         (pstParams->gain_y[3]),\
+                                                     reg_cw_x3,         (pstParams->gain_x[3]));
+				#endif
+				PE_CO_PE1_O20_RdFL(pe1_cw_ctrl_04);
+				sel_data = PE_CO_PE1_O20_Rd(pe1_cw_ctrl_04);
+				pstParams->region_sel = GET_BITS(sel_data,0,16);	//[15:0]
+				PE_CO_PE1_O20_Rd01(pe1_cw_ctrl_04,color_region_gain, (pstParams->region_gain));
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+		PE_CMG_HW_O20_DBG_PRINT("get[%d] en:%d, yc:%d, x:%d,%d,%d,%d,%d\n"\
+			" y:%d,%d,%d,%d,%d, sel:0x%x, g:%d\n", \
+			pstParams->win_id, pstParams->cw_en, \
+			pstParams->gain_sel, pstParams->gain_x[0], \
+			pstParams->gain_x[1], pstParams->gain_x[2], pstParams->gain_x[3], \
+			pstParams->gain_x[4], pstParams->gain_y[0], pstParams->gain_y[1], \
+			pstParams->gain_y[2], pstParams->gain_y[3], pstParams->gain_y[4], \
+			pstParams->region_sel, pstParams->region_gain);
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set clear white gain
+ *
+ * @param   *pstParams [in] LX_PE_CMG_CW_GAIN_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetClearWhiteGainCtrl(LX_PE_CMG_CW_GAIN_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	do{
+		CHECK_KNULL(pstParams);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CEO_PE1_O20_QWr03(pe1_cw_ctrl_01,user_ctrl_g_gain, GET_BITS(pstParams->g_gain,0,8),\
+                                                      user_ctrl_b_gain, GET_BITS(pstParams->b_gain,0,8),\
+                                                      user_ctrl_r_gain, GET_BITS(pstParams->r_gain,0,8));
+				#if 1	/* F20_APB */
+				do {
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_01.user_ctrl_g_gain, GET_BITS(pstParams->g_gain,0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_01.user_ctrl_b_gain, GET_BITS(pstParams->b_gain,0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_ctrl_01.user_ctrl_r_gain, GET_BITS(pstParams->r_gain,0,8));
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_ctrl_01.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CW0);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * get clear white gain
+ *
+ * @param   *pstParams [in/out] LX_PE_CMG_CW_GAIN_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetClearWhiteGainCtrl(LX_PE_CMG_CW_GAIN_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	LX_PE_WIN_ID win_id;
+	do{
+		CHECK_KNULL(pstParams);
+		win_id = PE_GET_CHECKED_WINID(pstParams->win_id);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(win_id))
+			{
+				PE_CE_PE1_O20_QRd03(pe1_cw_ctrl_01,user_ctrl_g_gain, pstParams->g_gain,\
+                                                     user_ctrl_b_gain, pstParams->b_gain,\
+                                                     user_ctrl_r_gain, pstParams->r_gain);
+			}
+			if(PE_CHECK_WIN1(win_id))
+			{
+				PE_CO_PE1_O20_QRd03(pe1_cw_ctrl_01,user_ctrl_g_gain, pstParams->g_gain,\
+                                                     user_ctrl_b_gain, pstParams->b_gain,\
+                                                     user_ctrl_r_gain, pstParams->r_gain);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set saturation gain LUT
+ *
+ * @param   *pstParams [in] LX_PE_CMG_SAT_GAIN_LUT_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetSaturationGainLUT(LX_PE_CMG_SAT_GAIN_LUT_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	#if 0
+	do {
+		CHECK_KNULL(pstParams);
+		if (PE_KDRV_VER_O20)
+		{
+			if (PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CMG_HW_O20_DBG_PRINT(
+					"[%s.%d][wid:%d] WR) X: %08x %08x %08x %08x %08x %08x %08x %08x %08x\n"
+					"\t\tY: %08x %08x %08x %08x %08x %08x %08x %08x %08x",
+					__F__, __L__, pstParams->win_id,
+					pstParams->x[0], pstParams->x[1], pstParams->x[2],
+					pstParams->x[3], pstParams->x[4], pstParams->x[5],
+					pstParams->x[6], pstParams->x[7], pstParams->x[8],
+					pstParams->y[0], pstParams->y[1], pstParams->y[2],
+					pstParams->y[3], pstParams->y[4], pstParams->y[5],
+					pstParams->y[6], pstParams->y[7], pstParams->y[8]);
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_18,	r_vsp_sat_gain_lut_x0, GET_BITS(pstParams->x[0], 0, 10),
+														r_vsp_sat_gain_lut_y0, GET_BITS(pstParams->y[0], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_17,	r_vsp_sat_gain_lut_x1, GET_BITS(pstParams->x[1], 0, 10),
+														r_vsp_sat_gain_lut_y1, GET_BITS(pstParams->y[1], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_16,	r_vsp_sat_gain_lut_x2, GET_BITS(pstParams->x[2], 0, 10),
+														r_vsp_sat_gain_lut_y2, GET_BITS(pstParams->y[2], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_15,	r_vsp_sat_gain_lut_x3, GET_BITS(pstParams->x[3], 0, 10),
+														r_vsp_sat_gain_lut_y3, GET_BITS(pstParams->y[3], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_14,	r_vsp_sat_gain_lut_x4, GET_BITS(pstParams->x[4], 0, 10),
+														r_vsp_sat_gain_lut_y4, GET_BITS(pstParams->y[4], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_13,	r_vsp_sat_gain_lut_x5, GET_BITS(pstParams->x[5], 0, 10),
+														r_vsp_sat_gain_lut_y5, GET_BITS(pstParams->y[5], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_12,	r_vsp_sat_gain_lut_x6, GET_BITS(pstParams->x[6], 0, 10),
+														r_vsp_sat_gain_lut_y6, GET_BITS(pstParams->y[6], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_11,	r_vsp_sat_gain_lut_x7, GET_BITS(pstParams->x[7], 0, 10),
+														r_vsp_sat_gain_lut_y7, GET_BITS(pstParams->y[7], 0, 8));
+				PE_CEO_PE1_O20_QWr02(pe1_vspyc_ctrl_10,	r_vsp_sat_gain_lut_x8, GET_BITS(pstParams->x[8], 0, 10),
+														r_vsp_sat_gain_lut_y8, GET_BITS(pstParams->y[8], 0, 8));
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif
+	#endif
+	return ret;
+}
+/**
+ * get saturation gain LUT
+ *
+ * @param   *pstParams [in] LX_PE_CMG_SAT_GAIN_LUT_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetSaturationGainLUT(LX_PE_CMG_SAT_GAIN_LUT_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	#if 0
+	do {
+		CHECK_KNULL(pstParams);
+		if (PE_KDRV_VER_O20)
+		{
+			if (PE_CHECK_WIN0(pstParams->win_id))
+			{
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_18,	r_vsp_sat_gain_lut_x0, pstParams->x[0],
+														r_vsp_sat_gain_lut_y0, pstParams->y[0]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_17,	r_vsp_sat_gain_lut_x1, pstParams->x[1],
+														r_vsp_sat_gain_lut_y1, pstParams->y[1]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_16,	r_vsp_sat_gain_lut_x2, pstParams->x[2],
+														r_vsp_sat_gain_lut_y2, pstParams->y[2]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_15,	r_vsp_sat_gain_lut_x3, pstParams->x[3],
+														r_vsp_sat_gain_lut_y3, pstParams->y[3]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_14,	r_vsp_sat_gain_lut_x4, pstParams->x[4],
+														r_vsp_sat_gain_lut_y4, pstParams->y[4]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_13,	r_vsp_sat_gain_lut_x5, pstParams->x[5],
+														r_vsp_sat_gain_lut_y5, pstParams->y[5]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_12,	r_vsp_sat_gain_lut_x6, pstParams->x[6],
+														r_vsp_sat_gain_lut_y6, pstParams->y[6]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_11,	r_vsp_sat_gain_lut_x7, pstParams->x[7],
+														r_vsp_sat_gain_lut_y7, pstParams->y[7]);
+				PE_CE_PE1_O20_QRd02(pe1_vspyc_ctrl_10,	r_vsp_sat_gain_lut_x8, pstParams->x[8],
+														r_vsp_sat_gain_lut_y8, pstParams->y[8]);
+				PE_CMG_HW_O20_DBG_PRINT(
+					"[%s.%d][wid:%d] RD) X: %08x %08x %08x %08x %08x %08x %08x %08x %08x\n"
+					"\t\tY: %08x %08x %08x %08x %08x %08x %08x %08x %08x",
+					__F__, __L__, pstParams->win_id,
+					pstParams->x[0], pstParams->x[1], pstParams->x[2],
+					pstParams->x[3], pstParams->x[4], pstParams->x[5],
+					pstParams->x[6], pstParams->x[7], pstParams->x[8],
+					pstParams->y[0], pstParams->y[1], pstParams->y[2],
+					pstParams->y[3], pstParams->y[4], pstParams->y[5],
+					pstParams->y[6], pstParams->y[7], pstParams->y[8]);
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	#endif
+	#endif
+	return ret;
+}
+
+/**
+ * Sets the cen region control registers
+ *
+ * @param   i_ui32RegionNum 	[in] UINT32
+ * @param   i_ui32wdata 		[in] UINT32
+ * @return  void
+ * @see
+ * @author
+ */
+static void PE_CMG_HW_O20_SetCenRegionCtrlReg(UINT32 i_ui32RegionNum, UINT32 i_ui32wdata)
+{
+	#ifdef PE_HW_O20_BRINGUP
+	switch(i_ui32RegionNum)
+	{
+		case 0:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_04,	reg_master_gain_cr0,	i_ui32wdata);
+			break;
+		case 1:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_04,	reg_master_gain_cr1,	i_ui32wdata);
+			break;
+		case 2:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_04,	reg_master_gain_cr2,	i_ui32wdata);
+			break;
+		case 3:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_04,	reg_master_gain_cr3,	i_ui32wdata);
+			break;
+		case 4:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_05,	reg_master_gain_cr4,	i_ui32wdata);
+			break;
+		case 5:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_05,	reg_master_gain_cr5,	i_ui32wdata);
+			break;
+		case 6:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_05,	reg_master_gain_cr6,	i_ui32wdata);
+			break;
+		case 7:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_05,	reg_master_gain_cr7,	i_ui32wdata);
+			break;
+		case 8:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_06,	reg_master_gain_cr8,	i_ui32wdata);
+			break;
+		case 9:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_06,	reg_master_gain_cr9,	i_ui32wdata);
+			break;
+		case 10:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_06,	reg_master_gain_cr10,	i_ui32wdata);
+			break;
+		case 11:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_06,	reg_master_gain_cr11,	i_ui32wdata);
+			break;
+		case 12:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_07,	reg_master_gain_cr12,	i_ui32wdata);
+			break;
+		case 13:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_07,	reg_master_gain_cr13,	i_ui32wdata);
+			break;
+		case 14:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_07,	reg_master_gain_cr14,	i_ui32wdata);
+			break;
+		case 15:
+		default:
+			PE_CEO_PE1_O20_QWr01(pe1_cen_ctrl_07,	reg_master_gain_cr15,	i_ui32wdata);
+			break;
+	}
+	#if 1	/* F20_APB */
+	do {
+		switch(i_ui32RegionNum)
+		{
+			case 0:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_04.reg_master_gain_cr0,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_04.udata32);
+				break;
+			case 1:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_04.reg_master_gain_cr1,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_04.udata32);
+				break;
+			case 2:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_04.reg_master_gain_cr2,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_04.udata32);
+				break;
+			case 3:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_04.reg_master_gain_cr3,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_04.udata32);
+				break;
+			case 4:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_05.reg_master_gain_cr4,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_05.udata32);
+				break;
+			case 5:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_05.reg_master_gain_cr5,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_05.udata32);
+				break;
+			case 6:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_05.reg_master_gain_cr6,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_05.udata32);
+				break;
+			case 7:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_05.reg_master_gain_cr7,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_05.udata32);
+				break;
+			case 8:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_06.reg_master_gain_cr8,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_06.udata32);
+				break;
+			case 9:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_06.reg_master_gain_cr9,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_06.udata32);
+				break;
+			case 10:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_06.reg_master_gain_cr10,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_06.udata32);
+				break;
+			case 11:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_06.reg_master_gain_cr11,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_06.udata32);
+				break;
+			case 12:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_07.reg_master_gain_cr12,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_07.udata32);
+				break;
+			case 13:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_07.reg_master_gain_cr13,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_07.udata32);
+				break;
+			case 14:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_07.reg_master_gain_cr14,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_07.udata32);
+				break;
+			case 15:
+			default:
+				PE_CHPI_APB0_F20_Wr(cen1.pe1_cen_ctrl_07.reg_master_gain_cr15,i_ui32wdata);
+				PE_CHPI_APB0_F20_WrFL(cen1.pe1_cen_ctrl_07.udata32);
+				break;
+		}
+		PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CEN1);
+	} while(0);
+	#endif
+	#endif /*PE_HW_O20_BRINGUP*/
+	return;
+}
+
+/**
+ * Gets CE region gain register value
+ *
+ * @param   i_ui32RegionNum 	[in] 	UINT32
+ * @param   *o_ui32RegGain		[out] 	UINT32
+ * @return  void
+ * @see
+ * @author
+ */
+static void PE_CMG_HW_O20_CEGetRegGain(UINT32 i_ui32RegionNum, UINT32 *o_ui32RegGain)
+{
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 re_mgain = 0;
+
+	switch(i_ui32RegionNum)
+	{
+		case 0:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr0,	re_mgain);
+			break;
+		case 1:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr1,	re_mgain);
+			break;
+		case 2:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr2,	re_mgain);
+			break;
+		case 3:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr3,	re_mgain);
+			break;
+		case 4:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr4,	re_mgain);
+			break;
+		case 5:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr5,	re_mgain);
+			break;
+		case 6:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr6,	re_mgain);
+			break;
+		case 7:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr7,	re_mgain);
+			break;
+		case 8:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr8,	re_mgain);
+			break;
+		case 9:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr9,	re_mgain);
+			break;
+		case 10:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr10,	re_mgain);
+			break;
+		case 11:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr11,	re_mgain);
+			break;
+		case 12:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr12,	re_mgain);
+			break;
+		case 13:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr13,	re_mgain);
+			break;
+		case 14:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr14,	re_mgain);
+			break;
+		case 15:
+		default:
+			PE_CE_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr15,	re_mgain);
+			break;
+	}
+
+	*o_ui32RegGain = re_mgain;
+	#endif /*PE_HW_O20_BRINGUP*/
+	return;
+}
+
+/**
+ * Gets CO region master gain register value
+ *
+ * @param   i_ui32RegionNum 	[in] 	UINT32
+ * @param   *o_ui32RegGain		[out] 	UINT32
+ * @return  void
+ * @see
+ * @author
+ */
+static void PE_CMG_HW_O20_COGetRegGain(UINT32 i_ui32RegionNum, UINT32 *o_ui32RegGain)
+{
+	#ifdef PE_HW_O20_BRINGUP
+
+	UINT32 re_mgain = 0;
+
+	switch(i_ui32RegionNum)
+	{
+		case 0:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr0,	re_mgain);
+			break;
+		case 1:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr1,	re_mgain);
+			break;
+		case 2:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr2,	re_mgain);
+			break;
+		case 3:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_04,	reg_master_gain_cr3,	re_mgain);
+			break;
+		case 4:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr4,	re_mgain);
+			break;
+		case 5:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr5,	re_mgain);
+			break;
+		case 6:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr6,	re_mgain);
+			break;
+		case 7:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_05,	reg_master_gain_cr7,	re_mgain);
+			break;
+		case 8:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr8,	re_mgain);
+			break;
+		case 9:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr9,	re_mgain);
+			break;
+		case 10:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr10,	re_mgain);
+			break;
+		case 11:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_06,	reg_master_gain_cr11,	re_mgain);
+			break;
+		case 12:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr12,	re_mgain);
+			break;
+		case 13:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr13,	re_mgain);
+			break;
+		case 14:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr14,	re_mgain);
+			break;
+		case 15:
+		default:
+			PE_CO_PE1_O20_QRd01(pe1_cen_ctrl_07,	reg_master_gain_cr15,	re_mgain);
+			break;
+	}
+
+	*o_ui32RegGain = re_mgain;
+	#endif /*PE_HW_O20_BRINGUP*/
+	return;
+}
+/**
+ * set Ext/Inner Pattern
+ *
+ * @param	*pstParams [in] LX_PE_CMG_EXT_PATTERN_INFO_T
+ * @return	OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetExtInnerPattern(LX_PE_CMG_EXT_PATTERN_INFO_T *p)
+{
+	int ret = RET_OK;
+	UINT32 iter, ia_data;
+
+#define PE_CMG_HW_O20_UHD_H_MAX			3840
+#define PE_CMG_HW_O20_UHD_V_MAX			2160
+
+	do {
+		CHECK_KNULL(p);
+		if (PE_KDRV_VER_O20)
+		{
+ 			if (PE_CHECK_WIN0(p->win_id))
+			{
+				PE_CMG_HW_O20_DBG_PRINT("set[%d] bOnOff:%d, eMode:%d\n"\
+				" stGradInfo: numGrad   : %d\n" \
+				"             eGradMode : %d\n" \
+				" stWinboxInfo: u8NumWin: %d\n", \
+				p->win_id, p->bOnOff, p->eMode, p->stGradInfo.numGrad, p->stGradInfo.eGradMode,\
+				p->stWinboxInfo.u8NumWin);
+
+				PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_00, 0x00000000);
+				PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_00);
+				PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_01, 0x00000000);
+				PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_01);
+				PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_02, 0x00000000);
+				PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_02);
+				PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_03, 0x00000000);
+				PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_03);
+				PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00000000);
+				PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+				OS_MsecSleep(30);
+
+				if (!p->bOnOff)
+					break;
+
+				if (p->eMode == LX_PE_EXT_PATTERN_WINBOX)
+				{
+					if (p->stWinboxInfo.u8NumWin > LX_PE_MAX_EXT_PATTERN_WINBOX)
+						p->stWinboxInfo.u8NumWin = LX_PE_MAX_EXT_PATTERN_WINBOX;
+
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_00, 0x87078000);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_00);
+
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001000);	// patch color
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stWinboxInfo.u8NumWin; iter++)
+					{
+						ia_data = p->stWinboxInfo.stWinBoxAttr[iter].fill_R |
+							(p->stWinboxInfo.stWinBoxAttr[iter].fill_B << 10) |
+							(p->stWinboxInfo.stWinBoxAttr[iter].fill_G << 20);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001020);	// patch start (x,y)
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stWinboxInfo.u8NumWin; iter++)
+					{
+						ia_data = ((p->stWinboxInfo.stWinBoxAttr[iter].x / 2) << 16) |
+							(p->stWinboxInfo.stWinBoxAttr[iter].y);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001040);	// patch end (x,y)
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stWinboxInfo.u8NumWin; iter++)
+					{
+						ia_data = (((p->stWinboxInfo.stWinBoxAttr[iter].x + p->stWinboxInfo.stWinBoxAttr[iter].w) / 2) << 16) |
+							(p->stWinboxInfo.stWinBoxAttr[iter].y + p->stWinboxInfo.stWinBoxAttr[iter].h);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+					if (p->stWinboxInfo.u8NumWin > 0)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_0_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 1)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_1_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 2)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_2_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 3)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_3_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 4)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_4_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 5)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_5_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 6)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_6_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 7)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_7_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 8)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_8_en, 1);
+					if (p->stWinboxInfo.u8NumWin > 9)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_02, patch_9_en, 1);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_02);
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_03, 0x00000000);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_03);
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_00, 0x87078001);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_00);
+				}
+				else if (p->eMode == LX_PE_EXT_PATTERN_GRADATION)
+				{
+					if (p->stGradInfo.numGrad > LX_PE_MAX_EXT_PATTERN_GRADATION_LINE)
+						p->stGradInfo.numGrad = LX_PE_MAX_EXT_PATTERN_GRADATION_LINE;
+					if (p->stGradInfo.numGrad % 2)
+					{
+						PE_CMG_HW_O20_DBG_PRINT("ERROR.\n");
+						ret = RET_ERROR;
+						break;
+					}
+
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_00, 0x87078002);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_00);
+
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001060);	// gradation start color
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stGradInfo.numGrad; iter++)
+					{
+						ia_data = p->stGradInfo.stLineAttr[iter].start_R |
+							(p->stGradInfo.stLineAttr[iter].start_B << 10) |
+							(p->stGradInfo.stLineAttr[iter].start_G << 20);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001064);	// gradation step color
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stGradInfo.numGrad; iter++)
+					{
+						ia_data = p->stGradInfo.stLineAttr[iter].step_R |
+							(p->stGradInfo.stLineAttr[iter].step_B << 10) |
+							(p->stGradInfo.stLineAttr[iter].step_G << 20);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ia_ctrl, 0x00001068);	// gradation region size
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_ctrl);
+					for (iter = 0; iter < p->stGradInfo.numGrad; iter++)
+					{
+						if (p->stGradInfo.eGradMode == LX_PE_EXT_PATTERN_GRADATION_DIRECTION_HORIZONTAL)
+							ia_data = ((PE_CMG_HW_O20_UHD_V_MAX) / p->stGradInfo.numGrad) * (iter + 1);
+						else
+							ia_data = ((PE_CMG_HW_O20_UHD_H_MAX / 2) / p->stGradInfo.numGrad) * (iter + 1);
+						PE_CEO_PE1_O20_Wr(pe1_tpg_ia_data, ia_data);
+						PE_CEO_PE1_O20_WrFL(pe1_tpg_ia_data);
+					}
+
+					PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_direction, p->stGradInfo.eGradMode ? 0 : 1);
+					PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_stride, p->stGradInfo.stLineAttr[0].strideSize);
+					if (p->stGradInfo.numGrad > 0)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_bar_0_en, 1);
+					if (p->stGradInfo.numGrad > 1)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_bar_1_en, 1);
+					if (p->stGradInfo.numGrad > 2)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_bar_2_en, 1);
+					if (p->stGradInfo.numGrad > 3)
+						PE_CEO_PE1_O20_Wr01(pe1_tpg_ctrl_01, gradation_bar_3_en, 1);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_01);
+					PE_CEO_PE1_O20_Wr(pe1_tpg_ctrl_00, 0x87078003);
+					PE_CEO_PE1_O20_WrFL(pe1_tpg_ctrl_00);
+				}
+				else
+				{
+					PE_CMG_HW_O20_DBG_PRINT("ERROR.\n");	ret = RET_ERROR;
+				}
+			}
+			OS_MsecSleep(30);
+ 		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	} while (0);
+	return ret;
+}
+/**
+ * set clear white table setting
+ *
+ * @param   *pstParams [in] LX_PE_CMG_CW_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetClearWhiteTableCtrl(LX_PE_CMG_CW_TABLE_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	do{
+		CHECK_KNULL(pstParams);
+		PE_CMG_HW_O20_DBG_PRINT("set[%d] \n"\
+			" hue_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" hue_y: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" sat_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" sat_y: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" val_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" val_y: %d, %d, %d, %d, %d, %d, %d, %d,\n", \
+			pstParams->win_id, \
+			pstParams->cw_hue_x[0], pstParams->cw_hue_x[1], pstParams->cw_hue_x[2], pstParams->cw_hue_x[3], \
+			pstParams->cw_hue_x[4], pstParams->cw_hue_x[5], pstParams->cw_hue_x[6], pstParams->cw_hue_x[7], \
+			pstParams->cw_hue_y[0], pstParams->cw_hue_y[1], pstParams->cw_hue_y[2], pstParams->cw_hue_y[3], \
+			pstParams->cw_hue_y[4], pstParams->cw_hue_y[5], pstParams->cw_hue_y[6], pstParams->cw_hue_y[7], \
+			pstParams->cw_sat_x[0], pstParams->cw_sat_x[1], pstParams->cw_sat_x[2], pstParams->cw_sat_x[3], \
+			pstParams->cw_sat_x[4], pstParams->cw_sat_x[5], pstParams->cw_sat_x[6], pstParams->cw_sat_x[7], \
+			pstParams->cw_sat_y[0], pstParams->cw_sat_y[1], pstParams->cw_sat_y[2], pstParams->cw_sat_y[3], \
+			pstParams->cw_sat_y[4], pstParams->cw_sat_y[5], pstParams->cw_sat_y[6], pstParams->cw_sat_y[7], \
+			pstParams->cw_val_x[0], pstParams->cw_val_x[1], pstParams->cw_val_x[2], pstParams->cw_val_x[3], \
+			pstParams->cw_val_x[4], pstParams->cw_val_x[5], pstParams->cw_val_x[6], pstParams->cw_val_x[7], \
+			pstParams->cw_val_y[0], pstParams->cw_val_y[1], pstParams->cw_val_y[2], pstParams->cw_val_y[3], \
+			pstParams->cw_val_y[4], pstParams->cw_val_y[5], pstParams->cw_val_y[6], pstParams->cw_val_y[7]);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				/* hue */
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_00, reg_crgn_hue_gain_y0,	GET_BITS(pstParams->cw_hue_y[0],0,8),\
+														   reg_crgn_hue_gain_x0,	GET_BITS(pstParams->cw_hue_x[0],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_01, reg_crgn_hue_gain_y1,	GET_BITS(pstParams->cw_hue_y[1],0,8),\
+														   reg_crgn_hue_gain_x1,	GET_BITS(pstParams->cw_hue_x[1],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_02, reg_crgn_hue_gain_y2,	GET_BITS(pstParams->cw_hue_y[2],0,8),\
+														   reg_crgn_hue_gain_x2,	GET_BITS(pstParams->cw_hue_x[2],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_03, reg_crgn_hue_gain_y3,	GET_BITS(pstParams->cw_hue_y[3],0,8),\
+														   reg_crgn_hue_gain_x3,	GET_BITS(pstParams->cw_hue_x[3],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_04, reg_crgn_hue_gain_y4,	GET_BITS(pstParams->cw_hue_y[4],0,8),\
+														   reg_crgn_hue_gain_x4,	GET_BITS(pstParams->cw_hue_x[4],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_05, reg_crgn_hue_gain_y5,	GET_BITS(pstParams->cw_hue_y[5],0,8),\
+														   reg_crgn_hue_gain_x5,	GET_BITS(pstParams->cw_hue_x[5],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_06, reg_crgn_hue_gain_y6,	GET_BITS(pstParams->cw_hue_y[6],0,8),\
+														   reg_crgn_hue_gain_x6,	GET_BITS(pstParams->cw_hue_x[6],0,10));
+				PE_CEO2_PE1_O20_QWr02(pe1_cw_crgn_ctrl_07, reg_crgn_hue_gain_y7,	GET_BITS(pstParams->cw_hue_y[7],0,8),\
+														   reg_crgn_hue_gain_x7,	GET_BITS(pstParams->cw_hue_x[7],0,10));
+				/* sat */
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_08, reg_crgn_sat_gain_y0,	GET_BITS(pstParams->cw_sat_y[0],0,8),\
+														   reg_crgn_sat_gain_x0,	GET_BITS(pstParams->cw_sat_x[0],0,8),\
+														   reg_crgn_sat_gain_y1,	GET_BITS(pstParams->cw_sat_y[1],0,8),\
+														   reg_crgn_sat_gain_x1,	GET_BITS(pstParams->cw_sat_x[1],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_09, reg_crgn_sat_gain_y2,	GET_BITS(pstParams->cw_sat_y[2],0,8),\
+														   reg_crgn_sat_gain_x2,	GET_BITS(pstParams->cw_sat_x[2],0,8),\
+														   reg_crgn_sat_gain_y3,	GET_BITS(pstParams->cw_sat_y[3],0,8),\
+														   reg_crgn_sat_gain_x3,	GET_BITS(pstParams->cw_sat_x[3],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_10, reg_crgn_sat_gain_y4,	GET_BITS(pstParams->cw_sat_y[4],0,8),\
+														   reg_crgn_sat_gain_x4,	GET_BITS(pstParams->cw_sat_x[4],0,8),\
+														   reg_crgn_sat_gain_y5,	GET_BITS(pstParams->cw_sat_y[5],0,8),\
+														   reg_crgn_sat_gain_x5,	GET_BITS(pstParams->cw_sat_x[5],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_11, reg_crgn_sat_gain_y6,	GET_BITS(pstParams->cw_sat_y[6],0,8),\
+														   reg_crgn_sat_gain_x6,	GET_BITS(pstParams->cw_sat_x[6],0,8),\
+														   reg_crgn_sat_gain_y7,	GET_BITS(pstParams->cw_sat_y[7],0,8),\
+														   reg_crgn_sat_gain_x7,	GET_BITS(pstParams->cw_sat_x[7],0,8));
+				/* val */
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_12, reg_crgn_val_gain_y0,	GET_BITS(pstParams->cw_val_y[0],0,8),\
+														   reg_crgn_val_gain_x0,	GET_BITS(pstParams->cw_val_x[0],0,8),\
+														   reg_crgn_val_gain_y1,	GET_BITS(pstParams->cw_val_y[1],0,8),\
+														   reg_crgn_val_gain_x1,	GET_BITS(pstParams->cw_val_x[1],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_13, reg_crgn_val_gain_y2,	GET_BITS(pstParams->cw_val_y[2],0,8),\
+														   reg_crgn_val_gain_x2,	GET_BITS(pstParams->cw_val_x[2],0,8),\
+														   reg_crgn_val_gain_y3,	GET_BITS(pstParams->cw_val_y[3],0,8),\
+														   reg_crgn_val_gain_x3,	GET_BITS(pstParams->cw_val_x[3],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_14, reg_crgn_val_gain_y4,	GET_BITS(pstParams->cw_val_y[4],0,8),\
+														   reg_crgn_val_gain_x4,	GET_BITS(pstParams->cw_val_x[4],0,8),\
+														   reg_crgn_val_gain_y5,	GET_BITS(pstParams->cw_val_y[5],0,8),\
+														   reg_crgn_val_gain_x5,	GET_BITS(pstParams->cw_val_x[5],0,8));
+				PE_CEO2_PE1_O20_QWr04(pe1_cw_crgn_ctrl_15, reg_crgn_val_gain_y6,	GET_BITS(pstParams->cw_val_y[6],0,8),\
+														   reg_crgn_val_gain_x6,	GET_BITS(pstParams->cw_val_x[6],0,8),\
+														   reg_crgn_val_gain_y7,	GET_BITS(pstParams->cw_val_y[7],0,8),\
+														   reg_crgn_val_gain_x7,	GET_BITS(pstParams->cw_val_x[7],0,8));
+				#if 1	/* F20_APB */
+				do {
+					/* hue */
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_00.reg_crgn_hue_gain_y0, GET_BITS(pstParams->cw_hue_y[0],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_00.reg_crgn_hue_gain_x0, GET_BITS(pstParams->cw_hue_x[0],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_01.reg_crgn_hue_gain_y1, GET_BITS(pstParams->cw_hue_y[1],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_01.reg_crgn_hue_gain_x1, GET_BITS(pstParams->cw_hue_x[1],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_02.reg_crgn_hue_gain_y2, GET_BITS(pstParams->cw_hue_y[2],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_02.reg_crgn_hue_gain_x2, GET_BITS(pstParams->cw_hue_x[2],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_03.reg_crgn_hue_gain_y3, GET_BITS(pstParams->cw_hue_y[3],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_03.reg_crgn_hue_gain_x3, GET_BITS(pstParams->cw_hue_x[3],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_04.reg_crgn_hue_gain_y4, GET_BITS(pstParams->cw_hue_y[4],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_04.reg_crgn_hue_gain_x4, GET_BITS(pstParams->cw_hue_x[4],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_05.reg_crgn_hue_gain_y5, GET_BITS(pstParams->cw_hue_y[5],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_05.reg_crgn_hue_gain_x5, GET_BITS(pstParams->cw_hue_x[5],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_06.reg_crgn_hue_gain_y6, GET_BITS(pstParams->cw_hue_y[6],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_06.reg_crgn_hue_gain_x6, GET_BITS(pstParams->cw_hue_x[6],0,10));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_07.reg_crgn_hue_gain_y7, GET_BITS(pstParams->cw_hue_y[7],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_07.reg_crgn_hue_gain_x7, GET_BITS(pstParams->cw_hue_x[7],0,10));
+					/* sat */
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_08.reg_crgn_sat_gain_y0, GET_BITS(pstParams->cw_sat_y[0],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_08.reg_crgn_sat_gain_x0, GET_BITS(pstParams->cw_sat_x[0],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_08.reg_crgn_sat_gain_y1, GET_BITS(pstParams->cw_sat_y[1],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_08.reg_crgn_sat_gain_x1, GET_BITS(pstParams->cw_sat_x[1],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_09.reg_crgn_sat_gain_y2, GET_BITS(pstParams->cw_sat_y[2],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_09.reg_crgn_sat_gain_x2, GET_BITS(pstParams->cw_sat_x[2],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_09.reg_crgn_sat_gain_y3, GET_BITS(pstParams->cw_sat_y[3],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_09.reg_crgn_sat_gain_x3, GET_BITS(pstParams->cw_sat_x[3],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_10.reg_crgn_sat_gain_y4, GET_BITS(pstParams->cw_sat_y[4],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_10.reg_crgn_sat_gain_x4, GET_BITS(pstParams->cw_sat_x[4],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_10.reg_crgn_sat_gain_y5, GET_BITS(pstParams->cw_sat_y[5],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_10.reg_crgn_sat_gain_x5, GET_BITS(pstParams->cw_sat_x[5],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_11.reg_crgn_sat_gain_y6, GET_BITS(pstParams->cw_sat_y[6],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_11.reg_crgn_sat_gain_x6, GET_BITS(pstParams->cw_sat_x[6],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_11.reg_crgn_sat_gain_y7, GET_BITS(pstParams->cw_sat_y[7],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_11.reg_crgn_sat_gain_x7, GET_BITS(pstParams->cw_sat_x[7],0,8));
+					/* val */
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_12.reg_crgn_val_gain_y0, GET_BITS(pstParams->cw_val_y[0],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_12.reg_crgn_val_gain_x0, GET_BITS(pstParams->cw_val_x[0],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_12.reg_crgn_val_gain_y1, GET_BITS(pstParams->cw_val_y[1],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_12.reg_crgn_val_gain_x1, GET_BITS(pstParams->cw_val_x[1],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_13.reg_crgn_val_gain_y2, GET_BITS(pstParams->cw_val_y[2],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_13.reg_crgn_val_gain_x2, GET_BITS(pstParams->cw_val_x[2],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_13.reg_crgn_val_gain_y3, GET_BITS(pstParams->cw_val_y[3],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_13.reg_crgn_val_gain_x3, GET_BITS(pstParams->cw_val_x[3],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_14.reg_crgn_val_gain_y4, GET_BITS(pstParams->cw_val_y[4],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_14.reg_crgn_val_gain_x4, GET_BITS(pstParams->cw_val_x[4],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_14.reg_crgn_val_gain_y5, GET_BITS(pstParams->cw_val_y[5],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_14.reg_crgn_val_gain_x5, GET_BITS(pstParams->cw_val_x[5],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_15.reg_crgn_val_gain_y6, GET_BITS(pstParams->cw_val_y[6],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_15.reg_crgn_val_gain_x6, GET_BITS(pstParams->cw_val_x[6],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_15.reg_crgn_val_gain_y7, GET_BITS(pstParams->cw_val_y[7],0,8));
+					PE_CHPI_APB0_F20_Wr(cw0.pe1_cw_crgn_ctrl_15.reg_crgn_val_gain_x7, GET_BITS(pstParams->cw_val_x[7],0,8));
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_00.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_01.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_02.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_03.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_04.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_05.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_06.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_07.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_08.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_09.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_10.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_11.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_12.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_13.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_14.udata32);
+					PE_CHPI_APB0_F20_WrFL(cw0.pe1_cw_crgn_ctrl_15.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CW0);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set clear white table setting
+ *
+ * @param   *pstParams [in] LX_PE_CMG_CW_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetVspccCtrl(LX_PE_CMG_VSPCC_CTRL_T *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	PE_CMG_HW_O20_SETTINGS_T *pInfo=&_g_pe_cmg_hw_o20_info;
+	do{
+		CHECK_KNULL(pstParams);
+		PE_CMG_HW_O20_DBG_PRINT("set[%d] \n"\
+			"satTarget : %d\n" \
+			"objMapGainLUT_x : %d, %d, %d, %d" \
+			"objMapGainLUT_y : %d, %d, %d, %d" \
+			"faceMapGainLUT_x : %d, %d, %d, %d" \
+			"faceMapGainLUT_y : %d, %d, %d, %d" \
+			" hue_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" hue_g: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" sat_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" sat_g: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" val_x: %d, %d, %d, %d, %d, %d, %d, %d,\n" \
+			" val_g: %d, %d, %d, %d, %d, %d, %d, %d,\n", \
+			pstParams->win_id, \
+			pstParams->satTarget,\
+			pstParams->objMapGainLUT_x[0],pstParams->objMapGainLUT_x[1],pstParams->objMapGainLUT_x[2],pstParams->objMapGainLUT_x[3],\
+			pstParams->objMapGainLUT_y[0],pstParams->objMapGainLUT_y[1],pstParams->objMapGainLUT_y[2],pstParams->objMapGainLUT_y[3],\
+			pstParams->faceMapGainLUT_x[0],pstParams->faceMapGainLUT_x[1],pstParams->faceMapGainLUT_x[2],pstParams->faceMapGainLUT_x[3],\
+			pstParams->faceMapGainLUT_y[0],pstParams->faceMapGainLUT_y[1],pstParams->faceMapGainLUT_y[2],pstParams->faceMapGainLUT_y[3],\
+			pstParams->hue_x[0], pstParams->hue_x[1], pstParams->hue_x[2], pstParams->hue_x[3], \
+			pstParams->hue_x[4], pstParams->hue_x[5], pstParams->hue_x[6], pstParams->hue_x[7], \
+			pstParams->hue_g[0], pstParams->hue_g[1], pstParams->hue_g[2], pstParams->hue_g[3], \
+			pstParams->hue_g[4], pstParams->hue_g[5], pstParams->hue_g[6], pstParams->hue_g[7], \
+			pstParams->sat_x[0], pstParams->sat_x[1], pstParams->sat_x[2], pstParams->sat_x[3], \
+			pstParams->sat_x[4], pstParams->sat_x[5], pstParams->sat_x[6], pstParams->sat_x[7], \
+			pstParams->sat_g[0], pstParams->sat_g[1], pstParams->sat_g[2], pstParams->sat_g[3], \
+			pstParams->sat_g[4], pstParams->sat_g[5], pstParams->sat_g[6], pstParams->sat_g[7], \
+			pstParams->val_x[0], pstParams->val_x[1], pstParams->val_x[2], pstParams->val_x[3], \
+			pstParams->val_x[4], pstParams->val_x[5], pstParams->val_x[6], pstParams->val_x[7], \
+			pstParams->val_g[0], pstParams->val_g[1], pstParams->val_g[2], pstParams->val_g[3], \
+			pstParams->val_g[4], pstParams->val_g[5], pstParams->val_g[6], pstParams->val_g[7]);
+		if(PE_KDRV_VER_O20)
+		{
+			if(PE_CHECK_WIN0(pstParams->win_id))
+			{
+				/* to adjust target_sat according to vsp saturation see */
+				//PE_CEO_PE1_O20_QWr01(pe1_vspyc_ctrl_01, saturation_target, GET_BITS(pstParams->satTarget, 0, 8));
+				pInfo->org_target_sat = pstParams->satTarget;
+				/* objMapGainLUT_y,x */
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_cc_ctrl_01,	reg_objt_gain_y0, GET_BITS(pstParams->objMapGainLUT_y[0], 0, 8),\
+															reg_objt_gain_x0, GET_BITS(pstParams->objMapGainLUT_x[0], 0, 8),\
+															reg_objt_gain_y1, GET_BITS(pstParams->objMapGainLUT_y[1], 0, 8),\
+															reg_objt_gain_x1, GET_BITS(pstParams->objMapGainLUT_x[1], 0, 8));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_cc_ctrl_02,	reg_objt_gain_y2, GET_BITS(pstParams->objMapGainLUT_y[2], 0, 8),\
+															reg_objt_gain_x2, GET_BITS(pstParams->objMapGainLUT_x[2], 0, 8),\
+															reg_objt_gain_y3, GET_BITS(pstParams->objMapGainLUT_y[3], 0, 8),\
+															reg_objt_gain_x3, GET_BITS(pstParams->objMapGainLUT_x[3], 0, 8));
+				/* faceMapGainLUT_y,x */
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_cc_ctrl_03,	reg_face_gain_y0, GET_BITS(pstParams->faceMapGainLUT_y[0], 0, 8),\
+															reg_face_gain_x0, GET_BITS(pstParams->faceMapGainLUT_x[0], 0, 8),\
+															reg_face_gain_y1, GET_BITS(pstParams->faceMapGainLUT_y[1], 0, 8),\
+															reg_face_gain_x1, GET_BITS(pstParams->faceMapGainLUT_x[1], 0, 8));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_cc_ctrl_04,	reg_face_gain_y2, GET_BITS(pstParams->faceMapGainLUT_y[2], 0, 8),\
+															reg_face_gain_x2, GET_BITS(pstParams->faceMapGainLUT_x[2], 0, 8),\
+															reg_face_gain_y3, GET_BITS(pstParams->faceMapGainLUT_y[3], 0, 8),\
+															reg_face_gain_x3, GET_BITS(pstParams->faceMapGainLUT_x[3], 0, 8));
+				/* hue_g,x */
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_00,	reg_crgn_hue_gain_y0, GET_BITS(pstParams->hue_g[0], 0, 8),\
+															reg_crgn_hue_gain_x0, GET_BITS(pstParams->hue_x[0], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_01,	reg_crgn_hue_gain_y1, GET_BITS(pstParams->hue_g[1], 0, 8),\
+															reg_crgn_hue_gain_x1, GET_BITS(pstParams->hue_x[1], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_02,	reg_crgn_hue_gain_y2, GET_BITS(pstParams->hue_g[2], 0, 8),\
+															reg_crgn_hue_gain_x2, GET_BITS(pstParams->hue_x[2], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_03,	reg_crgn_hue_gain_y3, GET_BITS(pstParams->hue_g[3], 0, 8),\
+															reg_crgn_hue_gain_x3, GET_BITS(pstParams->hue_x[3], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_04,	reg_crgn_hue_gain_y4, GET_BITS(pstParams->hue_g[4], 0, 8),\
+															reg_crgn_hue_gain_x4, GET_BITS(pstParams->hue_x[4], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_05,	reg_crgn_hue_gain_y5, GET_BITS(pstParams->hue_g[5], 0, 8),\
+															reg_crgn_hue_gain_x5, GET_BITS(pstParams->hue_x[5], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_06,	reg_crgn_hue_gain_y6, GET_BITS(pstParams->hue_g[6], 0, 8),\
+															reg_crgn_hue_gain_x6, GET_BITS(pstParams->hue_x[6], 0, 10));
+				PE_CEO2_PE1_O20_QWr02(pe1_vsp_crgn_ctrl_07,	reg_crgn_hue_gain_y7, GET_BITS(pstParams->hue_g[7], 0, 8),\
+															reg_crgn_hue_gain_x7, GET_BITS(pstParams->hue_x[7], 0, 10));
+				/* sat_g,x */
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_08,	reg_crgn_sat_gain_y0, GET_BITS(pstParams->sat_g[0], 0, 8),\
+															reg_crgn_sat_gain_x0, GET_BITS(pstParams->sat_x[0], 0, 7),\
+															reg_crgn_sat_gain_y1, GET_BITS(pstParams->sat_g[1], 0, 8),\
+															reg_crgn_sat_gain_x1, GET_BITS(pstParams->sat_x[1], 0, 7));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_09,	reg_crgn_sat_gain_y2, GET_BITS(pstParams->sat_g[2], 0, 8),\
+															reg_crgn_sat_gain_x2, GET_BITS(pstParams->sat_x[2], 0, 7),\
+															reg_crgn_sat_gain_y3, GET_BITS(pstParams->sat_g[3], 0, 8),\
+															reg_crgn_sat_gain_x3, GET_BITS(pstParams->sat_x[3], 0, 7));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_10,	reg_crgn_sat_gain_y4, GET_BITS(pstParams->sat_g[4], 0, 8),\
+															reg_crgn_sat_gain_x4, GET_BITS(pstParams->sat_x[4], 0, 7),\
+															reg_crgn_sat_gain_y5, GET_BITS(pstParams->sat_g[5], 0, 8),\
+															reg_crgn_sat_gain_x5, GET_BITS(pstParams->sat_x[5], 0, 7));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_11,	reg_crgn_sat_gain_y6, GET_BITS(pstParams->sat_g[6], 0, 8),\
+															reg_crgn_sat_gain_x6, GET_BITS(pstParams->sat_x[6], 0, 7),\
+															reg_crgn_sat_gain_y7, GET_BITS(pstParams->sat_g[7], 0, 8),\
+															reg_crgn_sat_gain_x7, GET_BITS(pstParams->sat_x[7], 0, 7));
+				/* val_g,x */
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_12,	reg_crgn_val_gain_y0, GET_BITS(pstParams->val_g[0], 0, 8),\
+															reg_crgn_val_gain_x0, GET_BITS(pstParams->val_x[0], 0, 8),\
+															reg_crgn_val_gain_y1, GET_BITS(pstParams->val_g[1], 0, 8),\
+															reg_crgn_val_gain_x1, GET_BITS(pstParams->val_x[1], 0, 8));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_13,	reg_crgn_val_gain_y2, GET_BITS(pstParams->val_g[2], 0, 8),\
+															reg_crgn_val_gain_x2, GET_BITS(pstParams->val_x[2], 0, 8),\
+															reg_crgn_val_gain_y3, GET_BITS(pstParams->val_g[3], 0, 8),\
+															reg_crgn_val_gain_x3, GET_BITS(pstParams->val_x[3], 0, 8));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_14,	reg_crgn_val_gain_y4, GET_BITS(pstParams->val_g[4], 0, 8),\
+															reg_crgn_val_gain_x4, GET_BITS(pstParams->val_x[4], 0, 8),\
+															reg_crgn_val_gain_y5, GET_BITS(pstParams->val_g[5], 0, 8),\
+															reg_crgn_val_gain_x5, GET_BITS(pstParams->val_x[5], 0, 8));
+				PE_CEO2_PE1_O20_QWr04(pe1_vsp_crgn_ctrl_15,	reg_crgn_val_gain_y6, GET_BITS(pstParams->val_g[6], 0, 8),\
+															reg_crgn_val_gain_x6, GET_BITS(pstParams->val_x[6], 0, 8),\
+															reg_crgn_val_gain_y7, GET_BITS(pstParams->val_g[7], 0, 8),\
+															reg_crgn_val_gain_x7, GET_BITS(pstParams->val_x[7], 0, 8));
+				#if 1	/* F20_APB */
+				do {
+					/* objMapGainLUT_y,x */
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_01.reg_objt_gain_y0, GET_BITS(pstParams->objMapGainLUT_y[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_01.reg_objt_gain_x0, GET_BITS(pstParams->objMapGainLUT_x[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_01.reg_objt_gain_y1, GET_BITS(pstParams->objMapGainLUT_y[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_01.reg_objt_gain_x1, GET_BITS(pstParams->objMapGainLUT_x[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_02.reg_objt_gain_y2, GET_BITS(pstParams->objMapGainLUT_y[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_02.reg_objt_gain_x2, GET_BITS(pstParams->objMapGainLUT_x[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_02.reg_objt_gain_y3, GET_BITS(pstParams->objMapGainLUT_y[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_02.reg_objt_gain_x3, GET_BITS(pstParams->objMapGainLUT_x[3], 0, 8));
+					/* faceMapGainLUT_y,x */
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_03.reg_face_gain_y0, GET_BITS(pstParams->faceMapGainLUT_y[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_03.reg_face_gain_x0, GET_BITS(pstParams->faceMapGainLUT_x[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_03.reg_face_gain_y1, GET_BITS(pstParams->faceMapGainLUT_y[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_03.reg_face_gain_x1, GET_BITS(pstParams->faceMapGainLUT_x[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_04.reg_face_gain_y2, GET_BITS(pstParams->faceMapGainLUT_y[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_04.reg_face_gain_x2, GET_BITS(pstParams->faceMapGainLUT_x[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_04.reg_face_gain_y3, GET_BITS(pstParams->faceMapGainLUT_y[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_cc_ctrl_04.reg_face_gain_x3, GET_BITS(pstParams->faceMapGainLUT_x[3], 0, 8));
+					/* hue_g,x */
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_00.reg_crgn_hue_gain_y0, GET_BITS(pstParams->hue_g[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_00.reg_crgn_hue_gain_x0, GET_BITS(pstParams->hue_x[0], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_01.reg_crgn_hue_gain_y1, GET_BITS(pstParams->hue_g[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_01.reg_crgn_hue_gain_x1, GET_BITS(pstParams->hue_x[1], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_02.reg_crgn_hue_gain_y2, GET_BITS(pstParams->hue_g[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_02.reg_crgn_hue_gain_x2, GET_BITS(pstParams->hue_x[2], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_03.reg_crgn_hue_gain_y3, GET_BITS(pstParams->hue_g[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_03.reg_crgn_hue_gain_x3, GET_BITS(pstParams->hue_x[3], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_04.reg_crgn_hue_gain_y4, GET_BITS(pstParams->hue_g[4], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_04.reg_crgn_hue_gain_x4, GET_BITS(pstParams->hue_x[4], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_05.reg_crgn_hue_gain_y5, GET_BITS(pstParams->hue_g[5], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_05.reg_crgn_hue_gain_x5, GET_BITS(pstParams->hue_x[5], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_06.reg_crgn_hue_gain_y6, GET_BITS(pstParams->hue_g[6], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_06.reg_crgn_hue_gain_x6, GET_BITS(pstParams->hue_x[6], 0, 10));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_07.reg_crgn_hue_gain_y7, GET_BITS(pstParams->hue_g[7], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_07.reg_crgn_hue_gain_x7, GET_BITS(pstParams->hue_x[7], 0, 10));
+					/* sat_g,x */
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_08.reg_crgn_sat_gain_y0, GET_BITS(pstParams->sat_g[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_08.reg_crgn_sat_gain_x0, GET_BITS(pstParams->sat_x[0], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_08.reg_crgn_sat_gain_y1, GET_BITS(pstParams->sat_g[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_08.reg_crgn_sat_gain_x1, GET_BITS(pstParams->sat_x[1], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_09.reg_crgn_sat_gain_y2, GET_BITS(pstParams->sat_g[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_09.reg_crgn_sat_gain_x2, GET_BITS(pstParams->sat_x[2], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_09.reg_crgn_sat_gain_y3, GET_BITS(pstParams->sat_g[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_09.reg_crgn_sat_gain_x3, GET_BITS(pstParams->sat_x[3], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_10.reg_crgn_sat_gain_y4, GET_BITS(pstParams->sat_g[4], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_10.reg_crgn_sat_gain_x4, GET_BITS(pstParams->sat_x[4], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_10.reg_crgn_sat_gain_y5, GET_BITS(pstParams->sat_g[5], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_10.reg_crgn_sat_gain_x5, GET_BITS(pstParams->sat_x[5], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_11.reg_crgn_sat_gain_y6, GET_BITS(pstParams->sat_g[6], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_11.reg_crgn_sat_gain_x6, GET_BITS(pstParams->sat_x[6], 0, 7));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_11.reg_crgn_sat_gain_y7, GET_BITS(pstParams->sat_g[7], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_11.reg_crgn_sat_gain_x7, GET_BITS(pstParams->sat_x[7], 0, 7));
+					/* val_g,x */
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_12.reg_crgn_val_gain_y0, GET_BITS(pstParams->val_g[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_12.reg_crgn_val_gain_x0, GET_BITS(pstParams->val_x[0], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_12.reg_crgn_val_gain_y1, GET_BITS(pstParams->val_g[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_12.reg_crgn_val_gain_x1, GET_BITS(pstParams->val_x[1], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_13.reg_crgn_val_gain_y2, GET_BITS(pstParams->val_g[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_13.reg_crgn_val_gain_x2, GET_BITS(pstParams->val_x[2], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_13.reg_crgn_val_gain_y3, GET_BITS(pstParams->val_g[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_13.reg_crgn_val_gain_x3, GET_BITS(pstParams->val_x[3], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_14.reg_crgn_val_gain_y4, GET_BITS(pstParams->val_g[4], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_14.reg_crgn_val_gain_x4, GET_BITS(pstParams->val_x[4], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_14.reg_crgn_val_gain_y5, GET_BITS(pstParams->val_g[5], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_14.reg_crgn_val_gain_x5, GET_BITS(pstParams->val_x[5], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_15.reg_crgn_val_gain_y6, GET_BITS(pstParams->val_g[6], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_15.reg_crgn_val_gain_x6, GET_BITS(pstParams->val_x[6], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_15.reg_crgn_val_gain_y7, GET_BITS(pstParams->val_g[7], 0, 8));
+					PE_CHPI_APB0_F20_Wr(vsp0.pe1_vsp_crgn_ctrl_15.reg_crgn_val_gain_x7, GET_BITS(pstParams->val_x[7], 0, 8));
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_cc_ctrl_01.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_cc_ctrl_02.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_cc_ctrl_03.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_cc_ctrl_04.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_00.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_01.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_02.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_03.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_04.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_05.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_06.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_07.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_08.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_09.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_10.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_11.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_12.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_13.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_14.udata32);
+					PE_CHPI_APB0_F20_WrFL(vsp0.pe1_vsp_crgn_ctrl_15.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_VSP0);
+				} while(0);
+				#endif
+
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");	ret = RET_OK;
+		}
+	}while(0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+}
+/**
+ * set dse ctrl
+ *
+ * @param   *pstParams [in] LX_PE_CMG_DSE_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetDseCtrl(void *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count = 0;
+	UINT32 color_out_gain, x_data, y_data;
+	UINT32 dse_lut_param[PE_CMG_HW_O20_LUT_STEP];
+	do {
+		CHECK_KNULL(pstParams);
+		if(PE_KDRV_VER_O20)
+		{
+			LX_PE_CMG_DSE_CTRL_T *pp=(LX_PE_CMG_DSE_CTRL_T *)pstParams;
+			PE_CHECK_WINID(pp->win_id);
+			color_out_gain = (pp->saturation_region_gain==0)? \
+				0x1:pp->saturation_region_gain;
+			PE_CMG_HW_O20_DBG_PRINT("[wid:%d] set: saturation_cr_mode:%d, saturation_region_gain:%d\n"\
+				"region sel:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",\
+				pp->win_id,\
+				pp->saturation_cr_mode, pp->saturation_region_gain, \
+				pp->region_onoff[0],pp->region_onoff[1],pp->region_onoff[2],pp->region_onoff[3],\
+				pp->region_onoff[4],pp->region_onoff[5],pp->region_onoff[6],pp->region_onoff[7],\
+				pp->region_onoff[8],pp->region_onoff[9],pp->region_onoff[10],pp->region_onoff[11],\
+				pp->region_onoff[12],pp->region_onoff[13],pp->region_onoff[14],pp->region_onoff[15]);
+			PE_CMG_HW_O20_DBG_PRINT("[wid:%d] set: n"\
+				"dse_gain_h_x:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_h_y:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_y_x:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_y_y:%d,%d,%d,%d,%d,%d,%d,%d\n", \
+				pp->win_id,\
+				pp->dse_h_x[0],pp->dse_h_x[1],pp->dse_h_x[2],pp->dse_h_x[3],\
+				pp->dse_h_x[4],pp->dse_h_x[5],pp->dse_h_x[6],pp->dse_h_x[7],\
+				pp->dse_h_y[0],pp->dse_h_y[1],pp->dse_h_y[2],pp->dse_h_y[3],\
+				pp->dse_h_y[4],pp->dse_h_y[5],pp->dse_h_y[6],pp->dse_h_y[7],\
+				pp->dse_y_x[0],pp->dse_y_x[1],pp->dse_y_x[2],pp->dse_y_x[3],\
+				pp->dse_y_x[4],pp->dse_y_x[5],pp->dse_y_x[6],pp->dse_y_x[7],\
+				pp->dse_y_y[0],pp->dse_y_y[1],pp->dse_y_y[2],pp->dse_y_y[3],\
+				pp->dse_y_y[4],pp->dse_y_y[5],pp->dse_y_y[6],pp->dse_y_y[7]);
+			if(PE_CHECK_WIN0(pp->win_id))
+			{
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ctrl_00);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region0_sel,	GET_BITS(pp->region_onoff[0],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region1_sel,	GET_BITS(pp->region_onoff[1],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region2_sel,	GET_BITS(pp->region_onoff[2],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region3_sel,	GET_BITS(pp->region_onoff[3],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region4_sel,	GET_BITS(pp->region_onoff[4],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region5_sel,	GET_BITS(pp->region_onoff[5],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region6_sel,	GET_BITS(pp->region_onoff[6],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region7_sel,	GET_BITS(pp->region_onoff[7],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region8_sel,	GET_BITS(pp->region_onoff[8],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region9_sel,	GET_BITS(pp->region_onoff[9],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region10_sel,	GET_BITS(pp->region_onoff[10],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region11_sel,	GET_BITS(pp->region_onoff[11],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region12_sel,	GET_BITS(pp->region_onoff[12],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region13_sel,	GET_BITS(pp->region_onoff[13],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region14_sel,	GET_BITS(pp->region_onoff[14],0,1));
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ctrl_00,	color_region15_sel,	GET_BITS(pp->region_onoff[15],0,1));
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ctrl_00);
+
+				PE_CEO_PE1_O20_QWr03(pe1_dse_ctrl_01,	reg_dse_cr_mode_sel,GET_BITS(pp->saturation_cr_mode,0,1),\
+														reg_yh_cr_en,		GET_BITS(pp->saturation_cr_mode,0,1),\
+														color_region_gain,	GET_BITS(color_out_gain,0,8));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt0,	reg_y_region_pt0_y,	GET_BITS(pp->dse_y_y[0],0,8),\
+															reg_y_region_pt0_x,	GET_BITS(pp->dse_y_x[0],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt1,	reg_y_region_pt1_y,	GET_BITS(pp->dse_y_y[1],0,8),\
+															reg_y_region_pt1_x,	GET_BITS(pp->dse_y_x[1],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt2,	reg_y_region_pt2_y,	GET_BITS(pp->dse_y_y[2],0,8),\
+															reg_y_region_pt2_x,	GET_BITS(pp->dse_y_x[2],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt3,	reg_y_region_pt3_y,	GET_BITS(pp->dse_y_y[3],0,8),\
+															reg_y_region_pt3_x,	GET_BITS(pp->dse_y_x[3],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt4,	reg_y_region_pt4_y,	GET_BITS(pp->dse_y_y[4],0,8),\
+															reg_y_region_pt4_x,	GET_BITS(pp->dse_y_x[4],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt5,	reg_y_region_pt5_y,	GET_BITS(pp->dse_y_y[5],0,8),\
+															reg_y_region_pt5_x,	GET_BITS(pp->dse_y_x[5],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt6,	reg_y_region_pt6_y,	GET_BITS(pp->dse_y_y[6],0,8),\
+															reg_y_region_pt6_x,	GET_BITS(pp->dse_y_x[6],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_y_region_pt7,	reg_y_region_pt7_y,	GET_BITS(pp->dse_y_y[7],0,8),\
+															reg_y_region_pt7_x,	GET_BITS(pp->dse_y_x[7],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt0,	reg_h_region_pt0_y,	GET_BITS(pp->dse_h_y[0],0,8),\
+															reg_h_region_pt0_x,	GET_BITS(pp->dse_h_x[0],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt1,	reg_h_region_pt1_y,	GET_BITS(pp->dse_h_y[1],0,8),\
+															reg_h_region_pt1_x,	GET_BITS(pp->dse_h_x[1],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt2,	reg_h_region_pt2_y,	GET_BITS(pp->dse_h_y[2],0,8),\
+															reg_h_region_pt2_x,	GET_BITS(pp->dse_h_x[2],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt3,	reg_h_region_pt3_y,	GET_BITS(pp->dse_h_y[3],0,8),\
+															reg_h_region_pt3_x,	GET_BITS(pp->dse_h_x[3],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt4,	reg_h_region_pt4_y,	GET_BITS(pp->dse_h_y[4],0,8),\
+															reg_h_region_pt4_x,	GET_BITS(pp->dse_h_x[4],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt5,	reg_h_region_pt5_y,	GET_BITS(pp->dse_h_y[5],0,8),\
+															reg_h_region_pt5_x,	GET_BITS(pp->dse_h_x[5],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt6,	reg_h_region_pt6_y,	GET_BITS(pp->dse_h_y[6],0,8),\
+															reg_h_region_pt6_x,	GET_BITS(pp->dse_h_x[6],0,10));
+				PE_CEO_PE1_O20_QWr02(pe_dse_h_region_pt7,	reg_h_region_pt7_y,	GET_BITS(pp->dse_h_y[7],0,8),\
+															reg_h_region_pt7_x,	GET_BITS(pp->dse_h_x[7],0,10));
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ia_ctrl);
+				PE_CEO_PE1_O20_RdFL(pe1_dse_ia_data);
+				PE_CEO_PE1_O20_RdFL(pe1_dce_ctrl_08);
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x0);	//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_ai,			0x1);	//ai 0:disable, 1:enable
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_address,	0x0);	//address
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x0);	//0:clear, 1:enable
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for(count=0;count<PE_CMG_HW_O20_LUT_STEP;count++)
+				{
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,hif_dse_wdata_y,GET_BITS(pp->sSaturationLUT_y[count],0,10));	//y data
+					PE_CEO_PE1_O20_Wr01(pe1_dse_ia_data,hif_dse_wdata_x,GET_BITS(pp->sSaturationLUT_x[count],0,10));//x data
+					PE_CEO_PE1_O20_WrFL(pe1_dse_ia_data);
+					x_data = (UINT32)(pp->sSaturationLUT_x[count])<<16;
+					y_data = (UINT32)(pp->sSaturationLUT_y[count]);
+					if (y_data>1023)
+					{
+						y_data=1023;
+					}
+					dse_lut_param[count] = x_data + y_data;
+				}
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable, 	0x1);	//0:host access, 1:normal mode
+				PE_CEO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x1);	//0:clear, 1:enable
+				PE_CEO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				memcpy(_g_cmg_hw_o20_pre_dse_lut, dse_lut_param, sizeof(UINT32)*PE_CMG_HW_O20_LUT_STEP);
+				if(_g_cmg_hw_o20_trace)
+				{
+					PE_CMG_HW_O20_DBG_PRINT("\n update dse lut\n");
+					PE_CMG_HW_O20_DBG_PRINT("\n   [ i]    x,    y\n");
+					for (count=0;count<(PE_CMG_HW_O20_LUT_MAX-1);count++)
+					{
+						PE_CMG_HW_O20_DBG_PRINT("   [%02d] %4d, %4d\n", \
+							count, (_g_cmg_hw_o20_pre_dse_lut[count]>>16)&0x3ff, _g_cmg_hw_o20_pre_dse_lut[count]&0x3ff);
+					}
+				}
+				#if 1	/* F20_APB */
+				do {
+					for(count=0;count<PE_CMG_HW_O20_LUT_STEP;count++)
+					{
+						PE_CHPI_APB0_F20_QWr(dse0.pe1_dse_ia_data[count].udata32,dse_lut_param[count]);
+					}
+					PE_CHPI_APB0_F20_Wr(dse0.pe1_dse_ctrl_01.reg_dse_cr_mode_sel,GET_BITS(pp->saturation_cr_mode,0,1));
+					PE_CHPI_APB0_F20_Wr(dse0.pe1_dse_ctrl_01.reg_yh_cr_en,GET_BITS(pp->saturation_cr_mode,0,1));
+					PE_CHPI_APB0_F20_Wr(dse0.pe1_dse_ctrl_01.color_region_gain,GET_BITS(color_out_gain,0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt0.reg_y_region_pt0_y,GET_BITS(pp->dse_y_y[0],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt0.reg_y_region_pt0_x,GET_BITS(pp->dse_y_x[0],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt1.reg_y_region_pt1_y,GET_BITS(pp->dse_y_y[1],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt1.reg_y_region_pt1_x,GET_BITS(pp->dse_y_x[1],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt2.reg_y_region_pt2_y,GET_BITS(pp->dse_y_y[2],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt2.reg_y_region_pt2_x,GET_BITS(pp->dse_y_x[2],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt3.reg_y_region_pt3_y,GET_BITS(pp->dse_y_y[3],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt3.reg_y_region_pt3_x,GET_BITS(pp->dse_y_x[3],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt4.reg_y_region_pt4_y,GET_BITS(pp->dse_y_y[4],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt4.reg_y_region_pt4_x,GET_BITS(pp->dse_y_x[4],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt5.reg_y_region_pt5_y,GET_BITS(pp->dse_y_y[5],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt5.reg_y_region_pt5_x,GET_BITS(pp->dse_y_x[5],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt6.reg_y_region_pt6_y,GET_BITS(pp->dse_y_y[6],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt6.reg_y_region_pt6_x,GET_BITS(pp->dse_y_x[6],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt7.reg_y_region_pt7_y,GET_BITS(pp->dse_y_y[7],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_y_region_pt7.reg_y_region_pt7_x,GET_BITS(pp->dse_y_x[7],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt0.reg_h_region_pt0_y,GET_BITS(pp->dse_h_y[0],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt0.reg_h_region_pt0_x,GET_BITS(pp->dse_h_x[0],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt1.reg_h_region_pt1_y,GET_BITS(pp->dse_h_y[1],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt1.reg_h_region_pt1_x,GET_BITS(pp->dse_h_x[1],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt2.reg_h_region_pt2_y,GET_BITS(pp->dse_h_y[2],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt2.reg_h_region_pt2_x,GET_BITS(pp->dse_h_x[2],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt3.reg_h_region_pt3_y,GET_BITS(pp->dse_h_y[3],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt3.reg_h_region_pt3_x,GET_BITS(pp->dse_h_x[3],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt4.reg_h_region_pt4_y,GET_BITS(pp->dse_h_y[4],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt4.reg_h_region_pt4_x,GET_BITS(pp->dse_h_x[4],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt5.reg_h_region_pt5_y,GET_BITS(pp->dse_h_y[5],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt5.reg_h_region_pt5_x,GET_BITS(pp->dse_h_x[5],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt6.reg_h_region_pt6_y,GET_BITS(pp->dse_h_y[6],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt6.reg_h_region_pt6_x,GET_BITS(pp->dse_h_x[6],0,10));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt7.reg_h_region_pt7_y,GET_BITS(pp->dse_h_y[7],0,8));
+					PE_CHPI_APB0_F20_Wr(dse0.pe_dse_h_region_pt7.reg_h_region_pt7_x,GET_BITS(pp->dse_h_x[7],0,10));
+					PE_CHPI_APB0_F20_WrFL(dse0.pe1_dse_ctrl_01.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt0.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt1.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt2.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt3.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt4.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt5.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt6.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_y_region_pt7.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt0.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt1.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt2.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt3.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt4.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt5.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt6.udata32);
+					PE_CHPI_APB0_F20_WrFL(dse0.pe_dse_h_region_pt7.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_DSE0);
+				} while(0);
+				#endif
+				#if 1	/* F20_TBL */
+				do {
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region0_sel,GET_BITS(pp->region_onoff[0],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region1_sel,GET_BITS(pp->region_onoff[1],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region2_sel,GET_BITS(pp->region_onoff[2],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region3_sel,GET_BITS(pp->region_onoff[3],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region4_sel,GET_BITS(pp->region_onoff[4],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region5_sel,GET_BITS(pp->region_onoff[5],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region6_sel,GET_BITS(pp->region_onoff[6],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region7_sel,GET_BITS(pp->region_onoff[7],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region8_sel,GET_BITS(pp->region_onoff[8],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region9_sel,GET_BITS(pp->region_onoff[9],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region10_sel,GET_BITS(pp->region_onoff[10],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region11_sel,GET_BITS(pp->region_onoff[11],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region12_sel,GET_BITS(pp->region_onoff[12],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region13_sel,GET_BITS(pp->region_onoff[13],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region14_sel,GET_BITS(pp->region_onoff[14],0,1));
+					PE_CHPI_TBL0_F20_Wr(cco.pe1_dse_ctrl_00.color_region15_sel,GET_BITS(pp->region_onoff[15],0,1));
+					PE_CHPI_TBL0_F20_WrFL(cco.pe1_dse_ctrl_00.udata32);
+
+					/* count */
+					PE_INF_O20_IncChipInfoCount(PE_INF_O20_CHPI_CNT_CCO);
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+
+}
+
+/**
+ * get dse ctrl
+ *
+ * @param   *pstParams [in] LX_PE_CMG_DSE_CTRL_T
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_GetDseCtrl(void *pstParams)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	UINT32 count = 0;
+	//int i = 0;
+	do {
+		CHECK_KNULL(pstParams);
+		if(PE_KDRV_VER_O20)
+		{
+			LX_PE_CMG_DSE_CTRL_T *pp=(LX_PE_CMG_DSE_CTRL_T *)pstParams;
+			PE_CHECK_WINID(pp->win_id);
+			if(PE_CHECK_WIN0(pp->win_id))
+			{
+				PE_CE_PE1_O20_RdFL(pe1_dse_ctrl_00);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region0_sel,	pp->region_onoff[0]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region1_sel,	pp->region_onoff[1]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region2_sel,	pp->region_onoff[2]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region3_sel,	pp->region_onoff[3]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region4_sel,	pp->region_onoff[4]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region5_sel,	pp->region_onoff[5]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region6_sel,	pp->region_onoff[6]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region7_sel,	pp->region_onoff[7]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region8_sel,	pp->region_onoff[8]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region9_sel,	pp->region_onoff[9]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region10_sel,	pp->region_onoff[10]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region11_sel,	pp->region_onoff[11]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region12_sel,	pp->region_onoff[12]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region13_sel,	pp->region_onoff[13]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region14_sel,	pp->region_onoff[14]);
+				PE_CE_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region15_sel,	pp->region_onoff[15]);
+				PE_CE_PE1_O20_RdFL(pe1_dse_ctrl_00);
+
+				PE_CE_PE1_O20_QRd03(pe1_dse_ctrl_01,		reg_dse_cr_mode_sel,pp->saturation_cr_mode,\
+															reg_yh_cr_en,		pp->saturation_cr_mode,\
+															color_region_gain,	pp->saturation_region_gain);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt0,	reg_y_region_pt0_y,	pp->dse_y_y[0],\
+															reg_y_region_pt0_x,	pp->dse_y_x[0]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt1,	reg_y_region_pt1_y,	pp->dse_y_y[1],\
+															reg_y_region_pt1_x,	pp->dse_y_x[1]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt2,	reg_y_region_pt2_y,	pp->dse_y_y[2],\
+															reg_y_region_pt2_x,	pp->dse_y_x[2]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt3,	reg_y_region_pt3_y,	pp->dse_y_y[3],\
+															reg_y_region_pt3_x,	pp->dse_y_x[3]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt4,	reg_y_region_pt4_y,	pp->dse_y_y[4],\
+															reg_y_region_pt4_x,	pp->dse_y_x[4]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt5,	reg_y_region_pt5_y,	pp->dse_y_y[5],\
+															reg_y_region_pt5_x,	pp->dse_y_x[5]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt6,	reg_y_region_pt6_y,	pp->dse_y_y[6],\
+															reg_y_region_pt6_x,	pp->dse_y_x[6]);
+				PE_CE_PE1_O20_QRd02(pe_dse_y_region_pt7,	reg_y_region_pt7_y,	pp->dse_y_y[7],\
+															reg_y_region_pt7_x,	pp->dse_y_x[7]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt0,	reg_h_region_pt0_y,	pp->dse_h_y[0],\
+															reg_h_region_pt0_x,	pp->dse_h_x[0]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt1,	reg_h_region_pt1_y,	pp->dse_h_y[1],\
+															reg_h_region_pt1_x,	pp->dse_h_x[1]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt2,	reg_h_region_pt2_y,	pp->dse_h_y[2],\
+															reg_h_region_pt2_x,	pp->dse_h_x[2]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt3,	reg_h_region_pt3_y,	pp->dse_h_y[3],\
+															reg_h_region_pt3_x,	pp->dse_h_x[3]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt4,	reg_h_region_pt4_y,	pp->dse_h_y[4],\
+															reg_h_region_pt4_x,	pp->dse_h_x[4]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt5,	reg_h_region_pt5_y,	pp->dse_h_y[5],\
+															reg_h_region_pt5_x,	pp->dse_h_x[5]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt6,	reg_h_region_pt6_y,	pp->dse_h_y[6],\
+															reg_h_region_pt6_x,	pp->dse_h_x[6]);
+				PE_CE_PE1_O20_QRd02(pe_dse_h_region_pt7,	reg_h_region_pt7_y,	pp->dse_h_y[7],\
+															reg_h_region_pt7_x,	pp->dse_h_x[7]);
+				PE_CE_PE1_O20_RdFL(pe1_dse_ia_ctrl);
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x0);	//0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_ai,			0x1);	//ai 0:disable, 1:enable
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_address,	0x0);	//address
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x0);	//0:clear, 1:enable
+				PE_CE_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for(count=0;count<PE_CMG_HW_O20_LUT_STEP;count++)
+				{
+					PE_CE_PE1_O20_QRd02(pe1_dse_ia_data, hif_dse_wdata_y, pp->sSaturationLUT_y[count],\
+														 hif_dse_wdata_x, pp->sSaturationLUT_x[count]);//x data
+				}
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable, 	0x1);	//0:host access, 1:normal mode
+				PE_CE_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x1);	//0:clear, 1:enable
+				PE_CE_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+			}
+			if(PE_CHECK_WIN1(pp->win_id))
+			{
+				PE_CO_PE1_O20_RdFL(pe1_dse_ctrl_00);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region0_sel,	pp->region_onoff[0]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region1_sel,	pp->region_onoff[1]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region2_sel,	pp->region_onoff[2]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region3_sel,	pp->region_onoff[3]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region4_sel,	pp->region_onoff[4]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region5_sel,	pp->region_onoff[5]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region6_sel,	pp->region_onoff[6]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region7_sel,	pp->region_onoff[7]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region8_sel,	pp->region_onoff[8]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region9_sel,	pp->region_onoff[9]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region10_sel,	pp->region_onoff[10]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region11_sel,	pp->region_onoff[11]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region12_sel,	pp->region_onoff[12]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region13_sel,	pp->region_onoff[13]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region14_sel,	pp->region_onoff[14]);
+				PE_CO_PE1_O20_Rd01(pe1_dse_ctrl_00,	color_region15_sel,	pp->region_onoff[15]);
+				PE_CO_PE1_O20_RdFL(pe1_dse_ctrl_00);
+
+				PE_CO_PE1_O20_QRd03(pe1_dse_ctrl_01,		reg_dse_cr_mode_sel,pp->saturation_cr_mode,\
+															reg_yh_cr_en,		pp->saturation_cr_mode,\
+															color_region_gain,	pp->saturation_region_gain);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt0,	reg_y_region_pt0_y,	pp->dse_y_y[0],\
+															reg_y_region_pt0_x,	pp->dse_y_x[0]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt1,	reg_y_region_pt1_y,	pp->dse_y_y[1],\
+															reg_y_region_pt1_x,	pp->dse_y_x[1]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt2,	reg_y_region_pt2_y,	pp->dse_y_y[2],\
+															reg_y_region_pt2_x,	pp->dse_y_x[2]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt3,	reg_y_region_pt3_y,	pp->dse_y_y[3],\
+															reg_y_region_pt3_x,	pp->dse_y_x[3]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt4,	reg_y_region_pt4_y,	pp->dse_y_y[4],\
+															reg_y_region_pt4_x,	pp->dse_y_x[4]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt5,	reg_y_region_pt5_y,	pp->dse_y_y[5],\
+															reg_y_region_pt5_x,	pp->dse_y_x[5]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt6,	reg_y_region_pt6_y,	pp->dse_y_y[6],\
+															reg_y_region_pt6_x,	pp->dse_y_x[6]);
+				PE_CO_PE1_O20_QRd02(pe_dse_y_region_pt7,	reg_y_region_pt7_y,	pp->dse_y_y[7],\
+															reg_y_region_pt7_x,	pp->dse_y_x[7]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt0,	reg_h_region_pt0_y,	pp->dse_h_y[0],\
+															reg_h_region_pt0_x,	pp->dse_h_x[0]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt1,	reg_h_region_pt1_y,	pp->dse_h_y[1],\
+															reg_h_region_pt1_x,	pp->dse_h_x[1]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt2,	reg_h_region_pt2_y,	pp->dse_h_y[2],\
+															reg_h_region_pt2_x,	pp->dse_h_x[2]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt3,	reg_h_region_pt3_y,	pp->dse_h_y[3],\
+															reg_h_region_pt3_x,	pp->dse_h_x[3]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt4,	reg_h_region_pt4_y,	pp->dse_h_y[4],\
+															reg_h_region_pt4_x,	pp->dse_h_x[4]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt5,	reg_h_region_pt5_y,	pp->dse_h_y[5],\
+															reg_h_region_pt5_x,	pp->dse_h_x[5]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt6,	reg_h_region_pt6_y,	pp->dse_h_y[6],\
+															reg_h_region_pt6_x,	pp->dse_h_x[6]);
+				PE_CO_PE1_O20_QRd02(pe_dse_h_region_pt7,	reg_h_region_pt7_y,	pp->dse_h_y[7],\
+															reg_h_region_pt7_x,	pp->dse_h_x[7]);
+				PE_CO_PE1_O20_RdFL(pe1_dse_ia_ctrl);
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable,		0x0);	//0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_ai,			0x1);	//ai 0:disable, 1:enable
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_address,	0x0);	//address
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x0);	//0:clear, 1:enable
+				PE_CO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+				for(count=0;count<PE_CMG_HW_O20_LUT_STEP;count++)
+				{
+					PE_CO_PE1_O20_QRd02(pe1_dse_ia_data,hif_dse_wdata_y,pp->sSaturationLUT_y[count],\
+														hif_dse_wdata_x,pp->sSaturationLUT_x[count]);//x data
+				}
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_enable, 	0x1);	//0:host access, 1:normal mode
+				PE_CO_PE1_O20_Wr01(pe1_dse_ia_ctrl,	hif_dse_load,	 	0x1);	//0:clear, 1:enable
+				PE_CO_PE1_O20_WrFL(pe1_dse_ia_ctrl);
+			}
+			PE_CMG_HW_O20_DBG_PRINT("[wid:%d] get: saturation_cr_mode:%d, saturation_region_gain:%d\n"\
+				"region sel:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",\
+				pp->win_id,\
+				pp->saturation_cr_mode, pp->saturation_region_gain, \
+				pp->region_onoff[0],pp->region_onoff[1],pp->region_onoff[2],pp->region_onoff[3],\
+				pp->region_onoff[4],pp->region_onoff[5],pp->region_onoff[6],pp->region_onoff[7],\
+				pp->region_onoff[8],pp->region_onoff[9],pp->region_onoff[10],pp->region_onoff[11],\
+				pp->region_onoff[12],pp->region_onoff[13],pp->region_onoff[14],pp->region_onoff[15]);
+			PE_CMG_HW_O20_DBG_PRINT("[wid:%d] get: n"\
+				"dse_gain_h_x:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_h_y:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_y_x:%d,%d,%d,%d,%d,%d,%d,%d\n" \
+				"dse_gain_y_y:%d,%d,%d,%d,%d,%d,%d,%d\n", \
+				pp->win_id,\
+				pp->dse_h_x[0],pp->dse_h_x[1],pp->dse_h_x[2],pp->dse_h_x[3],\
+				pp->dse_h_x[4],pp->dse_h_x[5],pp->dse_h_x[6],pp->dse_h_x[7],\
+				pp->dse_h_y[0],pp->dse_h_y[1],pp->dse_h_y[2],pp->dse_h_y[3],\
+				pp->dse_h_y[4],pp->dse_h_y[5],pp->dse_h_y[6],pp->dse_h_y[7],\
+				pp->dse_y_x[0],pp->dse_y_x[1],pp->dse_y_x[2],pp->dse_y_x[3],\
+				pp->dse_y_x[4],pp->dse_y_x[5],pp->dse_y_x[6],pp->dse_y_x[7],\
+				pp->dse_y_y[0],pp->dse_y_y[1],pp->dse_y_y[2],pp->dse_y_y[3],\
+				pp->dse_y_y[4],pp->dse_y_y[5],pp->dse_y_y[6],pp->dse_y_y[7]);
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");
+		}
+	} while (0);
+	#endif /*PE_HW_O20_BRINGUP*/
+	return ret;
+
+}
+
+/**
+ * set target saturation
+ *
+ * @param   void
+ * @return  OK if success, ERROR otherwise.
+ * @see
+ * @author
+ */
+int PE_CMG_HW_O20_SetTargetSat(void)
+{
+	int ret = RET_OK;
+	#ifdef PE_HW_O20_BRINGUP
+	PE_CMG_HW_O20_SETTINGS_T *pInfo=&_g_pe_cmg_hw_o20_info;
+	UINT32 vsp_sat;
+	UINT32 org_target_sat = pInfo->org_target_sat;
+	UINT32 target_sat;
+	do {
+		if(PE_KDRV_VER_O20)
+		{
+			PE_CE_PE1_O20_QRd01(pe1_vspyc_ctrl_01, saturation, vsp_sat);
+			target_sat = (vsp_sat * org_target_sat)>>7; // now 9bit data
+			if(target_sat > 255)
+				target_sat = 255;
+			else
+				target_sat &= 0xff; //now 8bit
+			if(pInfo->pre_target_sat != target_sat)
+				
+			{
+				PE_CMG_HW_O20_DBG_PRINT("vsp_sat 0x%02x org_target_sat 0x%02x target sat 0x%02x -> 0x%02x\n",vsp_sat, org_target_sat, pInfo->pre_target_sat, target_sat);
+				PE_CEO_PE1_O20_QWr01(pe1_vspyc_ctrl_01, saturation_target, GET_BITS(target_sat, 0, 8));
+				pInfo->pre_target_sat = target_sat;
+				#if 1	/* F20_APB */
+				do {
+					PE_CHPI_APB0_F20_Wr(cmn0.pe1_vspyc_ctrl_01.saturation_target, GET_BITS(target_sat, 0, 8));
+					PE_CHPI_APB0_F20_WrFL(cmn0.pe1_vspyc_ctrl_01.udata32);
+					PE_INF_O20_SetChipInfoHead(PE_INF_O20_CHPI_BLOCK_CMN0);
+					PE_PRINT_CMN("shdw:0x%08x:0x%08x|0x%08x:0x%08x|0x%08x:0x%08x\n",\
+						PE_CHPI_APB0_F20_Rd(cmn0.pe1_vspyc_ctrl_00.uaddr32),PE_CHPI_APB0_F20_Rd(cmn0.pe1_vspyc_ctrl_00.udata32),\
+						PE_CHPI_APB0_F20_Rd(cmn0.pe1_vspyc_ctrl_01.uaddr32),PE_CHPI_APB0_F20_Rd(cmn0.pe1_vspyc_ctrl_01.udata32),\
+						PE_CHPI_APB0_F20_Rd(cmn0.pe1_cen_ctrl_03.uaddr32),PE_CHPI_APB0_F20_Rd(cmn0.pe1_cen_ctrl_03.udata32));
+				} while(0);
+				#endif
+			}
+		}
+		else
+		{
+			PE_CMG_HW_O20_DBG_PRINT("nothing to do.\n");
+		}
+	} while (0);
+	#endif
+	return ret;
+}

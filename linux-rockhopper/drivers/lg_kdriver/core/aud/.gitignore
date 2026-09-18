@@ -1,0 +1,9 @@
+common
+*.mod.c
+*.cmd
+*.md
+*.ko
+*.o
+*.order
+*.swp
+*~

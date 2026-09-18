@@ -1,0 +1,9 @@
+config DRM_LG1K
+        tristate "DRM Support for lg1k TV display"
+        depends on DRM && OF && ARCH_LG1K
+        depends on COMMON_CLK
+        select DRM_GEM_DMA_HELPER
+        select DRM_FB_DMA_HELPER
+        select DRM_KMS_HELPER
+        help
+          Choose this option if you support LG1K DRM.

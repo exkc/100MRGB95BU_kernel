@@ -1,0 +1,99 @@
+INCLUDE_O26_CHIP_KDRV  ?= YES
+
+#-----------------------------------------------------------------------------------------
+# arch default devices
+#-----------------------------------------------------------------------------------------
+INCLUDE_KDRV_SAMPLE     := NO
+INCLUDE_KDRV_AUDIO      := NO
+INCLUDE_KDRV_AFE        := NO
+INCLUDE_KDRV_CI         := NO
+INCLUDE_KDRV_LEGACY_CI  := NO
+INCLUDE_KDRV_DE         := NO
+INCLUDE_KDRV_DEMOD      := NO
+INCLUDE_KDRV_DENC       := NO
+INCLUDE_KDRV_EMMC       := NO
+INCLUDE_KDRV_FBDEV      := NO
+INCLUDE_KDRV_GFX        := NO
+INCLUDE_KDRV_GPIO       := NO
+INCLUDE_KDRV_HDMI       := NO
+INCLUDE_KDRV_HDMI20     := NO
+INCLUDE_KDRV_I2C        := NO
+INCLUDE_KDRV_PE         := NO
+INCLUDE_KDRV_TE         := NO
+INCLUDE_KDRV_CIPLUS     := NO
+INCLUDE_KDRV_CI20       := NO
+INCLUDE_KDRV_SDEC       := NO
+INCLUDE_KDRV_PVR        := NO
+INCLUDE_KDRV_ATSC3      := NO
+INCLUDE_KDRV_ARIB2      := NO
+INCLUDE_KDRV_CLK        := NO
+INCLUDE_KDRV_VBI        := NO
+INCLUDE_KDRV_VDEC       := NO
+INCLUDE_KDRV_VENC       := NO
+INCLUDE_KDRV_PNG        := NO
+INCLUDE_KDRV_SE         := NO
+INCLUDE_KDRV_SYS        := NO
+INCLUDE_KDRV_SCI        := NO
+INCLUDE_KDRV_MONITOR    := NO
+INCLUDE_KDRV_MJPEG      := NO
+INCLUDE_KDRV_APR        := NO
+INCLUDE_KDRV_MEMPROT    := NO
+INCLUDE_KDRV_PM         := NO
+INCLUDE_KDRV_BE         := NO
+INCLUDE_KDRV_LGBUS      := NO
+INCLUDE_KDRV_OVI        := NO
+INCLUDE_KDRV_LOGM       := YES
+INCLUDE_KDRV_VIP        := NO
+INCLUDE_KDRV_SLT        := NO
+INCLUDE_KDRV_SPI        := NO
+INCLUDE_KDRV_UCOM       := NO
+INCLUDE_KDRV_IRB        := NO
+
+INCLUDE_KDRV_PQE_PM     := NO
+INCLUDE_KDRV_PWM		:= NO
+
+#-----------------------------------------------------------------------------------------
+# arch default PM
+#-----------------------------------------------------------------------------------------
+KDRV_CONFIG_PM_AUDIO    := YES
+KDRV_CONFIG_PM_AFE      := YES
+KDRV_CONFIG_PM_LEGACY_CI:= NO
+KDRV_CONFIG_PM_DE       := YES
+KDRV_CONFIG_PM_DEMOD    := YES
+KDRV_CONFIG_PM_DENC     := YES
+#KDRV_CONFIG_PM_EMMC    := NO
+KDRV_CONFIG_PM_FBDEV    := YES
+KDRV_CONFIG_PM_GFX      := YES
+KDRV_CONFIG_PM_GPIO     := YES
+KDRV_CONFIG_PM_HDMI     := NO
+KDRV_CONFIG_PM_HDMI20   := YES
+KDRV_CONFIG_PM_I2C      := YES
+KDRV_CONFIG_PM_PE       := YES
+KDRV_CONFIG_PM_PVR      := YES
+KDRV_CONFIG_PM_SDEC     := YES
+KDRV_CONFIG_PM_ATSC3    := YES
+KDRV_CONFIG_PM_TE       := YES
+KDRV_CONFIG_PM_ARIB2    := YES
+KDRV_CONFIG_PM_CIPLUS   := YES
+KDRV_CONFIG_PM_VBI      := YES
+#KDRV_CONFIG_PM_MMCU    := YES
+KDRV_CONFIG_PM_VDEC     := YES
+KDRV_CONFIG_PM_VENC     := YES
+KDRV_CONFIG_PM_PNG      := YES
+KDRV_CONFIG_PM_SE       := YES
+KDRV_CONFIG_PM_SYS      := YES
+KDRV_CONFIG_PM_SCI      := YES
+KDRV_CONFIG_PM_CLK      := YES
+KDRV_CONFIG_PM_MONITOR  := YES
+KDRV_CONFIG_PM_MJPEG    := YES
+KDRV_CONFIG_PM_APR      := YES
+KDRV_CONFIG_PM_MEMPROT  := NO
+KDRV_CONFIG_PM_PM       := YES
+KDRV_CONFIG_PM_BE       := YES
+KDRV_CONFIG_PM_LGBUS    := YES
+KDRV_CONFIG_PM_OVI      := YES
+KDRV_CONFIG_PM_LOGM     := YES
+KDRV_CONFIG_PM_VIP      := YES
+KDRV_CONFIG_PM_SPI      := YES
+KDRV_CONFIG_PM_UCOM     := YES
+KDRV_CONFIG_PM_IRB      := YES

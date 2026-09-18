@@ -1,0 +1,24 @@
+;; clock gating configuration for the power saving
+;; see http://jira.lge.com/issue/browse/SICDTV-15841
+;; and see http://jira.lge.com/issue/browse/SCDCR-7887
+;; 0xCA3A2010 0x00FFFFFF
+;; 0xCA3A2014 0x000000E7
+;; 0xCA3A2018 0x00000180
+;; 0xCA3A201C 0x00003160
+;;
+D.S ASD:0xCA3A2010 %LONG 0x00FFFFFF
+D.S ASD:0xCA3A2014 %LONG 0x000000E7
+D.S ASD:0xCA3A2018 %LONG 0x00000180
+D.S ASD:0xCA3A201C %LONG 0x00003160
+
+;; C4TX down
+;; see http://jira.lge.com/issue/browse/SCDCR-7887
+D.S ASD:0xCC974024 %LONG 0x00000000
+
+;; ADMD(analog demod to tuner) down
+;; see http://jira.lge.com/issue/browse/SICDTV-15841
+D.S ASD:0xCC4C40B0 %LONG 0x0000387B
+D.S ASD:0xC8A35000 %LONG 0x02900C80
+D.S ASD:0xC8A35004 %LONG 0x145A105E
+D.S ASD:0xC8A35008 %LONG 0x350B011A
+D.S ASD:0xC8A3500C %LONG 0x64310A32

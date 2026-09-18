@@ -1,0 +1,245 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T dnr2nd_l_sd_default_o20[] =
+{
+	{0x1A594, 0x00000021},      // DNR_MAX_CTRL
+    {0x1A5A0, 0x2000FF51},      // MNR_CTRL_0
+    {0x1A5A4, 0x301000FF},      // MNR_CTRL_1
+    {0x1A5A8, 0x00000000},      // MNR_CTRL_2
+    {0x1A5AC, 0x80000000},      // MNR_CTRL_3
+    {0x1A5B0, 0x00000000},      // MNR_CTRL_4
+    {0x1A5B4, 0x00000000},      // MNR_CTRL_5
+    {0x1A5B8, 0x04040A40},      // DETAIL_CTRL
+    {0x1A5BC, 0x10300005},      // DC_BNR_CTRL_0
+    {0x1A5C0, 0x55590000},      // DC_BNR_CTRL_1
+    {0x1A5C4, 0x0A104000},      // DC_BNR_CTRL_2
+    {0x1A5C8, 0x15254080},      // DC_BNR_CTRL_3
+    {0x1A5CC, 0x0000FF00},      // DC_BNR_CTRL_4
+    {0x1A5D0, 0x004080FF},      // DC_BNR_CTRL_5
+    {0x1A5D4, 0xB30B0B0F},      // AC_BNR_CTRL_0
+    {0x1A5D8, 0x0F19370B},      // AC_BNR_CTRL_1
+    {0x1A5DC, 0x0A204060},      // AC_BNR_CTRL_2
+    {0x1A5E4, 0x3060A0FF},      // AC_BNR_CTRL_3
+    {0x1A5E8, 0x19375000},      // AC_BNR_CTRL_4
+    {0x1A5F0, 0xFA963201},      // AC_BNR_CTRL_5
+    {0x1A5F4, 0x00FFC0C0},      // AC_BNR_CTRL_6
+    {0x1A5F8, 0x80FF8040},      // AC_BNR_CTRL_7
+    {0x1A600, 0x00000F20},      // AC_BNR_CTRL_8
+    {0x1A604, 0x80098000},      // AC_BNR_CTRL_9
+    {0x1A608, 0xFF00FF00},      // AC_BNR_CTRL_10
+    {0x1A60C, 0xFF00FF00},      // AC_BNR_CTRL_11
+    {0x1A610, 0x0000FFFF},      // AC_BNR_CTRL_12
+    {0x1A66C, 0x680CE018},      // SC_BNR_CTRL_0
+    {0x1A670, 0x084004B4},      // SC_BNR_CTRL_1
+    {0x1A674, 0xB41E8000},      // SC_BNR_CTRL_2
+    {0x1A678, 0x00200808},      // SC_BNR_CTRL_3
+    {0x1A67C, 0x01000040},      // SC_BNR_CTRL_4
+    {0x1A680, 0xFFFF8040},      // SC_BNR_CTRL_5
+    {0x1A684, 0x00000100},      // SC_BNR_CTRL_6
+    {0x1A69C, 0x00000000},      // AC_BNR_CTRL_13
+    {0x1A6A0, 0x00000000},      // AC_BNR_CTRL_14
+    {0x1A6A4, 0x40302010},      // DC_BNR_CTRL_6
+    {0x1A6A8, 0xFF604020},      // DC_BNR_CTRL_7
+    {0x1A6AC, 0x30201001},      // SQM_CTRL_0
+    {0x1A6B0, 0x70605040},      // SQM_CTRL_1
+    {0x1A6B4, 0x0461E046},      // SQM_CTRL_2
+    {0x1A6B8, 0x00000000},      // SQM_CTRL_3
+    {0x1A6BC, 0x00000000},      // SQM_CTRL_4
+    {0x1A730, 0x10203040},      // AC_BNR_15
+    {0x1A734, 0x204060FF},      // AC_BNR_16
+    {0x1A764, 0xC00FF000},      // REG_DECON_CTRL_0
+    {0x1A768, 0x00000000},      // REG_DECON_CTRL_1
+    {0x1A76C, 0x00000FFF},      // REG_DECON_CTRL_2
+    {0x1A770, 0x00FFFFFF},      // REG_DECON_CTRL_3
+    {0x1A774, 0x13579753},      // REG_DECON_CTRL_4
+    {0x1A778, 0x24680864},      // REG_DECON_CTRL_5
+    {0x1A77C, 0x14703692},      // REG_DECON_CTRL_6
+    {0x1A780, 0x800FF060},      // REG_DECON_CTRL_7
+    {0x1A784, 0x30000000},      // REG_DECON_CTRL_8
+    {0x1A788, 0x00000FFF},      // REG_DECON_CTRL_9
+    {0x1A78C, 0x00FFFFFF},      // REG_DECON_CTRL_10
+    {0x1A790, 0x32AAB0FF},      // REG_DC_BNR_CTRL_8
+    {0x1A794, 0xFFFFFFFF},      // REG_DC_BNR_CTRL_9
+    {0x1A798, 0xFFC84840},      // REG_DC_BNR_CTRL_10
+    {0x1A79C, 0x40404040},      // REG_DC_BNR_CTRL_11
+    {0x1A7A8, 0xD0002010},      // REG_MNR_CTRL_6
+    {0x1A7AC, 0x01020408},      // REG_MNR_CTRL_7
+    {0x1A7B0, 0xFFE0D0C0},      // REG_MNR_CTRL_8
+    {0x1A7B4, 0x050A1428},      // REG_MNR_CTRL_9
+    {0x1A7B8, 0xFFC0A080},      // REG_MNR_CTRL_10
+    {0x1A7BC, 0x32505AFF},      // REG_MNR_CTRL_11
+    {0x1A7C0, 0x00C8C8FF},      // REG_MNR_CTRL_12
+    {0x1A7C4, 0x13579753},      // REG_DECON_CTRL_11
+    {0x1A7C8, 0x24680864},      // REG_DECON_CTRL_12
+    {0x1A7CC, 0x14703692},      // REG_DECON_CTRL_13
+    {0x1A7D0, 0x00000000},      // REG_DECON_CTRL_14
+    {0x1A7D4, 0x00000000},      // REG_DECON_CTRL_15
+    {0x1A7D8, 0x00000000},      // REG_DECON_CTRL_16
+    {0x1A7DC, 0x80000044},      // REG_DECON_CTRL_17
+    {0x1A7E0, 0x32501AB5},      // REG_DECON_CTRL_18
+    {0x1A7E4, 0x190F0A07},      // REG_DECON_CTRL_19
+    {0x1A7E8, 0x002080FF},      // REG_DECON_CTRL_20
+    {0x1A7EC, 0x00C0783C},      // REG_DECON_CTRL_21
+    {0x1A7F0, 0x08040080},      // REG_DECON_CTRL_22
+    {0x1A7F4, 0x0200003C},      // REG_DECON_CTRL_23
+    {0x1A7F8, 0x0643212C},      // REG_DECON_CTRL_24
+    {0x1A7FC, 0x190C8384},      // REG_DECON_CTRL_25
+    {0x1A800, 0x3E840100},      // REG_DECON_CTRL_26
+    {0x1A804, 0x10040100},      // REG_DECON_CTRL_27
+    {0x1A808, 0x10040100},      // REG_DECON_CTRL_28
+    {0x1A80C, 0x00000000},      // REG_DECON_CTRL_29
+    {0x1A810, 0x82010000},      // REG_DECON_CTRL_30
+    {0x1A814, 0x80600000},      // REG_DECON_CTRL_31
+    {0x1A818, 0xC003212C},      // REG_DECON_CTRL_32
+    {0x1A81C, 0x200000C8},      // REG_DECON_CTRL_33
+    {0x1A820, 0x0284B200},      // REG_DECON_CTRL_34
+    {0x1A824, 0x00000000},      // REG_DECON_CTRL_35
+    {0x1A828, 0x00000000},      // REG_DECON_CTRL_36
+    {0x1A82C, 0x00000000},      // REG_DECON_CTRL_37
+    {0x1A830, 0x00000000},      // REG_DECON_CTRL_38
+    {0x1A834, 0x00000000},      // REG_DECON_CTRL_39
+    {0x1A838, 0x00000000},      // REG_DECON_CTRL_40
+    {0x1A83C, 0x00000000},      // REG_DECON_CTRL_41
+    {0x1A840, 0x00000000},      // REG_DECON_CTRL_42
+    {0x1A844, 0x00000000},      // REG_DECON_CTRL_43
+    {0x1A848, 0x3264C8FA},      // REG_DECON_CTRL_44
+    {0x1A84C, 0xFF641400},      // REG_DECON_CTRL_45
+    {0x1A850, 0x30031040},      // REG_DECON_CTRL_46
+    {0x1A854, 0x4871B399},      // REG_DECON_CTRL_47
+    {0x1A858, 0x0A506478},      // REG_DECON_CTRL_48
+    {0x1A85C, 0xFF320A01},      // REG_DECON_CTRL_49
+    {0x1A860, 0x143C6EC8},      // REG_DECON_CTRL_50
+    {0x1A864, 0x5064788C},      // REG_DECON_CTRL_51
+    {0x1A868, 0x7882B4C8},      // REG_DECON_CTRL_52
+    {0x1A86C, 0x00C8C800},      // REG_DECON_CTRL_53
+    {0x1A870, 0x0064C8FA},      // REG_DECON_CTRL_54
+    {0x1A874, 0x0032C8FF},      // REG_DECON_CTRL_55
+    {0x1A878, 0x8FF00000},      // REG_DECON_CTRL_56
+    {0x1A87C, 0x00000044},      // REG_DECON_CTRL_57
+    {0x1A880, 0x00F03C0F},      // REG_DECON_CTRL_58
+    {0x1A884, 0x0000C850},      // REG_DECON_CTRL_59
+    {0x1A888, 0x01E0780A},      // REG_DECON_CTRL_60
+    {0x1A88C, 0x00A0280A},      // REG_DECON_CTRL_61
+    {0x1A890, 0x20202080},      // REG_DECON_CTRL_62
+    {0x1A894, 0x80208080},      // REG_DECON_CTRL_63
+    {0x1A898, 0x00000000},      // REG_DC_BNR_CTRL_12
+    {0x1A89C, 0x00000000},      // REG_DC_BNR_CTRL_13
+    {0x1A8A0, 0x00000000},      // REG_DC_BNR_CTRL_14
+    {0x1A8A4, 0x00000000},      // REG_DC_BNR_CTRL_15
+    {0x1A8A8, 0x80FFFF00},      // REG_DECON_CTRL_64
+    {0x1A8AC, 0x00200200},      // REG_DECON_CTRL_65
+    {0x1A8B0, 0x00200200},      // REG_DECON_CTRL_66
+    {0x1A8B4, 0x00200200},      // REG_DECON_CTRL_67
+    {0x1A8B8, 0x00032000},      // REG_DECON_CTRL_68
+    {0x1A8BC, 0x9ABC0085},      // REG_DECON_CTRL_69
+    {0x1A8C0, 0x03C190C8},      // REG_DECON_CTRL_70
+    {0x1A8C4, 0x99096320},      // REG_DECON_CTRL_71
+    {0x1A8C8, 0x384FA100},      // REG_DECON_CTRL_72
+    {0x1A8CC, 0x10040100},      // REG_DECON_CTRL_73
+    {0x1A8D0, 0x10040100},      // REG_DECON_CTRL_74
+    {0x1A8D4, 0x10002010},      // REG_DECON_CTRL_75
+    {0x1A8D8, 0x01407900},      // REG_DECON_CTRL_76
+    {0x1A8DC, 0x0B408000},      // REG_DECON_CTRL_77
+    {0x1A8E0, 0x6030180C},      // REG_DECON_CTRL_78
+    {0x1A8E4, 0x002080FF},      // REG_DECON_CTRL_79
+    {0x1A8E8, 0x00000000},      // REG_DECON_CTRL_80
+    {0x1A8EC, 0x00000000},      // REG_DECON_CTRL_81
+    {0x1A8F0, 0x00000000},      // REG_DECON_CTRL_82
+    {0x1A8F4, 0x00000000},      // REG_DECON_CTRL_83
+};     
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       

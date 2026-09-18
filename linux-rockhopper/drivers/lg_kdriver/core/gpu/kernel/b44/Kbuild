@@ -1,0 +1,30 @@
+# vim: set filetype=make:
+
+ifeq ($(KDRV_MODULE_BUILD), YES)
+link_type = m
+else
+link_type = y
+endif
+
+obj-y += drivers/base/arm/
+export CONFIG_DMA_SHARED_BUFFER_TEST_EXPORTER=$(link_type)
+
+obj-y += drivers/gpu/arm/
+
+export CONFIG_MALI_PLATFORM_NAME=devicetree
+export CONFIG_MALI_PRFCNT_SET_PRIMARY=y
+export CONFIG_MALI_DEVFREQ=y
+export CONFIG_MALI_ERROR_INJECT_NONE=y
+export CONFIG_MALI_GATOR_SUPPORT=y
+export CONFIG_MALI_REAL_HW=y
+export CONFIG_MALI_MIDGARD=$(link_type)
+export CONFIG_MALI_KUTF=n
+
+subdir-ccflags-y += -DCONFIG_MALI_PRFCNT_SET_PRIMARY=1
+subdir-ccflags-y += -DCONFIG_MALI_DEVFREQ=1
+subdir-ccflags-y += -DCONFIG_MALI_ERROR_INJECT_NONE=1
+subdir-ccflags-y += -DCONFIG_MALI_GATOR_SUPPORT=1
+subdir-ccflags-y += -DCONFIG_MALI_REAL_HW=1
+subdir-ccflags-y += -DCONFIG_MALI_MIDGARD=1
+subdir-ccflags-y += -DCONFIG_MALI_KUTF=0
+

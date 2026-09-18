@@ -1,0 +1,37 @@
+ifeq ($(KDRV_MODULE_BUILD), YES)
+link_type = m
+else
+link_type = y
+endif
+
+src_top := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+obj-y += drivers/base/kds/
+obj-y += drivers/base/dma_buf_unified/
+subdir-ccflags-y += -I$(src_top)/include
+
+export CONFIG_KDS=$(link_type)
+export CONFIG_DMA_SHARED_BUFFER_UNIFIED=$(link_type)
+
+
+obj-y += drivers/gpu/arm/midgard/
+subdir-ccflags-y += -DMALI_GCC_WORKAROUND_MIDCOM_4598=0 -DCONFIG_KDS -DCONFIG_MALI_MIDGARD_DVFS -DCONFIG_MALI_PLATFORM_FAKE -DCONFIG_MALI_PLATFORM_LG1314 -DLGE_PAGE_POOL_MAX=0 -DCONFIG_MALI_BACKEND=gpu
+
+# get module arguments from gpuddk build log
+export MALI_GCC_WORKAROUND_MIDCOM_4598=0
+export CONFIG_MALI_MIDGARD=$(link_type)
+export CONFIG_MALI_MIDGARD_DVFS=y
+export CONFIG_MALI_PLATFORM_FAKE=y
+export CONFIG_MALI_PLATFORM_LG1314=y
+export CONFIG_MALI_BACKEND=gpu
+
+export MALI_ERROR_INJECT_ON=0
+export MALI_KERNEL_TEST_API=0
+export MALI_UNIT_TEST=0
+export MALI_RELEASE_NAME=r12p0-04rel0
+export MALI_MOCK_TEST=0
+export MALI_CUSTOMER_RELEASE=1
+export MALI_COVERAGE=0
+
+
+# vim: set filetype=make:

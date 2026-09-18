@@ -1,0 +1,31 @@
+ifeq ($(KDRV_MODULE_BUILD), YES)
+link_type = m
+else
+link_type = y
+endif
+
+src_top := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+
+obj-y += drivers/base/dma_buf_unified/
+subdir-ccflags-y += -I$(src_top)/include
+
+export CONFIG_DMA_SHARED_BUFFER=$(link_type)
+export CONFIG_DMA_SHARED_BUFFER_UNIFIED=$(link_type)
+
+
+obj-y += drivers/gpu/arm/midgard/
+subdir-ccflags-y += -DCONFIG_MALI_GATOR_SUPPORT -DCONFIG_MALI_MIDGARD_DVFS
+
+# get build arguments from build/build.ninja
+export MALI_UNIT_TEST=0
+export MALI_CUSTOMER_RELEASE=1
+export MALI_USE_CSF=0
+export MALI_CSF_LT_V10=0
+export MALI_KERNEL_TEST_API=0
+export CONFIG_MALI_KUTF=n
+export CONFIG_MALI_MIDGARD=$(link_type)
+export CONFIG_MALI_NO_MALI_DEFAULT_GPU=tGOx
+export CONFIG_MALI_PLATFORM_NAME=lg1811
+
+
+# vim: set filetype=make:

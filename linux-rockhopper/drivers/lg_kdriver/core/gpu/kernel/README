@@ -1,0 +1,13 @@
+
+- r28
+- r17
+    아래 git 에서 gpu-kernel.r17 tag 에서 kernel/ 아랫쪽 내용을 복사해옴.
+    http://source.lge.com/dsw/gitweb?p=DTV/z-restricted/Bifrost.git;a=summary
+- r9
+    아래 git 에서 gpu-kernel.r9 tag 에서 kernel/ 아랫쪽 내용을 복사해옴.
+    http://source.lge.com/dsw/gitweb?p=DTV/z-restricted/Bifrost.git;a=summary
+- m12
+    아래 git 에서 driver/product/kernel/ 아랫쪽 내용을 복사해옴.
+    http://source.lge.com/dsw/gitweb?p=DTV/z-restricted/Midgard.git;a=tag;h=refs/tags/submissions/92
+    m16p3 빌드에 사용됨.
+

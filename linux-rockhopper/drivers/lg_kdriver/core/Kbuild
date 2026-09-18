@@ -1,0 +1,99 @@
+# SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+# Copyright(c) 2013 by LG Electronics Inc.
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+
+#
+# the below paramter is used when kdriver is built into kernel
+# KDRV_TOP_DIR means the "top" directory for kdriver core file(s)
+#
+KDRV_TOP_DIR        := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+KDRV_INC_DIR        := $(realpath $(KDRV_TOP_DIR)/../include)
+KDRV_PLT_DIR        := $(realpath $(KDRV_TOP_DIR)/../platform)
+KDRV_CHIP_DIR       := $(realpath $(KDRV_TOP_DIR)/../chip)
+export KDRV_TOP_DIR
+
+include $(KDRV_TOP_DIR)/modules.mk
+include $(addprefix $(KDRV_TOP_DIR)/,$(addsuffix /Makefile,$(BASE_MODULE)))
+
+# raxis.lim (2014/11/14)
+# if USE_FAKE_WEBOS_OEBUILDis defined, we won't make kdrv_lg115x.ko becuase kdriver is built-in into kernel.
+# KDRV_MODULE_BUILD parser will result in the unncessary kdriver module build.
+#
+ifeq ($(USE_FAKE_WEBOS_OEBUILD), YES)
+# Do Nothing !!
+else ifeq ($(USE_KASAN), YES)
+# Do Nothing !!
+else ifeq ($(USE_UBSAN), YES)
+# Do Nothing !!
+else
+# if KDRV_MODULE_BUILD is enabled, we will make kdrv_lg115x.ko regardless of kernel configuration.
+# KDRV_MODULE_BUILD shouild be defined at platform Makefile.
+#
+ifeq ($(KDRV_MODULE_BUILD), YES)
+CONFIG_LG_BUILTIN_KDRIVER := m
+endif
+
+endif
+
+obj-$(CONFIG_LG_BUILTIN_KDRIVER)    += lg1k.o
+lg1k-objs          := $(KDRV_MODULE_OBJS)
+
+# fwload 는 vdec, audio 중 하나라도 활성화된 경우에만 빌드한다.
+ifneq (,$(filter YES, $(INCLUDE_KDRV_VDEC) $(INCLUDE_KDRV_AUDIO)))
+export INCLUDE_KDRV_VDEC INCLUDE_KDRV_SE
+export INCLUDE_KDRV_AUDIO
+obj-y	+= fwload/
+endif
+
+ifeq ($(INCLUDE_KDRV_AUDIO), YES)
+ifneq (,$(filter $(PLATFORM_CHIP_NAME), o20 e60))
+obj-y	+= audio/
+else
+obj-y	+= aud/
+endif
+endif
+
+obj-y	+= hma/
+obj-y	+= pmt/
+
+ifeq ($(INCLUDE_KDRV_HDMI20), YES)
+endif
+
+ifeq ($(BUILD_FEATURE_audio_board), y)
+# audio only 보드 환경에서는 audio 외의 드라이버 빌드를 하지 않음
+# see http://jira.lge.com/issue/browse/SICDTV-15376
+else
+ifeq ($(INCLUDE_KDRV_VDEC), YES)
+export INCLUDE_KDRV_DE
+obj-y	+= vdec/
+endif
+
+ifeq ($(INCLUDE_KDRV_DEMOD), YES)
+obj-y	+= demod/khal/
+endif
+
+ifneq ($(filter $(PLATFORM_CHIP_NAME),o20 e60),)
+obj-y	+= ../chip/$(PLATFORM_CHIP_NAME)/cpc/
+endif
+
+ifneq ($(PLATFORM_CHIP_NAME), m23)
+obj-y	+= lne/
+endif
+obj-y	+= gpu/kernel/
+obj-$(CONFIG_DRM_LG1K)	+= drm/
+
+obj-y	+= ddr/
+obj-y 	+= sheap/
+
+endif # BUILD_FEATURE_audio_board
+
+# vim:set ft=make:

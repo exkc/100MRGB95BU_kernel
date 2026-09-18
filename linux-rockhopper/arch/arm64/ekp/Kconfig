@@ -1,0 +1,90 @@
+menuconfig EKP
+	bool "Enhanced Kernel Protection"
+	depends on MMU && HAVE_ARM_SMCCC && !JUMP_LABEL
+	depends on ARM64_4K_PAGES
+	depends on !NUMA && !KVM && !HUGETLBFS && !BPF_JIT
+	depends on !TRANSPARENT_HUGEPAGE
+	select STRICT_KERNEL_RWX
+	select RODATA_FULL_DEFAULT_ENABLED
+	help
+	  This option allows you to enable support for EKP (Enhanced Kernel
+	  Protection). This is to protect MMU page tables for mitigating
+	  malicious attacks to detour the kernel memory access permissions
+	  such as read-only for kernel '.text', '.rodata', or PXN (Privilege
+	  Execute-Never) for user address spaces.
+
+if EKP
+
+config EKP_FORCE_ENABLE
+	bool "Enable EKP by force"
+	default n
+	help
+	  Say Y if you want to force EKP to be enabled no matter what value
+	  is set to kernel parameter "ekp_enabled".
+
+	  *** You MUST enable this on the production kernel. ***
+
+config EKP_SYSMEM_PHYS_BASE
+	hex "Physical memory base address"
+	default 0x00000000
+	help
+	  This option defines the physical memory base base address.
+	  This information is used for romempool test bit mechanism.
+
+config EKP_MAX_MEMBLOCK_COUNT
+	int "kernel memory block max count for passing to ekp-fw"
+	default 100
+	help
+	  Defines the maximum count of memory block structures
+	  to be passed to "ekp-fw"
+
+source "arch/arm64/ekp/fw/Kconfig"
+
+config EKP_CRED_PROTECTION
+	bool "Make task credentials read-only"
+	default n
+	help
+	  Credential is a key structure which has lots of security
+	  informations such as UID/GID and security capabilities.
+	  When this option is enabled, EKP makes credentials read-only
+	  to prevent any modifications from malicious attacks.
+
+config EKP_CRED_TAG
+	bool "Cred pointer tag"
+	depends on EKP_CRED_PROTECTION
+	default n
+	help
+	  It is necessary to check whether the cred pointer has been
+	  tampered with by a hacker. Tagging can be confirmed and
+	  error checked using the tgid of task_struct.
+
+config EKP_CRED_OVERRIDE
+	bool "Cred override protection(experimental)"
+	depends on EKP_CRED_PROTECTION
+	default n
+	help
+	  The usage pattern of CRED's override/revert function
+	  is very diverse. In order to apply a mechanism to protect
+	  overridden cred, the logic analysis must be performed clearly
+	  before changing it to default y.
+
+config EKP_MODULE_PROTECTION
+	depends on MODULES && STRICT_MODULE_RWX
+	depends on !LIVEPATCH
+	def_bool y
+	help
+	  This option applies W^X mappings on LKM memory spaces forcedly.
+	  The EKP firmware binary can detect that the mapping information
+	  is changed by the outside by marking the corresponding mapping.
+
+config EKP_FAULT_NOTIFIER
+	bool "Fault Notifier to pass the reason of EKP violation"
+	depends on FAULT_NOTIFIER
+	default n
+	help
+	  If you want to pass the reason of EKP violation to the Fault
+	  Manager using Fault Notifier, then say Y.
+
+source "arch/arm64/ekp/debug/Kconfig"
+
+endif # EKP

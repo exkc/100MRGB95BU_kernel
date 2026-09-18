@@ -1,0 +1,78 @@
+
+.rst-content code.literal {
+    color : black;
+
+}
+
+.rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td,.wy-table-backed,.wy-table-odd td,.wy-table-striped tr:nth-child(2n-1) td {
+    background-color: white
+}
+
+.rst-content table.docutils td{
+    background-color:white;
+    border:1px solid rgb(225, 228, 229)
+}
+
+td dl, td dl dd {
+    margin-bottom:0px !important;
+}
+
+td ul, dd ul {
+    margin-bottom:0px !important;
+    margin-top:1rem;
+}
+
+.rst-content td p code, .rst-content tt, td p code {
+    white-space: nowrap;
+    max-width: 100%;
+    background-color: white;
+    border: 0;
+    font-size: 75%;
+    padding: 0 5px;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,Courier,monospace;
+    color: #e74c3c;
+    overflow-x: auto;
+}
+
+td ul li p {
+    font-size: inherit
+}
+
+dd ul li p {
+    font-size: inherit
+}
+
+td p {
+    height: 18px
+}
+
+th.head {
+    background-color: #f4f5f7
+}
+
+.rst-content dl dt {
+    font-weight:400
+}
+
+.rst-content .code-block-caption {
+    padding-bottom: 10px;
+    border: 1px solid #e1e4e5;
+    border-radius: 5px 5px 0 0;
+    background-color: #f5f5f5;
+    padding-left: 12px;
+    font-weight: 900;
+    text-align: left;
+}
+
+.rst-content div.highlight-cpp.notranslate {
+    margin-top : 0;
+}
+
+.rst-content div.highlight pre {
+    background-color: lightgray;
+}
+
+.wy-nav-content {
+    padding : 30px;
+    max-width : 860px;
+}

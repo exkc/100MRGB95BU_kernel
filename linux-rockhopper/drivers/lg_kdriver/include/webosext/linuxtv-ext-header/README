@@ -1,0 +1,69 @@
+    The linuxtv-ext-header defines tv extensions not defined in the standard
+or de facto standard. There are two directories at this moment: 'dvbv5-ext'
+and 'v4l2-ext'. The header files in this repository are used for implementing
+both kernel and user drivers. Developers should not define data structures
+or types that are used exclusively in userland.
+
+
+========================================
+  DIRECTORIES
+========================================
+    Currently, there are two directories extending standards, 'dvbv5-ext',
+'v4l2-ext'. If you need to extend another standard, you can add a directory,
+e.g., 'alsa-ext' directory.
+
+linux/dvbv5-ext:
+    This directory defines tv extensions not defined in the dvbv5. Every
+header in this directory should include the 'linuxtv-ext-ver.h' like below.
+
+    #include <linux/linuxtv-ext-ver.h>
+
+linux/v4l2-ext:
+    This directory defines tv extensions not defined in the v4l2. Every
+header in this directory should include 'linuxtv-ext-ver.h' like below.
+
+    #include <linux/linuxtv-ext-ver.h>
+
+
+========================================
+  VERSION
+========================================
+    Platform software can run on two different soc drivers. In the
+development phase, each driver implementation may not be able to keep the
+same header version for each other. For example, some APIs implemented in
+soc A is not yet implemented in soc B. To prevent inconvenience caused by
+this, userland developer can use the following version:
+
+    #if (LINUXTV_EXT_VER_CUR > LINUXTV_EXT_VER(1,0,0,1)
+        // do something that you can afeter v1.0.0-1
+    #else
+        // do something that you can before v1.0.0-1
+    #endif
+
+    The version is composed of MAJOR, MINOR, PATCH, and SUBMISSION defined
+in the linuxtv-ext-ver.h. Every header defining APIs or data structure
+shared by both kernel and userspace should include 'linuxtv-ext-ver.h' file.
+SUBMISSION should be identical with the tag submission. Therefore API
+manager should set SUBMISSION field in 'linuxtv-ext-ver.h' before he or she
+tags a submission.
+
+
+========================================
+  Notes for userland software developer
+========================================
+    Headers under dvbv5-ext will be placed under
+'/sysroot/usr/include/linux/dvbv5-ext/' directory. In oe-build,
+'linuxtv-ext-header.bb' file do this for you. You can include the header
+as below.
+
+    #include <linux/dvbv5-ext/someheader.h>
+
+
+========================================
+  Notes for kernel driver developer
+========================================
+    Kernel driver developers should put headers in this repository on proper
+location on their own. In the oe-build environment, you can add dependency
+to 'linuxtv-ext-header'. Before fetching your driver, you should copy
+'linux/dvbv5-ext/*', 'linux/v4l2-ext/*', and 'linux/linuxtv-ext-ver.h' to place where you want
+, probably under $kernel_src/include/uapi/linux.

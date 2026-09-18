@@ -1,0 +1,29 @@
+
+GPU_RELEASE-$(KDRV_OLD_PIONEER) = r28/
+GPU_RELEASE-$(KDRV_OLD_PIONEER)_o24 = v43/
+#GPU_RELEASE-m19 = m12/
+GPU_RELEASE-m19 = m17/
+GPU_RELEASE-o20 = r28/
+GPU_RELEASE-e60 = r28/
+GPU_RELEASE-o22 = b46/
+GPU_RELEASE-m23 = b46/
+
+# v53 on bulssi
+GPU_BULSSI = $(if $(findstring bulssi,$(BUILD_FEATURES)),YES)
+GPU_RELEASE-$(GPU_BULSSI)_o24 = v53/
+GPU_RELEASE-$(GPU_BULSSI)_o26 = v53/
+
+# for webos
+GPU_RELEASE-o24 = v46/
+GPU_RELEASE-o26 = v46/
+
+GPU_RELEASE = $(firstword \
+	$(GPU_RELEASE-YES_$(PLATFORM_CHIP_NAME)) \
+	$(GPU_RELEASE-YES) \
+	$(GPU_RELEASE-$(PLATFORM_CHIP_NAME)) \
+	xXx)
+export GPU_RELEASE
+
+obj-y += $(GPU_RELEASE)
+
+# vim: set filetype=make:

@@ -1,0 +1,1 @@
+../../webosext/alsa-ext-soundengine-header/linux/alsa-ext-lgse.h

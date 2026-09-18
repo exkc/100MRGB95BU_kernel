@@ -1,0 +1,956 @@
+#ifndef __CTOP_CTRL_REG_O24_A0_H__
+#define __CTOP_CTRL_REG_O24_A0_H__
+
+/*----------------------------------------------------------------------------------------
+    Control Constants
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+    File Inclusions
+----------------------------------------------------------------------------------------*/
+// TODO: O24_Adapter_Register_Manual
+
+// O24_IPW_Register_Manual
+#include "o24a0/ip_ctrl_aud_o24a0.h"
+#include "o24a0/ip_ctrl_cco_o24a0.h"
+#include "o24a0/ip_ctrl_cpu_o24a0.h"
+#include "o24a0/ip_ctrl_cvi_o24a0.h"
+#include "o24a0/ip_ctrl_dbb_o24a0.h"
+#include "o24a0/ip_ctrl_dsc_o24a0.h"
+#include "o24a0/ip_ctrl_edid_o24a0.h"
+#include "o24a0/ip_ctrl_fmc_o24a0.h"
+#include "o24a0/ip_ctrl_fms_o24a0.h"
+#include "o24a0/ip_ctrl_gsc_o24a0.h"
+#include "o24a0/ip_ctrl_hdmi_o24a0.h"
+#include "o24a0/ip_ctrl_hdr_o24a0.h"
+#include "o24a0/ip_ctrl_imx_o24a0.h"
+#include "o24a0/ip_ctrl_led_o24a0.h"
+#include "o24a0/ip_ctrl_lnx0_o24a0.h"
+#include "o24a0/ip_ctrl_lnx1_o24a0.h"
+#include "o24a0/ip_ctrl_me0_o24a0.h"
+#include "o24a0/ip_ctrl_me1_o24a0.h"
+#include "o24a0/ip_ctrl_nd0_o24a0.h"
+#include "o24a0/ip_ctrl_nd1_o24a0.h"
+#include "o24a0/ip_ctrl_sre_o24a0.h"
+#include "o24a0/ip_ctrl_tcon_o24a0.h"
+#include "o24a0/ip_ctrl_te_o24a0.h"
+#include "o24a0/ip_ctrl_vd0_o24a0.h"
+#include "o24a0/ip_ctrl_vd1_o24a0.h"
+#include "o24a0/ip_ctrl_vdo_o24a0.h"
+#include "o24a0/ip_ctrl_vsd_o24a0.h"
+#include "o24a0/sb_ctrl_fmgsesb_o24a0.h"
+#include "o24a0/sb_ctrl_lb0sb_o24a0.h"
+#include "o24a0/sb_ctrl_lb1sb_o24a0.h"
+#include "o24a0/sb_ctrl_vd2vmsb_o24a0.h"
+
+// O24_CTOP_SYN_Register_Manual
+#include "o24a0/bnd_ctrl_aud_o24a0.h"
+#include "o24a0/bnd_ctrl_bmc_o24a0.h"
+#include "o24a0/bnd_ctrl_cco_o24a0.h"
+#include "o24a0/bnd_ctrl_cpu_o24a0.h"
+#include "o24a0/bnd_ctrl_edid_o24a0.h"
+#include "o24a0/bnd_ctrl_emmc_o24a0.h"
+#include "o24a0/bnd_ctrl_gsc_o24a0.h"
+#include "o24a0/bnd_ctrl_hdmi_o24a0.h"
+#include "o24a0/bnd_ctrl_lnx0_o24a0.h"
+#include "o24a0/bnd_ctrl_m0_o24a0.h"
+#include "o24a0/bnd_ctrl_m1_o24a0.h"
+#include "o24a0/bnd_ctrl_m2_o24a0.h"
+#include "o24a0/bnd_ctrl_nd1_o24a0.h"
+#include "o24a0/bnd_ctrl_venc_o24a0.h"
+#include "o24a0/bnd_ctrl_woc_o24a0.h"
+
+#include "o24a0/drg_ctrl_o24a0.h"
+#include "o24a0/micom_crg_top_woc_ctrl_o24a0.h"
+#include "o24a0/micom_pw_ctrl_o24a0.h"
+#include "o24a0/mip_ctrl_tsadc_o24a0.h"
+#include "o24a0/pvmcon_cpu_o24a0.h"
+#include "o24a0/tmux_ctrl_o24a0.h"
+#include "o24a0/trg_ctrl_o24a0.h"
+
+// O24_CTOP_PAD_Register_Manual
+#include "o24a0/iomux_ctrl_bmc_o24a0.h"
+#include "o24a0/iomux_ctrl_edid_o24a0.h"
+#include "o24a0/iomux_ctrl_lnx1_o24a0.h"
+#include "o24a0/iomux_ctrl_vd0_o24a0.h"
+#include "o24a0/iomux_ctrl_vd1_o24a0.h"
+#include "o24a0/iomux_ctrl_vd2_o24a0.h"
+#include "o24a0/micom_iomux_ctrl_woc_o24a0.h"
+
+// O24_CTOP_MIP_Adaptor_Register_Manual
+#include "o24a0/mip_ctrl_acodec_o24a0.h"
+#include "o24a0/mip_ctrl_adc_o24a0.h"
+#include "o24a0/mip_ctrl_c4tx_o24a0.h"
+#include "o24a0/mip_ctrl_earc_o24a0.h"
+#include "o24a0/mip_ctrl_hdmi_dpm_o24a0.h"
+#include "o24a0/pmcu_mip_ctrl_sadc_cpu_o24a0.h"
+
+// O24_CRG_SUB_Register_Manual
+#include "o24a0/bcrg_ctrl_aud_o24a0.h"
+#include "o24a0/bcrg_ctrl_bmc_o24a0.h"
+#include "o24a0/bcrg_ctrl_cco_o24a0.h"
+#include "o24a0/bcrg_ctrl_cpu_o24a0.h"
+#include "o24a0/bcrg_ctrl_cvi_o24a0.h"
+#include "o24a0/bcrg_ctrl_dnsr_o24a0.h"
+#include "o24a0/bcrg_ctrl_dpe_o24a0.h"
+#include "o24a0/bcrg_ctrl_edid_o24a0.h"
+#include "o24a0/bcrg_ctrl_emmc_o24a0.h"
+#include "o24a0/bcrg_ctrl_fmc_o24a0.h"
+#include "o24a0/bcrg_ctrl_fms_o24a0.h"
+#include "o24a0/bcrg_ctrl_gsc_o24a0.h"
+#include "o24a0/bcrg_ctrl_hdmi_o24a0.h"
+#include "o24a0/bcrg_ctrl_hdr_o24a0.h"
+#include "o24a0/bcrg_ctrl_imx_o24a0.h"
+#include "o24a0/bcrg_ctrl_lbm_o24a0.h"
+#include "o24a0/bcrg_ctrl_lnx0_o24a0.h"
+#include "o24a0/bcrg_ctrl_lnx1_o24a0.h"
+#include "o24a0/bcrg_ctrl_lnx2_o24a0.h"
+#include "o24a0/bcrg_ctrl_m0_o24a0.h"
+#include "o24a0/bcrg_ctrl_m1_o24a0.h"
+#include "o24a0/bcrg_ctrl_m2_o24a0.h"
+#include "o24a0/bcrg_ctrl_me0_o24a0.h"
+#include "o24a0/bcrg_ctrl_me1_o24a0.h"
+#include "o24a0/bcrg_ctrl_nd0_o24a0.h"
+#include "o24a0/bcrg_ctrl_nd1_o24a0.h"
+#include "o24a0/bcrg_ctrl_sre_o24a0.h"
+#include "o24a0/bcrg_ctrl_vd0_o24a0.h"
+#include "o24a0/bcrg_ctrl_vd1_o24a0.h"
+#include "o24a0/bcrg_ctrl_vd2_o24a0.h"
+#include "o24a0/bcrg_ctrl_venc_o24a0.h"
+
+#include "o24a0/cpu_scrg_ctrl_pmcu_o24a0.h"
+#include "o24a0/cpu_scrg_ctrl_vmcu_o24a0.h"
+
+#include "o24a0/mcrg_ctrl_aud_o24a0.h"
+#include "o24a0/mcrg_ctrl_bmc_o24a0.h"
+#include "o24a0/mcrg_ctrl_cco_o24a0.h"
+#include "o24a0/mcrg_ctrl_cpu_o24a0.h"
+#include "o24a0/mcrg_ctrl_cvi_o24a0.h"
+#include "o24a0/mcrg_ctrl_dnsr_o24a0.h"
+#include "o24a0/mcrg_ctrl_dpe_o24a0.h"
+#include "o24a0/mcrg_ctrl_edid_o24a0.h"
+#include "o24a0/mcrg_ctrl_emmc_o24a0.h"
+#include "o24a0/mcrg_ctrl_fmc_o24a0.h"
+#include "o24a0/mcrg_ctrl_fms_o24a0.h"
+#include "o24a0/mcrg_ctrl_gsc_o24a0.h"
+#include "o24a0/mcrg_ctrl_hdmi_o24a0.h"
+#include "o24a0/mcrg_ctrl_hdr_o24a0.h"
+#include "o24a0/mcrg_ctrl_imx_o24a0.h"
+#include "o24a0/mcrg_ctrl_lbm_o24a0.h"
+#include "o24a0/mcrg_ctrl_lnx0_o24a0.h"
+#include "o24a0/mcrg_ctrl_lnx1_o24a0.h"
+#include "o24a0/mcrg_ctrl_lnx2_o24a0.h"
+#include "o24a0/mcrg_ctrl_m0_o24a0.h"
+#include "o24a0/mcrg_ctrl_m1_o24a0.h"
+#include "o24a0/mcrg_ctrl_m2_o24a0.h"
+#include "o24a0/mcrg_ctrl_me0_o24a0.h"
+#include "o24a0/mcrg_ctrl_me1_o24a0.h"
+#include "o24a0/mcrg_ctrl_nd0_o24a0.h"
+#include "o24a0/mcrg_ctrl_nd1_o24a0.h"
+#include "o24a0/mcrg_ctrl_sre_o24a0.h"
+#include "o24a0/mcrg_ctrl_vd0_o24a0.h"
+#include "o24a0/mcrg_ctrl_vd1_o24a0.h"
+#include "o24a0/mcrg_ctrl_vd2_o24a0.h"
+#include "o24a0/mcrg_ctrl_venc_o24a0.h"
+
+#include "o24a0/micom_bcrg_ctrl_woc_o24a0.h"
+#include "o24a0/micom_mcrg_ctrl_woc_o24a0.h"
+#include "o24a0/micom_scrg_ctrl_micom_o24a0.h"
+
+#include "o24a0/scrg_ctrl_aud_o24a0.h"
+#include "o24a0/scrg_ctrl_cco_o24a0.h"
+#include "o24a0/scrg_ctrl_cpu_o24a0.h"
+#include "o24a0/scrg_ctrl_cvi_o24a0.h"
+#include "o24a0/scrg_ctrl_dbb_o24a0.h"
+#include "o24a0/scrg_ctrl_ddr0sb_o24a0.h"
+#include "o24a0/scrg_ctrl_ddr1sb_o24a0.h"
+#include "o24a0/scrg_ctrl_ddr2sb_o24a0.h"
+#include "o24a0/scrg_ctrl_dmcu_o24a0.h"
+#include "o24a0/scrg_ctrl_dnnr_o24a0.h"
+#include "o24a0/scrg_ctrl_dnsr_o24a0.h"
+#include "o24a0/scrg_ctrl_dsc_o24a0.h"
+#include "o24a0/scrg_ctrl_edid_o24a0.h"
+#include "o24a0/scrg_ctrl_emmc_o24a0.h"
+#include "o24a0/scrg_ctrl_ephy_o24a0.h"
+#include "o24a0/scrg_ctrl_epusb_o24a0.h"
+#include "o24a0/scrg_ctrl_fmc_o24a0.h"
+#include "o24a0/scrg_ctrl_fmgsesb_o24a0.h"
+#include "o24a0/scrg_ctrl_fms_o24a0.h"
+#include "o24a0/scrg_ctrl_gfx_o24a0.h"
+#include "o24a0/scrg_ctrl_gpu_o24a0.h"
+#include "o24a0/scrg_ctrl_gsc_o24a0.h"
+#include "o24a0/scrg_ctrl_hdmi_o24a0.h"
+#include "o24a0/scrg_ctrl_hdr_o24a0.h"
+#include "o24a0/scrg_ctrl_icod_o24a0.h"
+#include "o24a0/scrg_ctrl_icvesb_o24a0.h"
+#include "o24a0/scrg_ctrl_imvdsb_o24a0.h"
+#include "o24a0/scrg_ctrl_imx_o24a0.h"
+#include "o24a0/scrg_ctrl_lb0sb_o24a0.h"
+#include "o24a0/scrg_ctrl_lb1sb_o24a0.h"
+#include "o24a0/scrg_ctrl_lb2sb_o24a0.h"
+#include "o24a0/scrg_ctrl_lbus_o24a0.h"
+#include "o24a0/scrg_ctrl_led_o24a0.h"
+#include "o24a0/scrg_ctrl_lnx0_o24a0.h"
+#include "o24a0/scrg_ctrl_lnx1_o24a0.h"
+#include "o24a0/scrg_ctrl_lnx2_o24a0.h"
+#include "o24a0/scrg_ctrl_m0_o24a0.h"
+#include "o24a0/scrg_ctrl_m1_o24a0.h"
+#include "o24a0/scrg_ctrl_m2_o24a0.h"
+#include "o24a0/scrg_ctrl_me0_o24a0.h"
+#include "o24a0/scrg_ctrl_me1_o24a0.h"
+#include "o24a0/scrg_ctrl_mefmssb_o24a0.h"
+#include "o24a0/scrg_ctrl_nd0_o24a0.h"
+#include "o24a0/scrg_ctrl_nd1_o24a0.h"
+#include "o24a0/scrg_ctrl_sre_o24a0.h"
+#include "o24a0/scrg_ctrl_tcon_o24a0.h"
+#include "o24a0/scrg_ctrl_te_o24a0.h"
+#include "o24a0/scrg_ctrl_usbsb_o24a0.h"
+#include "o24a0/scrg_ctrl_usb_ss1_o24a0.h"
+#include "o24a0/scrg_ctrl_usb_ss2_o24a0.h"
+#include "o24a0/scrg_ctrl_usb_ss3_o24a0.h"
+#include "o24a0/scrg_ctrl_usb_ss4_o24a0.h"
+#include "o24a0/scrg_ctrl_vd0_o24a0.h"
+#include "o24a0/scrg_ctrl_vd1_o24a0.h"
+#include "o24a0/scrg_ctrl_vd2vmsb_o24a0.h"
+#include "o24a0/scrg_ctrl_vd2_o24a0.h"
+#include "o24a0/scrg_ctrl_vdo_o24a0.h"
+#include "o24a0/scrg_ctrl_venc_o24a0.h"
+#include "o24a0/scrg_ctrl_vsd_o24a0.h"
+
+#include "o24a0/fsc_ctrl_o24a0.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct
+{
+    //
+    // TODO: O24_Adapter_Register_Manual
+    //
+
+    //
+    // O24_IPW_Register_Manual
+    //
+    IP_CTRL_AUD_REG_O24A0_T*                 IP_CTRL_AUD;
+    IP_CTRL_CCO_REG_O24A0_T*                 IP_CTRL_CCO;
+    IP_CTRL_CPU_REG_O24A0_T*                 IP_CTRL_CPU;
+    IP_CTRL_CVI_REG_O24A0_T*                 IP_CTRL_CVI;
+    IP_CTRL_DBB_REG_O24A0_T*                 IP_CTRL_DBB;
+    IP_CTRL_DSC_REG_O24A0_T*                 IP_CTRL_DSC;
+    IP_CTRL_EDID_REG_O24A0_T*                IP_CTRL_EDID;
+    IP_CTRL_FMC_REG_O24A0_T*                 IP_CTRL_FMC;
+    IP_CTRL_FMS_REG_O24A0_T*                 IP_CTRL_FMS;
+    IP_CTRL_GSC_REG_O24A0_T*                 IP_CTRL_GSC;
+    IP_CTRL_HDMI_REG_O24A0_T*                IP_CTRL_HDMI;
+    IP_CTRL_HDR_REG_O24A0_T*                 IP_CTRL_HDR;
+    IP_CTRL_IMX_REG_O24A0_T*                 IP_CTRL_IMX;
+    IP_CTRL_LED_REG_O24A0_T*                 IP_CTRL_LED;
+    IP_CTRL_LNX0_REG_O24A0_T*                IP_CTRL_LNX0;
+    IP_CTRL_LNX1_REG_O24A0_T*                IP_CTRL_LNX1;
+    IP_CTRL_ME0_REG_O24A0_T*                 IP_CTRL_ME0;
+    IP_CTRL_ME1_REG_O24A0_T*                 IP_CTRL_ME1;
+    IP_CTRL_ND0_REG_O24A0_T*                 IP_CTRL_ND0;
+    IP_CTRL_ND1_REG_O24A0_T*                 IP_CTRL_ND1;
+    IP_CTRL_SRE_REG_O24A0_T*                 IP_CTRL_SRE;
+    IP_CTRL_TCON_REG_O24A0_T*                IP_CTRL_TCON;
+    IP_CTRL_TE_REG_O24A0_T*                  IP_CTRL_TE;
+    IP_CTRL_VD0_REG_O24A0_T*                 IP_CTRL_VD0;
+    IP_CTRL_VD1_REG_O24A0_T*                 IP_CTRL_VD1;
+    IP_CTRL_VDO_REG_O24A0_T*                 IP_CTRL_VDO;
+    IP_CTRL_VSD_REG_O24A0_T*                 IP_CTRL_VSD;
+    SB_CTRL_FMGSESB_REG_O24A0_T*             SB_CTRL_FMGSESB;
+    SB_CTRL_LB0SB_REG_O24A0_T*               SB_CTRL_LB0SB;
+    SB_CTRL_LB1SB_REG_O24A0_T*               SB_CTRL_LB1SB;
+    SB_CTRL_VD2VMSB_REG_O24A0_T*             SB_CTRL_VD2VMSB;
+    //
+    // O24_CTOP_SYN_Register_Manual
+    //
+    BND_CTRL_AUD_REG_O24A0_T*                BND_CTRL_AUD;
+    BND_CTRL_BMC_REG_O24A0_T*                BND_CTRL_BMC;
+    BND_CTRL_CCO_REG_O24A0_T*                BND_CTRL_CCO;
+    BND_CTRL_CPU_REG_O24A0_T*                BND_CTRL_CPU;
+    BND_CTRL_EDID_REG_O24A0_T*               BND_CTRL_EDID;
+    BND_CTRL_EMMC_REG_O24A0_T*               BND_CTRL_EMMC;
+    BND_CTRL_GSC_REG_O24A0_T*                BND_CTRL_GSC;
+    BND_CTRL_HDMI_REG_O24A0_T*               BND_CTRL_HDMI;
+    BND_CTRL_LNX0_REG_O24A0_T*               BND_CTRL_LNX0;
+    BND_CTRL_M0_REG_O24A0_T*                 BND_CTRL_M0;
+    BND_CTRL_M1_REG_O24A0_T*                 BND_CTRL_M1;
+    BND_CTRL_M2_REG_O24A0_T*                 BND_CTRL_M2;
+    BND_CTRL_ND1_REG_O24A0_T*                BND_CTRL_ND1;
+    BND_CTRL_VENC_REG_O24A0_T*               BND_CTRL_VENC;
+    DRG_CTRL_REG_O24A0_T*                    DRG_CTRL;
+    MIP_CTRL_TSADC_REG_O24A0_T*              MIP_CTRL_TSADC;
+    PVMCON_CPU_REG_O24A0_T*                  PVMCON_CPU;
+    TMUX_CTRL_REG_O24A0_T*                   TMUX_CTRL;
+    TRG_CTRL_REG_O24A0_T*                    TRG_CTRL;
+    BND_CTRL_WOC_REG_O24A0_T*                CPU_BND_CTRL_WOC;
+    BND_CTRL_WOC_REG_O24A0_T*                MICOM_BND_CTRL_WOC;
+    BND_CTRL_WOC_REG_O24A0_T*                PMCU_BND_CTRL_WOC;
+    BND_CTRL_WOC_REG_O24A0_T*                VMCU_BND_CTRL_WOC;
+    MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T*      CPU_CRG_TOP_WOC_CTRL;
+    MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T*      MICOM_CRG_TOP_WOC_CTRL;
+    MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T*      PMCU_CRG_TOP_WOC_CTRL;
+    MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T*      VMCU_CRG_TOP_WOC_CTRL;
+    MICOM_PW_CTRL_REG_O24A0_T*               CPU_PW_CTRL;
+    MICOM_PW_CTRL_REG_O24A0_T*               MICOM_PW_CTRL;
+    MICOM_PW_CTRL_REG_O24A0_T*               PMCU_PW_CTRL;
+    MICOM_PW_CTRL_REG_O24A0_T*               VMCU_PW_CTRL;
+    //
+    // O24_CTOP_PAD_Register_Manual
+    //
+    IOMUX_CTRL_BMC_REG_O24A0_T*              IOMUX_CTRL_BMC;
+    IOMUX_CTRL_EDID_REG_O24A0_T*             IOMUX_CTRL_EDID;
+    IOMUX_CTRL_LNX1_REG_O24A0_T*             IOMUX_CTRL_LNX1;
+    IOMUX_CTRL_VD0_REG_O24A0_T*              IOMUX_CTRL_VD0;
+    IOMUX_CTRL_VD1_REG_O24A0_T*              IOMUX_CTRL_VD1;
+    IOMUX_CTRL_VD2_REG_O24A0_T*              IOMUX_CTRL_VD2;
+    MICOM_IOMUX_CTRL_WOC_REG_O24A0_T*        CPU_IOMUX_CTRL_WOC;
+    MICOM_IOMUX_CTRL_WOC_REG_O24A0_T*        MICOM_IOMUX_CTRL_WOC;
+    MICOM_IOMUX_CTRL_WOC_REG_O24A0_T*        PMCU_IOMUX_CTRL_WOC;
+    MICOM_IOMUX_CTRL_WOC_REG_O24A0_T*        VMCU_IOMUX_CTRL_WOC;
+    //
+    // O24_CTOP_MIP_Adaptor_Register_Manual
+    //
+    MIP_CTRL_ACODEC_REG_O24A0_T*             MIP_CTRL_ACODEC;
+    MIP_CTRL_ADC_REG_O24A0_T*                MIP_CTRL_ADC;
+    MIP_CTRL_C4TX_REG_O24A0_T*               MIP_CTRL_C4TX;
+    MIP_CTRL_EARC_REG_O24A0_T*               MIP_CTRL_EARC;
+    MIP_CTRL_HDMI_DPM_REG_O24A0_T*           MIP_CTRL_HDMI_DPM;
+    PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T*      CPU_MIP_CTRL_SADC_CPU;
+    PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T*      MICOM_MIP_CTRL_SADC_CPU;
+    PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T*      PMCU_MIP_CTRL_SADC_CPU;
+    PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T*      VMCU_MIP_CTRL_SADC_CPU;
+
+    //
+    // O24_CRG_SUB_Register_Manual
+    //
+    BCRG_CTRL_AUD_REG_O24A0_T*               BCRG_CTRL_AUD;
+    BCRG_CTRL_BMC_REG_O24A0_T*               BCRG_CTRL_BMC;
+    BCRG_CTRL_CCO_REG_O24A0_T*               BCRG_CTRL_CCO;
+    BCRG_CTRL_CPU_REG_O24A0_T*               BCRG_CTRL_CPU;
+    BCRG_CTRL_CVI_REG_O24A0_T*               BCRG_CTRL_CVI;
+    BCRG_CTRL_DNSR_REG_O24A0_T*              BCRG_CTRL_DNSR;
+    BCRG_CTRL_DPE_REG_O24A0_T*               BCRG_CTRL_DPE;
+    BCRG_CTRL_EDID_REG_O24A0_T*              BCRG_CTRL_EDID;
+    BCRG_CTRL_EMMC_REG_O24A0_T*              BCRG_CTRL_EMMC;
+    BCRG_CTRL_FMC_REG_O24A0_T*               BCRG_CTRL_FMC;
+    BCRG_CTRL_FMS_REG_O24A0_T*               BCRG_CTRL_FMS;
+    BCRG_CTRL_GSC_REG_O24A0_T*               BCRG_CTRL_GSC;
+    BCRG_CTRL_HDMI_REG_O24A0_T*              BCRG_CTRL_HDMI;
+    BCRG_CTRL_HDR_REG_O24A0_T*               BCRG_CTRL_HDR;
+    BCRG_CTRL_IMX_REG_O24A0_T*               BCRG_CTRL_IMX;
+    BCRG_CTRL_LBM_REG_O24A0_T*               BCRG_CTRL_LBM;
+    BCRG_CTRL_LNX0_REG_O24A0_T*              BCRG_CTRL_LNX0;
+    BCRG_CTRL_LNX1_REG_O24A0_T*              BCRG_CTRL_LNX1;
+    BCRG_CTRL_LNX2_REG_O24A0_T*              BCRG_CTRL_LNX2;
+    BCRG_CTRL_M0_REG_O24A0_T*                BCRG_CTRL_M0;
+    BCRG_CTRL_M1_REG_O24A0_T*                BCRG_CTRL_M1;
+    BCRG_CTRL_M2_REG_O24A0_T*                BCRG_CTRL_M2;
+    BCRG_CTRL_ME0_REG_O24A0_T*               BCRG_CTRL_ME0;
+    BCRG_CTRL_ME1_REG_O24A0_T*               BCRG_CTRL_ME1;
+    BCRG_CTRL_ND0_REG_O24A0_T*               BCRG_CTRL_ND0;
+    BCRG_CTRL_ND1_REG_O24A0_T*               BCRG_CTRL_ND1;
+    BCRG_CTRL_SRE_REG_O24A0_T*               BCRG_CTRL_SRE;
+    BCRG_CTRL_VD0_REG_O24A0_T*               BCRG_CTRL_VD0;
+    BCRG_CTRL_VD1_REG_O24A0_T*               BCRG_CTRL_VD1;
+    BCRG_CTRL_VD2_REG_O24A0_T*               BCRG_CTRL_VD2;
+    BCRG_CTRL_VENC_REG_O24A0_T*              BCRG_CTRL_VENC;
+    MCRG_CTRL_AUD_REG_O24A0_T*               MCRG_CTRL_AUD;
+    MCRG_CTRL_BMC_REG_O24A0_T*               MCRG_CTRL_BMC;
+    MCRG_CTRL_CCO_REG_O24A0_T*               MCRG_CTRL_CCO;
+    MCRG_CTRL_CPU_REG_O24A0_T*               MCRG_CTRL_CPU;
+    MCRG_CTRL_CVI_REG_O24A0_T*               MCRG_CTRL_CVI;
+    MCRG_CTRL_DNSR_REG_O24A0_T*              MCRG_CTRL_DNSR;
+    MCRG_CTRL_DPE_REG_O24A0_T*               MCRG_CTRL_DPE;
+    MCRG_CTRL_EDID_REG_O24A0_T*              MCRG_CTRL_EDID;
+    MCRG_CTRL_EMMC_REG_O24A0_T*              MCRG_CTRL_EMMC;
+    MCRG_CTRL_FMC_REG_O24A0_T*               MCRG_CTRL_FMC;
+    MCRG_CTRL_FMS_REG_O24A0_T*               MCRG_CTRL_FMS;
+    MCRG_CTRL_GSC_REG_O24A0_T*               MCRG_CTRL_GSC;
+    MCRG_CTRL_HDMI_REG_O24A0_T*              MCRG_CTRL_HDMI;
+    MCRG_CTRL_HDR_REG_O24A0_T*               MCRG_CTRL_HDR;
+    MCRG_CTRL_IMX_REG_O24A0_T*               MCRG_CTRL_IMX;
+    MCRG_CTRL_LBM_REG_O24A0_T*               MCRG_CTRL_LBM;
+    MCRG_CTRL_LNX0_REG_O24A0_T*              MCRG_CTRL_LNX0;
+    MCRG_CTRL_LNX1_REG_O24A0_T*              MCRG_CTRL_LNX1;
+    MCRG_CTRL_LNX2_REG_O24A0_T*              MCRG_CTRL_LNX2;
+    MCRG_CTRL_M0_REG_O24A0_T*                MCRG_CTRL_M0;
+    MCRG_CTRL_M1_REG_O24A0_T*                MCRG_CTRL_M1;
+    MCRG_CTRL_M2_REG_O24A0_T*                MCRG_CTRL_M2;
+    MCRG_CTRL_ME0_REG_O24A0_T*               MCRG_CTRL_ME0;
+    MCRG_CTRL_ME1_REG_O24A0_T*               MCRG_CTRL_ME1;
+    MCRG_CTRL_ND0_REG_O24A0_T*               MCRG_CTRL_ND0;
+    MCRG_CTRL_ND1_REG_O24A0_T*               MCRG_CTRL_ND1;
+    MCRG_CTRL_SRE_REG_O24A0_T*               MCRG_CTRL_SRE;
+    MCRG_CTRL_VD0_REG_O24A0_T*               MCRG_CTRL_VD0;
+    MCRG_CTRL_VD1_REG_O24A0_T*               MCRG_CTRL_VD1;
+    MCRG_CTRL_VD2_REG_O24A0_T*               MCRG_CTRL_VD2;
+    MCRG_CTRL_VENC_REG_O24A0_T*              MCRG_CTRL_VENC;
+    SCRG_CTRL_AUD_REG_O24A0_T*               SCRG_CTRL_AUD;
+    SCRG_CTRL_CCO_REG_O24A0_T*               SCRG_CTRL_CCO;
+    SCRG_CTRL_CPU_REG_O24A0_T*               SCRG_CTRL_CPU;
+    SCRG_CTRL_CVI_REG_O24A0_T*               SCRG_CTRL_CVI;
+    SCRG_CTRL_DBB_REG_O24A0_T*               SCRG_CTRL_DBB;
+    SCRG_CTRL_DDR0SB_REG_O24A0_T*            SCRG_CTRL_DDR0SB;
+    SCRG_CTRL_DDR1SB_REG_O24A0_T*            SCRG_CTRL_DDR1SB;
+    SCRG_CTRL_DDR2SB_REG_O24A0_T*            SCRG_CTRL_DDR2SB;
+    SCRG_CTRL_DMCU_REG_O24A0_T*              SCRG_CTRL_DMCU;
+    SCRG_CTRL_DNNR_REG_O24A0_T*              SCRG_CTRL_DNNR;
+    SCRG_CTRL_DNSR_REG_O24A0_T*              SCRG_CTRL_DNSR;
+    SCRG_CTRL_DSC_REG_O24A0_T*               SCRG_CTRL_DSC;
+    SCRG_CTRL_EDID_REG_O24A0_T*              SCRG_CTRL_EDID;
+    SCRG_CTRL_EMMC_REG_O24A0_T*              SCRG_CTRL_EMMC;
+    SCRG_CTRL_EPHY_REG_O24A0_T*              SCRG_CTRL_EPHY;
+    SCRG_CTRL_EPUSB_REG_O24A0_T*             SCRG_CTRL_EPUSB;
+    SCRG_CTRL_FMC_REG_O24A0_T*               SCRG_CTRL_FMC;
+    SCRG_CTRL_FMGSESB_REG_O24A0_T*           SCRG_CTRL_FMGSESB;
+    SCRG_CTRL_FMS_REG_O24A0_T*               SCRG_CTRL_FMS;
+    SCRG_CTRL_GFX_REG_O24A0_T*               SCRG_CTRL_GFX;
+    SCRG_CTRL_GPU_REG_O24A0_T*               SCRG_CTRL_GPU;
+    SCRG_CTRL_GSC_REG_O24A0_T*               SCRG_CTRL_GSC;
+    SCRG_CTRL_HDMI_REG_O24A0_T*              SCRG_CTRL_HDMI;
+    SCRG_CTRL_HDR_REG_O24A0_T*               SCRG_CTRL_HDR;
+    SCRG_CTRL_ICOD_REG_O24A0_T*              SCRG_CTRL_ICOD;
+    SCRG_CTRL_ICVESB_REG_O24A0_T*            SCRG_CTRL_ICVESB;
+    SCRG_CTRL_IMVDSB_REG_O24A0_T*            SCRG_CTRL_IMVDSB;
+    SCRG_CTRL_IMX_REG_O24A0_T*               SCRG_CTRL_IMX;
+    SCRG_CTRL_LB0SB_REG_O24A0_T*             SCRG_CTRL_LB0SB;
+    SCRG_CTRL_LB1SB_REG_O24A0_T*             SCRG_CTRL_LB1SB;
+    SCRG_CTRL_LB2SB_REG_O24A0_T*             SCRG_CTRL_LB2SB;
+    SCRG_CTRL_LBUS_REG_O24A0_T*              SCRG_CTRL_LBUS;
+    SCRG_CTRL_LED_REG_O24A0_T*               SCRG_CTRL_LED;
+    SCRG_CTRL_LNX0_REG_O24A0_T*              SCRG_CTRL_LNX0;
+    SCRG_CTRL_LNX1_REG_O24A0_T*              SCRG_CTRL_LNX1;
+    SCRG_CTRL_LNX2_REG_O24A0_T*              SCRG_CTRL_LNX2;
+    SCRG_CTRL_M0_REG_O24A0_T*                SCRG_CTRL_M0;
+    SCRG_CTRL_M1_REG_O24A0_T*                SCRG_CTRL_M1;
+    SCRG_CTRL_M2_REG_O24A0_T*                SCRG_CTRL_M2;
+    SCRG_CTRL_ME0_REG_O24A0_T*               SCRG_CTRL_ME0;
+    SCRG_CTRL_ME1_REG_O24A0_T*               SCRG_CTRL_ME1;
+    SCRG_CTRL_MEFMSSB_REG_O24A0_T*           SCRG_CTRL_MEFMSSB;
+    SCRG_CTRL_ND0_REG_O24A0_T*               SCRG_CTRL_ND0;
+    SCRG_CTRL_ND1_REG_O24A0_T*               SCRG_CTRL_ND1;
+    SCRG_CTRL_SRE_REG_O24A0_T*               SCRG_CTRL_SRE;
+    SCRG_CTRL_TCON_REG_O24A0_T*              SCRG_CTRL_TCON;
+    SCRG_CTRL_TE_REG_O24A0_T*                SCRG_CTRL_TE;
+    SCRG_CTRL_USB_SS1_REG_O24A0_T*           SCRG_CTRL_USB_SS1;
+    SCRG_CTRL_USB_SS2_REG_O24A0_T*           SCRG_CTRL_USB_SS2;
+    SCRG_CTRL_USB_SS3_REG_O24A0_T*           SCRG_CTRL_USB_SS3;
+    SCRG_CTRL_USB_SS4_REG_O24A0_T*           SCRG_CTRL_USB_SS4;
+    SCRG_CTRL_USBSB_REG_O24A0_T*             SCRG_CTRL_USBSB;
+    SCRG_CTRL_VD0_REG_O24A0_T*               SCRG_CTRL_VD0;
+    SCRG_CTRL_VD1_REG_O24A0_T*               SCRG_CTRL_VD1;
+    SCRG_CTRL_VD2_REG_O24A0_T*               SCRG_CTRL_VD2;
+    SCRG_CTRL_VD2VMSB_REG_O24A0_T*           SCRG_CTRL_VD2VMSB;
+    SCRG_CTRL_VDO_REG_O24A0_T*               SCRG_CTRL_VDO;
+    SCRG_CTRL_VENC_REG_O24A0_T*              SCRG_CTRL_VENC;
+    SCRG_CTRL_VSD_REG_O24A0_T*               SCRG_CTRL_VSD;
+    MICOM_BCRG_CTRL_WOC_REG_O24A0_T*         CPU_BCRG_CTRL_WOC;
+    MICOM_BCRG_CTRL_WOC_REG_O24A0_T*         MICOM_BCRG_CTRL_WOC;
+    MICOM_BCRG_CTRL_WOC_REG_O24A0_T*         PMCU_BCRG_CTRL_WOC;
+    MICOM_BCRG_CTRL_WOC_REG_O24A0_T*         VMCU_BCRG_CTRL_WOC;
+    MICOM_MCRG_CTRL_WOC_REG_O24A0_T*         CPU_MCRG_CTRL_WOC;
+    MICOM_MCRG_CTRL_WOC_REG_O24A0_T*         MICOM_MCRG_CTRL_WOC;
+    MICOM_MCRG_CTRL_WOC_REG_O24A0_T*         PMCU_MCRG_CTRL_WOC;
+    MICOM_MCRG_CTRL_WOC_REG_O24A0_T*         VMCU_MCRG_CTRL_WOC;
+    MICOM_SCRG_CTRL_MICOM_REG_O24A0_T*       CPU_SCRG_CTRL_MICOM;
+    MICOM_SCRG_CTRL_MICOM_REG_O24A0_T*       MICOM_SCRG_CTRL_MICOM;
+    CPU_SCRG_CTRL_PMCU_REG_O24A0_T*          CPU_SCRG_CTRL_PMCU;
+    CPU_SCRG_CTRL_PMCU_REG_O24A0_T*          PMCU_SCRG_CTRL_PMCU;
+    CPU_SCRG_CTRL_VMCU_REG_O24A0_T*          CPU_SCRG_CTRL_VMCU;
+    CPU_SCRG_CTRL_VMCU_REG_O24A0_T*          VMCU_SCRG_CTRL_VMCU;
+
+	// ETC
+	FSC_CTRL_REG_O24A0_T*					FSC_CTRL;
+
+
+} CTOP_REG_O24A0_T;
+
+//
+// TODO: O24_Adapter_Register_Manual
+//
+
+//
+// O24_IPW_Register_Manual
+//
+#define O24_A0_IP_CTRL_AUD_BASE 0xCE441000
+#define O24_A0_IP_CTRL_AUD_TYPE IP_CTRL_AUD_REG_O24A0_T
+#define O24_A0_IP_CTRL_CCO_BASE 0xCC871000
+#define O24_A0_IP_CTRL_CCO_TYPE IP_CTRL_CCO_REG_O24A0_T
+#define O24_A0_IP_CTRL_CPU_BASE 0xCA211000
+#define O24_A0_IP_CTRL_CPU_TYPE IP_CTRL_CPU_REG_O24A0_T
+#define O24_A0_IP_CTRL_CVI_BASE 0xCCCD1000
+#define O24_A0_IP_CTRL_CVI_TYPE IP_CTRL_CVI_REG_O24A0_T
+#define O24_A0_IP_CTRL_DBB_BASE 0xC6881000
+#define O24_A0_IP_CTRL_DBB_TYPE IP_CTRL_DBB_REG_O24A0_T
+#define O24_A0_IP_CTRL_DSC_BASE 0xCCCF1000
+#define O24_A0_IP_CTRL_DSC_TYPE IP_CTRL_DSC_REG_O24A0_T
+#define O24_A0_IP_CTRL_EDID_BASE 0xC8831000
+#define O24_A0_IP_CTRL_EDID_TYPE IP_CTRL_EDID_REG_O24A0_T
+#define O24_A0_IP_CTRL_FMC_BASE 0xCC431000
+#define O24_A0_IP_CTRL_FMC_TYPE IP_CTRL_FMC_REG_O24A0_T
+#define O24_A0_IP_CTRL_FMS_BASE 0xCC4F1000
+#define O24_A0_IP_CTRL_FMS_TYPE IP_CTRL_FMS_REG_O24A0_T
+#define O24_A0_IP_CTRL_GSC_BASE 0xCC471000
+#define O24_A0_IP_CTRL_GSC_TYPE IP_CTRL_GSC_REG_O24A0_T
+#define O24_A0_IP_CTRL_HDMI_BASE 0xC8D41000
+#define O24_A0_IP_CTRL_HDMI_TYPE IP_CTRL_HDMI_REG_O24A0_T
+#define O24_A0_IP_CTRL_HDR_BASE 0xCCC21000
+#define O24_A0_IP_CTRL_HDR_TYPE IP_CTRL_HDR_REG_O24A0_T
+#define O24_A0_IP_CTRL_IMX_BASE 0xCC831000
+#define O24_A0_IP_CTRL_IMX_TYPE IP_CTRL_IMX_REG_O24A0_T
+#define O24_A0_IP_CTRL_LED_BASE 0xCC901000
+#define O24_A0_IP_CTRL_LED_TYPE IP_CTRL_LED_REG_O24A0_T
+#define O24_A0_IP_CTRL_LNX0_BASE 0xCC9D1000
+#define O24_A0_IP_CTRL_LNX0_TYPE IP_CTRL_LNX0_REG_O24A0_T
+#define O24_A0_IP_CTRL_LNX1_BASE 0xCC961000
+#define O24_A0_IP_CTRL_LNX1_TYPE IP_CTRL_LNX1_REG_O24A0_T
+#define O24_A0_IP_CTRL_ME0_BASE 0xCC4B1000
+#define O24_A0_IP_CTRL_ME0_TYPE IP_CTRL_ME0_REG_O24A0_T
+#define O24_A0_IP_CTRL_ME1_BASE 0xCC8B1000
+#define O24_A0_IP_CTRL_ME1_TYPE IP_CTRL_ME1_REG_O24A0_T
+#define O24_A0_IP_CTRL_ND0_BASE 0xCCC71000
+#define O24_A0_IP_CTRL_ND0_TYPE IP_CTRL_ND0_REG_O24A0_T
+#define O24_A0_IP_CTRL_ND1_BASE 0xCCCA1000
+#define O24_A0_IP_CTRL_ND1_TYPE IP_CTRL_ND1_REG_O24A0_T
+#define O24_A0_IP_CTRL_SRE_BASE 0xCC631000
+#define O24_A0_IP_CTRL_SRE_TYPE IP_CTRL_SRE_REG_O24A0_T
+#define O24_A0_IP_CTRL_TCON_BASE 0xCC921000
+#define O24_A0_IP_CTRL_TCON_TYPE IP_CTRL_TCON_REG_O24A0_T
+#define O24_A0_IP_CTRL_TE_BASE 0xCE481000
+#define O24_A0_IP_CTRL_TE_TYPE IP_CTRL_TE_REG_O24A0_T
+#define O24_A0_IP_CTRL_VD0_BASE 0xCEC71000
+#define O24_A0_IP_CTRL_VD0_TYPE IP_CTRL_VD0_REG_O24A0_T
+#define O24_A0_IP_CTRL_VD1_BASE 0xCEC31000
+#define O24_A0_IP_CTRL_VD1_TYPE IP_CTRL_VD1_REG_O24A0_T
+#define O24_A0_IP_CTRL_VDO_BASE 0xCCC41000
+#define O24_A0_IP_CTRL_VDO_TYPE IP_CTRL_VDO_REG_O24A0_T
+#define O24_A0_IP_CTRL_VSD_BASE 0xCCA31000
+#define O24_A0_IP_CTRL_VSD_TYPE IP_CTRL_VSD_REG_O24A0_T
+#define O24_A0_SB_CTRL_FMGSESB_BASE 0xCC531000
+#define O24_A0_SB_CTRL_FMGSESB_TYPE SB_CTRL_FMGSESB_REG_O24A0_T
+#define O24_A0_SB_CTRL_LB0SB_BASE 0xCCDE1000 // check me
+#define O24_A0_SB_CTRL_LB0SB_TYPE SB_CTRL_LB0SB_REG_O24A0_T
+#define O24_A0_SB_CTRL_LB1SB_BASE 0xCC551000 // check me
+#define O24_A0_SB_CTRL_LB1SB_TYPE SB_CTRL_LB1SB_REG_O24A0_T
+#define O24_A0_SB_CTRL_VD2VMSB_BASE 0xCECE1000 // check me
+#define O24_A0_SB_CTRL_VD2VMSB_TYPE SB_CTRL_VD2VMSB_REG_O24A0_T
+
+//
+// O24_CTOP_SYN_Register_Manual
+//
+#define O24_A0_BND_CTRL_AUD_BASE 0xCE492000
+#define O24_A0_BND_CTRL_AUD_TYPE BND_CTRL_AUD_REG_O24A0_T
+#define O24_A0_BND_CTRL_BMC_BASE 0xC68A2000
+#define O24_A0_BND_CTRL_BMC_TYPE BND_CTRL_BMC_REG_O24A0_T
+#define O24_A0_BND_CTRL_CCO_BASE 0xCC882000 // check me
+#define O24_A0_BND_CTRL_CCO_TYPE BND_CTRL_CCO_REG_O24A0_T
+#define O24_A0_BND_CTRL_CPU_BASE 0xCA222000
+#define O24_A0_BND_CTRL_CPU_TYPE BND_CTRL_CPU_REG_O24A0_T
+#define O24_A0_BND_CTRL_EDID_BASE 0xC8862000
+#define O24_A0_BND_CTRL_EDID_TYPE BND_CTRL_EDID_REG_O24A0_T
+#define O24_A0_BND_CTRL_EMMC_BASE 0xC4252000
+#define O24_A0_BND_CTRL_EMMC_TYPE BND_CTRL_EMMC_REG_O24A0_T
+#define O24_A0_BND_CTRL_GSC_BASE 0xCC482000 // check me
+#define O24_A0_BND_CTRL_GSC_TYPE BND_CTRL_GSC_REG_O24A0_T
+#define O24_A0_BND_CTRL_HDMI_BASE 0xC8D72000
+#define O24_A0_BND_CTRL_HDMI_TYPE BND_CTRL_HDMI_REG_O24A0_T
+#define O24_A0_BND_CTRL_LNX0_BASE 0xCC9E2000
+#define O24_A0_BND_CTRL_LNX0_TYPE BND_CTRL_LNX0_REG_O24A0_T
+#define O24_A0_BND_CTRL_M0_BASE 0xC4D32000
+#define O24_A0_BND_CTRL_M0_TYPE BND_CTRL_M0_REG_O24A0_T
+#define O24_A0_BND_CTRL_M1_BASE 0xC4932000
+#define O24_A0_BND_CTRL_M1_TYPE BND_CTRL_M1_REG_O24A0_T
+#define O24_A0_BND_CTRL_M2_BASE 0xC4532000
+#define O24_A0_BND_CTRL_M2_TYPE BND_CTRL_M2_REG_O24A0_T
+#define O24_A0_BND_CTRL_ND1_BASE 0xCCCB2000
+#define O24_A0_BND_CTRL_ND1_TYPE BND_CTRL_ND1_REG_O24A0_T
+#define O24_A0_BND_CTRL_VENC_BASE 0xCE871000 // check me
+#define O24_A0_BND_CTRL_VENC_TYPE BND_CTRL_VENC_REG_O24A0_T
+#define O24_A0_DRG_CTRL_BASE 0xCC932000
+#define O24_A0_DRG_CTRL_TYPE DRG_CTRL_REG_O24A0_T
+#define O24_A0_MIP_CTRL_TSADC_BASE 0xCC643000
+#define O24_A0_MIP_CTRL_TSADC_TYPE MIP_CTRL_TSADC_REG_O24A0_T
+#define O24_A0_PVMCON_CPU_BASE 0xCA223000
+#define O24_A0_PVMCON_CPU_TYPE PVMCON_CPU_REG_O24A0_T
+#define O24_A0_TMUX_CTRL_BASE 0xCC842000
+#define O24_A0_TMUX_CTRL_TYPE TMUX_CTRL_REG_O24A0_T
+#define O24_A0_TRG_CTRL_BASE 0xCC6A2000
+#define O24_A0_TRG_CTRL_TYPE TRG_CTRL_REG_O24A0_T
+#define O24_A0_CPU_BND_CTRL_WOC_BASE 0xC63F2000
+#define O24_A0_CPU_BND_CTRL_WOC_TYPE BND_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_BND_CTRL_WOC_BASE 0xF33F2000
+#define O24_A0_MICOM_BND_CTRL_WOC_TYPE BND_CTRL_WOC_REG_O24A0_T
+#define O24_A0_PMCU_BND_CTRL_WOC_BASE 0xCC3F2000
+#define O24_A0_PMCU_BND_CTRL_WOC_TYPE BND_CTRL_WOC_REG_O24A0_T
+#define O24_A0_VMCU_BND_CTRL_WOC_BASE 0xCE3F2000
+#define O24_A0_VMCU_BND_CTRL_WOC_TYPE BND_CTRL_WOC_REG_O24A0_T
+#define O24_A0_BND_CTRL_WOC_BASE 0xF33F2000 // check me
+#define O24_A0_BND_CTRL_WOC_TYPE BND_CTRL_WOC_REG_O24A0_T
+#define O24_A0_CPU_CRG_TOP_WOC_CTRL_BASE 0xC63F4000
+#define O24_A0_CPU_CRG_TOP_WOC_CTRL_TYPE MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T
+#define O24_A0_MICOM_CRG_TOP_WOC_CTRL_BASE 0xF33F4000
+#define O24_A0_MICOM_CRG_TOP_WOC_CTRL_TYPE MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T
+#define O24_A0_PMCU_CRG_TOP_WOC_CTRL_BASE 0xCC3F4000
+#define O24_A0_PMCU_CRG_TOP_WOC_CTRL_TYPE MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T
+#define O24_A0_VMCU_CRG_TOP_WOC_CTRL_BASE 0xCE3F4000
+#define O24_A0_VMCU_CRG_TOP_WOC_CTRL_TYPE MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T
+#define O24_A0_MICOM_CRG_TOP_WOC_CTRL_BASE 0xF33F4000
+#define O24_A0_MICOM_CRG_TOP_WOC_CTRL_TYPE MICOM_CRG_TOP_WOC_CTRL_REG_O24A0_T
+#define O24_A0_CPU_PW_CTRL_BASE 0xC63F3000
+#define O24_A0_CPU_PW_CTRL_TYPE MICOM_PW_CTRL_REG_O24A0_T
+#define O24_A0_MICOM_PW_CTRL_BASE 0xF33F3000
+#define O24_A0_MICOM_PW_CTRL_TYPE MICOM_PW_CTRL_REG_O24A0_T
+#define O24_A0_PMCU_PW_CTRL_BASE 0xCC3F3000
+#define O24_A0_PMCU_PW_CTRL_TYPE MICOM_PW_CTRL_REG_O24A0_T
+#define O24_A0_VMCU_PW_CTRL_BASE 0xCE3F3000
+#define O24_A0_VMCU_PW_CTRL_TYPE MICOM_PW_CTRL_REG_O24A0_T
+#define O24_A0_MICOM_PW_CTRL_BASE 0xF33F3000
+#define O24_A0_MICOM_PW_CTRL_TYPE MICOM_PW_CTRL_REG_O24A0_T
+
+//
+// O24_CTOP_PAD_Register_Manual
+//
+#define O24_A0_IOMUX_CTRL_BMC_BASE 0xC68A3000
+#define O24_A0_IOMUX_CTRL_BMC_TYPE IOMUX_CTRL_BMC_REG_O24A0_T
+#define O24_A0_IOMUX_CTRL_EDID_BASE 0xC8863000
+#define O24_A0_IOMUX_CTRL_EDID_TYPE IOMUX_CTRL_EDID_REG_O24A0_T
+#define O24_A0_IOMUX_CTRL_LNX1_BASE 0xCC972000
+#define O24_A0_IOMUX_CTRL_LNX1_TYPE IOMUX_CTRL_LNX1_REG_O24A0_T
+#define O24_A0_IOMUX_CTRL_VD0_BASE 0xCEC82000
+#define O24_A0_IOMUX_CTRL_VD0_TYPE IOMUX_CTRL_VD0_REG_O24A0_T
+#define O24_A0_IOMUX_CTRL_VD1_BASE 0xCEC42000
+#define O24_A0_IOMUX_CTRL_VD1_TYPE IOMUX_CTRL_VD1_REG_O24A0_T
+#define O24_A0_IOMUX_CTRL_VD2_BASE 0xCECC2000
+#define O24_A0_IOMUX_CTRL_VD2_TYPE IOMUX_CTRL_VD2_REG_O24A0_T
+#define O24_A0_CPU_IOMUX_CTRL_WOC_BASE 0xC63F5000
+#define O24_A0_CPU_IOMUX_CTRL_WOC_TYPE MICOM_IOMUX_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_IOMUX_CTRL_WOC_BASE 0xF33F5000
+#define O24_A0_MICOM_IOMUX_CTRL_WOC_TYPE MICOM_IOMUX_CTRL_WOC_REG_O24A0_T
+#define O24_A0_PMCU_IOMUX_CTRL_WOC_BASE 0xCC3F5000
+#define O24_A0_PMCU_IOMUX_CTRL_WOC_TYPE MICOM_IOMUX_CTRL_WOC_REG_O24A0_T
+#define O24_A0_VMCU_IOMUX_CTRL_WOC_BASE 0xCE3F5000
+#define O24_A0_VMCU_IOMUX_CTRL_WOC_TYPE MICOM_IOMUX_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_IOMUX_CTRL_WOC_BASE 0xF33F5000
+#define O24_A0_MICOM_IOMUX_CTRL_WOC_TYPE MICOM_IOMUX_CTRL_WOC_REG_O24A0_T
+
+//
+// O24_CTOP_MIP_Adaptor_Register_Manual
+//
+#define O24_A0_MIP_CTRL_ACODEC_BASE 0xCC9E3000
+#define O24_A0_MIP_CTRL_ACODEC_TYPE MIP_CTRL_ACODEC_REG_O24A0_T
+#define O24_A0_MIP_CTRL_ADC_BASE 0xCC9E4000
+#define O24_A0_MIP_CTRL_ADC_TYPE MIP_CTRL_ADC_REG_O24A0_T
+#define O24_A0_MIP_CTRL_C4TX_BASE 0xCC933000
+#define O24_A0_MIP_CTRL_C4TX_TYPE MIP_CTRL_C4TX_REG_O24A0_T
+#define O24_A0_MIP_CTRL_EARC_BASE 0xC8D73000
+#define O24_A0_MIP_CTRL_EARC_TYPE MIP_CTRL_EARC_REG_O24A0_T
+#define O24_A0_MIP_CTRL_HDMI_DPM_BASE 0xC8864000
+#define O24_A0_MIP_CTRL_HDMI_DPM_TYPE MIP_CTRL_HDMI_DPM_REG_O24A0_T
+#define O24_A0_CPU_MIP_CTRL_SADC_CPU_BASE 0xC63F6000
+#define O24_A0_CPU_MIP_CTRL_SADC_CPU_TYPE PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T
+#define O24_A0_MICOM_MIP_CTRL_SADC_CPU_BASE 0xF33F6000
+#define O24_A0_MICOM_MIP_CTRL_SADC_CPU_TYPE PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T
+#define O24_A0_PMCU_MIP_CTRL_SADC_CPU_BASE 0xCC3F6000
+#define O24_A0_PMCU_MIP_CTRL_SADC_CPU_TYPE PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T
+#define O24_A0_VMCU_MIP_CTRL_SADC_CPU_BASE 0xCE3F6000
+#define O24_A0_VMCU_MIP_CTRL_SADC_CPU_TYPE PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T
+#define O24_A0_PMCU_MIP_CTRL_SADC_CPU_BASE 0xCC3F6000
+#define O24_A0_PMCU_MIP_CTRL_SADC_CPU_TYPE PMCU_MIP_CTRL_SADC_CPU_REG_O24A0_T
+#define O24_A0_CPU_SCRG_CTRL_MICOM_BASE 0xC63E0000
+#define O24_A0_CPU_SCRG_CTRL_MICOM_TYPE MICOM_SCRG_CTRL_MICOM_REG_O24A0_T
+
+//
+// O24_CRG_SUB_Register_Manual
+//
+#define O24_A0_BCRG_CTRL_AUD_BASE 0xCE491000
+#define O24_A0_BCRG_CTRL_AUD_TYPE BCRG_CTRL_AUD_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_BMC_BASE 0xC68A1000
+#define O24_A0_BCRG_CTRL_BMC_TYPE BCRG_CTRL_BMC_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_CCO_BASE 0xCC881000
+#define O24_A0_BCRG_CTRL_CCO_TYPE BCRG_CTRL_CCO_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_CPU_BASE 0xCA221000
+#define O24_A0_BCRG_CTRL_CPU_TYPE BCRG_CTRL_CPU_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_CVI_BASE 0xCCD71000
+#define O24_A0_BCRG_CTRL_CVI_TYPE BCRG_CTRL_CVI_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_DNSR_BASE 0xCC6A1000
+#define O24_A0_BCRG_CTRL_DNSR_TYPE BCRG_CTRL_DNSR_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_DPE_BASE 0xCC931000
+#define O24_A0_BCRG_CTRL_DPE_TYPE BCRG_CTRL_DPE_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_EDID_BASE 0xC8861000
+#define O24_A0_BCRG_CTRL_EDID_TYPE BCRG_CTRL_EDID_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_EMMC_BASE 0xC4251000
+#define O24_A0_BCRG_CTRL_EMMC_TYPE BCRG_CTRL_EMMC_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_FMC_BASE 0xCC441000
+#define O24_A0_BCRG_CTRL_FMC_TYPE BCRG_CTRL_FMC_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_FMS_BASE 0xCC501000
+#define O24_A0_BCRG_CTRL_FMS_TYPE BCRG_CTRL_FMS_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_GSC_BASE 0xCC481000
+#define O24_A0_BCRG_CTRL_GSC_TYPE BCRG_CTRL_GSC_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_HDMI_BASE 0xC8D71000
+#define O24_A0_BCRG_CTRL_HDMI_TYPE BCRG_CTRL_HDMI_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_HDR_BASE 0xCCC51000
+#define O24_A0_BCRG_CTRL_HDR_TYPE BCRG_CTRL_HDR_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_IMX_BASE 0xCC841000
+#define O24_A0_BCRG_CTRL_IMX_TYPE BCRG_CTRL_IMX_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_LBM_BASE 0xC4191000
+#define O24_A0_BCRG_CTRL_LBM_TYPE BCRG_CTRL_LBM_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_LNX0_BASE 0xCC9E1000
+#define O24_A0_BCRG_CTRL_LNX0_TYPE BCRG_CTRL_LNX0_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_LNX1_BASE 0xCC971000
+#define O24_A0_BCRG_CTRL_LNX1_TYPE BCRG_CTRL_LNX1_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_LNX2_BASE 0xCCDA1000
+#define O24_A0_BCRG_CTRL_LNX2_TYPE BCRG_CTRL_LNX2_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_M0_BASE 0xC4D31000
+#define O24_A0_BCRG_CTRL_M0_TYPE BCRG_CTRL_M0_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_M1_BASE 0xC4931000
+#define O24_A0_BCRG_CTRL_M1_TYPE BCRG_CTRL_M1_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_M2_BASE 0xC4531000
+#define O24_A0_BCRG_CTRL_M2_TYPE BCRG_CTRL_M2_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_ME0_BASE 0xCC4C1000
+#define O24_A0_BCRG_CTRL_ME0_TYPE BCRG_CTRL_ME0_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_ME1_BASE 0xCC8C1000
+#define O24_A0_BCRG_CTRL_ME1_TYPE BCRG_CTRL_ME1_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_ND0_BASE 0xCCC81000
+#define O24_A0_BCRG_CTRL_ND0_TYPE BCRG_CTRL_ND0_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_ND1_BASE 0xCCCB1000
+#define O24_A0_BCRG_CTRL_ND1_TYPE BCRG_CTRL_ND1_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_SRE_BASE 0xCC641000
+#define O24_A0_BCRG_CTRL_SRE_TYPE BCRG_CTRL_SRE_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_VD0_BASE 0xCEC81000
+#define O24_A0_BCRG_CTRL_VD0_TYPE BCRG_CTRL_VD0_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_VD1_BASE 0xCEC41000
+#define O24_A0_BCRG_CTRL_VD1_TYPE BCRG_CTRL_VD1_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_VD2_BASE 0xCECC1000
+#define O24_A0_BCRG_CTRL_VD2_TYPE BCRG_CTRL_VD2_REG_O24A0_T
+#define O24_A0_BCRG_CTRL_VENC_BASE 0xCE871000
+#define O24_A0_BCRG_CTRL_VENC_TYPE BCRG_CTRL_VENC_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_AUD_BASE 0xCE490000
+#define O24_A0_MCRG_CTRL_AUD_TYPE MCRG_CTRL_AUD_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_BMC_BASE 0xC68A0000
+#define O24_A0_MCRG_CTRL_BMC_TYPE MCRG_CTRL_BMC_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_CCO_BASE 0xCC880000
+#define O24_A0_MCRG_CTRL_CCO_TYPE MCRG_CTRL_CCO_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_CPU_BASE 0xCA220000
+#define O24_A0_MCRG_CTRL_CPU_TYPE MCRG_CTRL_CPU_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_CVI_BASE 0xCCD70000
+#define O24_A0_MCRG_CTRL_CVI_TYPE MCRG_CTRL_CVI_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_DNSR_BASE 0xCC6A0000
+#define O24_A0_MCRG_CTRL_DNSR_TYPE MCRG_CTRL_DNSR_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_DPE_BASE 0xCC930000
+#define O24_A0_MCRG_CTRL_DPE_TYPE MCRG_CTRL_DPE_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_EDID_BASE 0xC8860000
+#define O24_A0_MCRG_CTRL_EDID_TYPE MCRG_CTRL_EDID_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_EMMC_BASE 0xC4250000
+#define O24_A0_MCRG_CTRL_EMMC_TYPE MCRG_CTRL_EMMC_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_FMC_BASE 0xCC440000
+#define O24_A0_MCRG_CTRL_FMC_TYPE MCRG_CTRL_FMC_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_FMS_BASE 0xCC500000
+#define O24_A0_MCRG_CTRL_FMS_TYPE MCRG_CTRL_FMS_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_GSC_BASE 0xCC480000
+#define O24_A0_MCRG_CTRL_GSC_TYPE MCRG_CTRL_GSC_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_HDMI_BASE 0xC8D70000
+#define O24_A0_MCRG_CTRL_HDMI_TYPE MCRG_CTRL_HDMI_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_HDR_BASE 0xCCC50000
+#define O24_A0_MCRG_CTRL_HDR_TYPE MCRG_CTRL_HDR_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_IMX_BASE 0xCC840000
+#define O24_A0_MCRG_CTRL_IMX_TYPE MCRG_CTRL_IMX_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_LBM_BASE 0xC4190000
+#define O24_A0_MCRG_CTRL_LBM_TYPE MCRG_CTRL_LBM_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_LNX0_BASE 0xCC9E0000
+#define O24_A0_MCRG_CTRL_LNX0_TYPE MCRG_CTRL_LNX0_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_LNX1_BASE 0xCC970000
+#define O24_A0_MCRG_CTRL_LNX1_TYPE MCRG_CTRL_LNX1_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_LNX2_BASE 0xCCDA0000
+#define O24_A0_MCRG_CTRL_LNX2_TYPE MCRG_CTRL_LNX2_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_M0_BASE 0xC4D30000
+#define O24_A0_MCRG_CTRL_M0_TYPE MCRG_CTRL_M0_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_M1_BASE 0xC4930000
+#define O24_A0_MCRG_CTRL_M1_TYPE MCRG_CTRL_M1_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_M2_BASE 0xC4530000
+#define O24_A0_MCRG_CTRL_M2_TYPE MCRG_CTRL_M2_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_ME0_BASE 0xCC4C0000
+#define O24_A0_MCRG_CTRL_ME0_TYPE MCRG_CTRL_ME0_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_ME1_BASE 0xCC8C0000
+#define O24_A0_MCRG_CTRL_ME1_TYPE MCRG_CTRL_ME1_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_ND0_BASE 0xCCC80000
+#define O24_A0_MCRG_CTRL_ND0_TYPE MCRG_CTRL_ND0_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_ND1_BASE 0xCCCB0000
+#define O24_A0_MCRG_CTRL_ND1_TYPE MCRG_CTRL_ND1_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_SRE_BASE 0xCC640000
+#define O24_A0_MCRG_CTRL_SRE_TYPE MCRG_CTRL_SRE_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_VD0_BASE 0xCEC80000
+#define O24_A0_MCRG_CTRL_VD0_TYPE MCRG_CTRL_VD0_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_VD1_BASE 0xCEC40000
+#define O24_A0_MCRG_CTRL_VD1_TYPE MCRG_CTRL_VD1_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_VD2_BASE 0xCECC0000
+#define O24_A0_MCRG_CTRL_VD2_TYPE MCRG_CTRL_VD2_REG_O24A0_T
+#define O24_A0_MCRG_CTRL_VENC_BASE 0xCE870000
+#define O24_A0_MCRG_CTRL_VENC_TYPE MCRG_CTRL_VENC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_AUD_BASE 0xCE440000
+#define O24_A0_SCRG_CTRL_AUD_TYPE SCRG_CTRL_AUD_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_CCO_BASE 0xCC870000
+#define O24_A0_SCRG_CTRL_CCO_TYPE SCRG_CTRL_CCO_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_CPU_BASE 0xCA210000
+#define O24_A0_SCRG_CTRL_CPU_TYPE SCRG_CTRL_CPU_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_CVI_BASE 0xCCCD0000
+#define O24_A0_SCRG_CTRL_CVI_TYPE SCRG_CTRL_CVI_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DBB_BASE 0xC6880000
+#define O24_A0_SCRG_CTRL_DBB_TYPE SCRG_CTRL_DBB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DDR0SB_BASE 0xC41C0000
+#define O24_A0_SCRG_CTRL_DDR0SB_TYPE SCRG_CTRL_DDR0SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DDR1SB_BASE 0xC41D0000
+#define O24_A0_SCRG_CTRL_DDR1SB_TYPE SCRG_CTRL_DDR1SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DDR2SB_BASE 0xC41E0000
+#define O24_A0_SCRG_CTRL_DDR2SB_TYPE SCRG_CTRL_DDR2SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DMCU_BASE 0xC4170000
+#define O24_A0_SCRG_CTRL_DMCU_TYPE SCRG_CTRL_DMCU_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DNNR_BASE 0xCC690000
+#define O24_A0_SCRG_CTRL_DNNR_TYPE SCRG_CTRL_DNNR_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DNSR_BASE 0xCC670000
+#define O24_A0_SCRG_CTRL_DNSR_TYPE SCRG_CTRL_DNSR_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_DSC_BASE 0xCCCF0000
+#define O24_A0_SCRG_CTRL_DSC_TYPE SCRG_CTRL_DSC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_EDID_BASE 0xC8830000
+#define O24_A0_SCRG_CTRL_EDID_TYPE SCRG_CTRL_EDID_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_EMMC_BASE 0xC4240000
+#define O24_A0_SCRG_CTRL_EMMC_TYPE SCRG_CTRL_EMMC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_EPHY_BASE 0xC8850000
+#define O24_A0_SCRG_CTRL_EPHY_TYPE SCRG_CTRL_EPHY_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_EPUSB_BASE 0xC60A0000
+#define O24_A0_SCRG_CTRL_EPUSB_TYPE SCRG_CTRL_EPUSB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_FMC_BASE 0xCC430000
+#define O24_A0_SCRG_CTRL_FMC_TYPE SCRG_CTRL_FMC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_FMGSESB_BASE 0xCC530000
+#define O24_A0_SCRG_CTRL_FMGSESB_TYPE SCRG_CTRL_FMGSESB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_FMS_BASE 0xCC4F0000
+#define O24_A0_SCRG_CTRL_FMS_TYPE SCRG_CTRL_FMS_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_GFX_BASE 0xC4150000
+#define O24_A0_SCRG_CTRL_GFX_TYPE SCRG_CTRL_GFX_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_GPU_BASE 0xC40A0000
+#define O24_A0_SCRG_CTRL_GPU_TYPE SCRG_CTRL_GPU_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_GSC_BASE 0xCC470000
+#define O24_A0_SCRG_CTRL_GSC_TYPE SCRG_CTRL_GSC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_HDMI_BASE 0xC8D40000
+#define O24_A0_SCRG_CTRL_HDMI_TYPE SCRG_CTRL_HDMI_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_HDR_BASE 0xCCC20000
+#define O24_A0_SCRG_CTRL_HDR_TYPE SCRG_CTRL_HDR_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ICOD_BASE 0xCE860000
+#define O24_A0_SCRG_CTRL_ICOD_TYPE SCRG_CTRL_ICOD_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ICVESB_BASE 0xCE890000
+#define O24_A0_SCRG_CTRL_ICVESB_TYPE SCRG_CTRL_ICVESB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_IMVDSB_BASE 0xCC980000
+#define O24_A0_SCRG_CTRL_IMVDSB_TYPE SCRG_CTRL_IMVDSB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_IMX_BASE 0xCC830000
+#define O24_A0_SCRG_CTRL_IMX_TYPE SCRG_CTRL_IMX_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LB0SB_BASE 0xCCDE0000
+#define O24_A0_SCRG_CTRL_LB0SB_TYPE SCRG_CTRL_LB0SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LB1SB_BASE 0xCC550000
+#define O24_A0_SCRG_CTRL_LB1SB_TYPE SCRG_CTRL_LB1SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LB2SB_BASE 0xC41F0000
+#define O24_A0_SCRG_CTRL_LB2SB_TYPE SCRG_CTRL_LB2SB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LBUS_BASE 0xC4100000
+#define O24_A0_SCRG_CTRL_LBUS_TYPE SCRG_CTRL_LBUS_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LED_BASE 0xCC900000
+#define O24_A0_SCRG_CTRL_LED_TYPE SCRG_CTRL_LED_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LNX0_BASE 0xCC9D0000
+#define O24_A0_SCRG_CTRL_LNX0_TYPE SCRG_CTRL_LNX0_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LNX1_BASE 0xCC960000
+#define O24_A0_SCRG_CTRL_LNX1_TYPE SCRG_CTRL_LNX1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_LNX2_BASE 0xCCD90000
+#define O24_A0_SCRG_CTRL_LNX2_TYPE SCRG_CTRL_LNX2_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_M0_BASE 0xC4D20000
+#define O24_A0_SCRG_CTRL_M0_TYPE SCRG_CTRL_M0_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_M1_BASE 0xC4920000
+#define O24_A0_SCRG_CTRL_M1_TYPE SCRG_CTRL_M1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_M2_BASE 0xC4520000
+#define O24_A0_SCRG_CTRL_M2_TYPE SCRG_CTRL_M2_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ME0_BASE 0xCC4B0000
+#define O24_A0_SCRG_CTRL_ME0_TYPE SCRG_CTRL_ME0_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ME1_BASE 0xCC8B0000
+#define O24_A0_SCRG_CTRL_ME1_TYPE SCRG_CTRL_ME1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_MEFMSSB_BASE 0xCC9A0000
+#define O24_A0_SCRG_CTRL_MEFMSSB_TYPE SCRG_CTRL_MEFMSSB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ND0_BASE 0xCCC70000
+#define O24_A0_SCRG_CTRL_ND0_TYPE SCRG_CTRL_ND0_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_ND1_BASE 0xCCCA0000
+#define O24_A0_SCRG_CTRL_ND1_TYPE SCRG_CTRL_ND1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_SRE_BASE 0xCC630000
+#define O24_A0_SCRG_CTRL_SRE_TYPE SCRG_CTRL_SRE_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_TCON_BASE 0xCC920000
+#define O24_A0_SCRG_CTRL_TCON_TYPE SCRG_CTRL_TCON_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_TE_BASE 0xCE480000
+#define O24_A0_SCRG_CTRL_TE_TYPE SCRG_CTRL_TE_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_USB_SS1_BASE 0xC8DB0000 // check me
+#define O24_A0_SCRG_CTRL_USB_SS1_TYPE SCRG_CTRL_USB_SS1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_USB_SS2_BASE 0xC8DD0000 // check me
+#define O24_A0_SCRG_CTRL_USB_SS2_TYPE SCRG_CTRL_USB_SS2_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_USB_SS3_BASE 0xC8DF0000 // check me
+#define O24_A0_SCRG_CTRL_USB_SS3_TYPE SCRG_CTRL_USB_SS3_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_USB_SS4_BASE 0xC6110000 // check me
+#define O24_A0_SCRG_CTRL_USB_SS4_TYPE SCRG_CTRL_USB_SS4_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_USBSB_BASE 0xC8E10000
+#define O24_A0_SCRG_CTRL_USBSB_TYPE SCRG_CTRL_USBSB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VD0_BASE 0xCEC70000
+#define O24_A0_SCRG_CTRL_VD0_TYPE SCRG_CTRL_VD0_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VD1_BASE 0xCEC30000
+#define O24_A0_SCRG_CTRL_VD1_TYPE SCRG_CTRL_VD1_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VD2_BASE 0xCECB0000
+#define O24_A0_SCRG_CTRL_VD2_TYPE SCRG_CTRL_VD2_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VD2VMSB_BASE 0xCECE0000
+#define O24_A0_SCRG_CTRL_VD2VMSB_TYPE SCRG_CTRL_VD2VMSB_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VDO_BASE 0xCCC40000
+#define O24_A0_SCRG_CTRL_VDO_TYPE SCRG_CTRL_VDO_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VENC_BASE 0xCE840000
+#define O24_A0_SCRG_CTRL_VENC_TYPE SCRG_CTRL_VENC_REG_O24A0_T
+#define O24_A0_SCRG_CTRL_VSD_BASE 0xCCA30000
+#define O24_A0_SCRG_CTRL_VSD_TYPE SCRG_CTRL_VSD_REG_O24A0_T
+#define O24_A0_CPU_BCRG_CTRL_WOC_BASE 0xC63F1000
+#define O24_A0_CPU_BCRG_CTRL_WOC_TYPE MICOM_BCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_BCRG_CTRL_WOC_BASE 0xF33F1000
+#define O24_A0_MICOM_BCRG_CTRL_WOC_TYPE MICOM_BCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_PMCU_BCRG_CTRL_WOC_BASE 0xCC3F1000
+#define O24_A0_PMCU_BCRG_CTRL_WOC_TYPE MICOM_BCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_VMCU_BCRG_CTRL_WOC_BASE 0xCE3F1000
+#define O24_A0_VMCU_BCRG_CTRL_WOC_TYPE MICOM_BCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_BCRG_CTRL_WOC_BASE 0xF33F1000
+#define O24_A0_MICOM_BCRG_CTRL_WOC_TYPE MICOM_BCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_CPU_MCRG_CTRL_WOC_BASE 0xC63F0000
+#define O24_A0_CPU_MCRG_CTRL_WOC_TYPE MICOM_MCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_MCRG_CTRL_WOC_BASE 0xF33F0000
+#define O24_A0_MICOM_MCRG_CTRL_WOC_TYPE MICOM_MCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_PMCU_MCRG_CTRL_WOC_BASE 0xCC3F0000
+#define O24_A0_PMCU_MCRG_CTRL_WOC_TYPE MICOM_MCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_VMCU_MCRG_CTRL_WOC_BASE 0xCE3F0000
+#define O24_A0_VMCU_MCRG_CTRL_WOC_TYPE MICOM_MCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_MCRG_CTRL_WOC_BASE 0xF33F0000
+#define O24_A0_MICOM_MCRG_CTRL_WOC_TYPE MICOM_MCRG_CTRL_WOC_REG_O24A0_T
+#define O24_A0_MICOM_SCRG_CTRL_MICOM_BASE 0xF33E0000
+#define O24_A0_MICOM_SCRG_CTRL_MICOM_TYPE MICOM_SCRG_CTRL_MICOM_REG_O24A0_T
+#define O24_A0_MICOM_SCRG_CTRL_MICOM_BASE 0xF33E0000
+#define O24_A0_MICOM_SCRG_CTRL_MICOM_TYPE MICOM_SCRG_CTRL_MICOM_REG_O24A0_T
+#define O24_A0_CPU_SCRG_CTRL_PMCU_BASE 0xCA3D0000
+#define O24_A0_CPU_SCRG_CTRL_PMCU_TYPE CPU_SCRG_CTRL_PMCU_REG_O24A0_T
+#define O24_A0_PMCU_SCRG_CTRL_PMCU_BASE 0xCC3D0000
+#define O24_A0_PMCU_SCRG_CTRL_PMCU_TYPE CPU_SCRG_CTRL_PMCU_REG_O24A0_T
+#define O24_A0_CPU_SCRG_CTRL_PMCU_BASE 0xCA3D0000
+#define O24_A0_CPU_SCRG_CTRL_PMCU_TYPE CPU_SCRG_CTRL_PMCU_REG_O24A0_T
+#define O24_A0_CPU_SCRG_CTRL_VMCU_BASE 0xCA3C0000
+#define O24_A0_CPU_SCRG_CTRL_VMCU_TYPE CPU_SCRG_CTRL_VMCU_REG_O24A0_T
+#define O24_A0_VMCU_SCRG_CTRL_VMCU_BASE 0xCE3C0000
+#define O24_A0_VMCU_SCRG_CTRL_VMCU_TYPE CPU_SCRG_CTRL_VMCU_REG_O24A0_T
+#define O24_A0_CPU_SCRG_CTRL_VMCU_BASE 0xCA3C0000
+#define O24_A0_CPU_SCRG_CTRL_VMCU_TYPE CPU_SCRG_CTRL_VMCU_REG_O24A0_T
+
+// ETC
+#define O24_A0_FSC_CTRL_BASE 0xCEC83000
+#define O24_A0_FSC_CTRL_TYPE FSC_CTRL_REG_O24A0_T
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // __CTOP_CTRL_REG_O24_A0_H__
+

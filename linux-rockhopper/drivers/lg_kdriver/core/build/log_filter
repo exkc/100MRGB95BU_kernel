@@ -1,0 +1,23 @@
+#!/bin/bash
+
+logdir=build/logs
+if test "x$1" != "x"; then
+    logdir=$1;
+fi
+
+mkdir -p $logdir;
+
+grep '^[^: ]\+:[[:digit:]]\+:[[:digit:]]\+: \(warning: \|note: \)' | while read; do
+    filename=$(echo $REPLY | sed 's/^\([^:]\+\):\([0-9]\+\):\([0-9]\+\): \(warning\|note\): .*$/\1/');
+    type=$(echo $REPLY | sed 's/^\([^:]\+\):\([0-9]\+\):\([0-9]\+\): \(warning\|note\): .*$/\4/');
+
+    if ! test -f $filename; then
+        continue;
+    fi
+    abs_filename=$(realpath $filename);
+    md5_filename=$(echo -n $abs_filename | md5sum | cut -d ' ' -f 1);
+    echo $REPLY >> $logdir/$md5_filename;
+done
+
+# return true for "make" to be happy
+true;

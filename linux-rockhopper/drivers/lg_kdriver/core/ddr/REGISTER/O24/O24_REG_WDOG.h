@@ -1,0 +1,1189 @@
+#ifndef _REG_WDOG_h
+#define _REG_WDOG_h
+//Header File for WDOG in \O24\O24_DRAM_MCU_Register_Manual.xls
+
+#define REG_WDOG_WDOGLOAD                                                      (APB_WDOG_BASE+0x0000)
+#define REG_WDOG_WDOGVALUE                                                     (APB_WDOG_BASE+0x0004)
+#define REG_WDOG_WDOGCONTROL                                                   (APB_WDOG_BASE+0x0008)
+#define REG_WDOG_WDOGINTCLR                                                    (APB_WDOG_BASE+0x000C)
+#define REG_WDOG_WDOGRIS                                                       (APB_WDOG_BASE+0x0010)
+#define REG_WDOG_WDOGMIS                                                       (APB_WDOG_BASE+0x0014)
+#define REG_WDOG_WDOGLOCK                                                      (APB_WDOG_BASE+0x0C00)
+#define REG_WDOG_WDOGITCR                                                      (APB_WDOG_BASE+0x0F00)
+#define REG_WDOG_WDOGITOP                                                      (APB_WDOG_BASE+0x0F04)
+#define REG_WDOG_WDOGPERIPHID0                                                 (APB_WDOG_BASE+0x0FE0)
+#define REG_WDOG_WDOGPERIPHID1                                                 (APB_WDOG_BASE+0x0FE4)
+#define REG_WDOG_WDOGPERIPHID2                                                 (APB_WDOG_BASE+0x0FE8)
+#define REG_WDOG_WDOGPERIPHID3                                                 (APB_WDOG_BASE+0x0FEC)
+#define REG_WDOG_WDOGPCELLID0                                                  (APB_WDOG_BASE+0x0FF0)
+#define REG_WDOG_WDOGPCELLID1                                                  (APB_WDOG_BASE+0x0FF4)
+#define REG_WDOG_WDOGPCELLID2                                                  (APB_WDOG_BASE+0x0FF8)
+#define REG_WDOG_WDOGPCELLID3                                                  (APB_WDOG_BASE+0x0FFC)
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000000 RW
+	UINT32 WDOGLOAD                         :32;	//31:0	//The WDOGLOAD Register is a 32-bit register containing the value from which the counter is to decrement. When this register is written to, the count is immediately restarted from the new value. The minimum valid value for WDOGLOAD is 1
+	};
+}REG_WDOG_WDOGLOAD_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000004 RO
+	UINT32 WDOGVALUE                        :32;	//31:0	//The WDOGVALUE Register gives the current value of the decrementing counter
+	};
+}REG_WDOG_WDOGVALUE_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000008 RW
+	UINT32 INTEN                            :1;	//0 //Enable the interrupt event, WDOGINT. Set HIGH to enable the counter and the interrupt, and set LOW to disable the counter and interrupt. Reloads the counter from the value in WDOGLOAD when the interrupt is enabled, and was previously disabled
+	UINT32 RESEN                            :1;	//1 //Enable Watchdog reset output, WDOGRES. Acts as a mask for the reset output. Set HIGH to enable the reset, and LOW to disable the reset
+	UINT32 resvd                            :30; 
+	};
+}REG_WDOG_WDOGCONTROL_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF000000C RW
+	UINT32 WDOGINTCLR                       :32;	//31:0	//A write of any value to the WDOGINTCLR Register clears the watchdog interrupt, and reloads the counter from the value in WDOGLOAD
+	};
+}REG_WDOG_WDOGINTCLR_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000010 RO
+	UINT32 Raw_Watchdog_Interrupt           :1;	//0 //Raw interrupt status from the counter
+	UINT32 resvd                            :31; 
+	};
+}REG_WDOG_WDOGRIS_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000014 RO
+	UINT32 Watchdog_Interrupt               :1;	//0 //Enabled interrupt status from the counter
+	UINT32 resvd                            :31; 
+	};
+}REG_WDOG_WDOGMIS_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000C00 RW
+	UINT32 Register_write_enable_status     :1;	//0 //0 = write access to all other registers is enabled, default	1 = write access to all other registers is disabled
+	UINT32 Enable_register_writes           :31;	//31:1	//Enable write access to all other registers by writing 0x1ACCE551. Disable write access by writing any other value
+	};
+}REG_WDOG_WDOGLOCK_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000F00 RW
+	UINT32 Integration_Test_Mode_Enable     :1;	//0 //When set HIGH, places the Watchdog into integration test mode
+	UINT32 resvd                            :31; 
+	};
+}REG_WDOG_WDOGITCR_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000F04 RW
+	UINT32 Integration_Test_WDOGRES_value0  :1;	//0 //Value output on WDOGRES when in Integration Test Mode
+	UINT32 Integration_Test_WDOGINT_value   :1;	//1 //Value output on WDOGINT when in Integration Test Mode
+	UINT32 resvd                            :30; 
+	};
+}REG_WDOG_WDOGITOP_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FE0 RO
+	UINT32 PartNumber0                      :8;	//7:0	//These bits read back as 0x05
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPERIPHID0_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FE4 RO
+	UINT32 PartNumber1                      :4;	//3:0	//These bits read back as 0x08
+	UINT32 Designer0                        :4;	//7:4	//These bits read back as 0x1
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPERIPHID1_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FE8 RO
+	UINT32 Designer1                        :4;	//3:0	//These bits read back as 0x4
+	UINT32 Revision                         :4;	//7:4	//These bits read back as 0x0
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPERIPHID2_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FEC RO
+	UINT32 Configuration                    :8;	//7:0	//These bits read back as 0x00
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPERIPHID3_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FF0 RO
+	UINT32 WdogPCellID0                     :8;	//7:0	//These bits read back as 0x0D
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPCELLID0_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FF4 RO
+	UINT32 WdogPCellID1                     :8;	//7:0	//These bits read back as 0xF0
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPCELLID1_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FF8 RO
+	UINT32 WdogPCellID2                     :8;	//7:0	//These bits read back as 0x05
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPCELLID2_T;
+
+typedef union {
+	UINT32 udata32;
+	struct {						//0xF0000FFC RO
+	UINT32 WdogPCellID3                     :8;	//7:0	//These bits read back as 0xB1
+	UINT32 resvd                            :24; 
+	};
+}REG_WDOG_WDOGPCELLID3_T;
+
+typedef struct {
+	REG_WDOG_WDOGLOAD_T                                        wdogload;	//0xF0000000
+	REG_WDOG_WDOGVALUE_T                                      wdogvalue;	//0xF0000004
+	REG_WDOG_WDOGCONTROL_T                                  wdogcontrol;	//0xF0000008
+	REG_WDOG_WDOGINTCLR_T                                    wdogintclr;	//0xF000000C
+	REG_WDOG_WDOGRIS_T                                          wdogris;	//0xF0000010
+	REG_WDOG_WDOGMIS_T                                          wdogmis;	//0xF0000014
+	UINT32                                                    reserved0;	//0xF0000018
+	UINT32                                                    reserved1;	//0xF000001C
+	UINT32                                                    reserved2;	//0xF0000020
+	UINT32                                                    reserved3;	//0xF0000024
+	UINT32                                                    reserved4;	//0xF0000028
+	UINT32                                                    reserved5;	//0xF000002C
+	UINT32                                                    reserved6;	//0xF0000030
+	UINT32                                                    reserved7;	//0xF0000034
+	UINT32                                                    reserved8;	//0xF0000038
+	UINT32                                                    reserved9;	//0xF000003C
+	UINT32                                                   reserved10;	//0xF0000040
+	UINT32                                                   reserved11;	//0xF0000044
+	UINT32                                                   reserved12;	//0xF0000048
+	UINT32                                                   reserved13;	//0xF000004C
+	UINT32                                                   reserved14;	//0xF0000050
+	UINT32                                                   reserved15;	//0xF0000054
+	UINT32                                                   reserved16;	//0xF0000058
+	UINT32                                                   reserved17;	//0xF000005C
+	UINT32                                                   reserved18;	//0xF0000060
+	UINT32                                                   reserved19;	//0xF0000064
+	UINT32                                                   reserved20;	//0xF0000068
+	UINT32                                                   reserved21;	//0xF000006C
+	UINT32                                                   reserved22;	//0xF0000070
+	UINT32                                                   reserved23;	//0xF0000074
+	UINT32                                                   reserved24;	//0xF0000078
+	UINT32                                                   reserved25;	//0xF000007C
+	UINT32                                                   reserved26;	//0xF0000080
+	UINT32                                                   reserved27;	//0xF0000084
+	UINT32                                                   reserved28;	//0xF0000088
+	UINT32                                                   reserved29;	//0xF000008C
+	UINT32                                                   reserved30;	//0xF0000090
+	UINT32                                                   reserved31;	//0xF0000094
+	UINT32                                                   reserved32;	//0xF0000098
+	UINT32                                                   reserved33;	//0xF000009C
+	UINT32                                                   reserved34;	//0xF00000A0
+	UINT32                                                   reserved35;	//0xF00000A4
+	UINT32                                                   reserved36;	//0xF00000A8
+	UINT32                                                   reserved37;	//0xF00000AC
+	UINT32                                                   reserved38;	//0xF00000B0
+	UINT32                                                   reserved39;	//0xF00000B4
+	UINT32                                                   reserved40;	//0xF00000B8
+	UINT32                                                   reserved41;	//0xF00000BC
+	UINT32                                                   reserved42;	//0xF00000C0
+	UINT32                                                   reserved43;	//0xF00000C4
+	UINT32                                                   reserved44;	//0xF00000C8
+	UINT32                                                   reserved45;	//0xF00000CC
+	UINT32                                                   reserved46;	//0xF00000D0
+	UINT32                                                   reserved47;	//0xF00000D4
+	UINT32                                                   reserved48;	//0xF00000D8
+	UINT32                                                   reserved49;	//0xF00000DC
+	UINT32                                                   reserved50;	//0xF00000E0
+	UINT32                                                   reserved51;	//0xF00000E4
+	UINT32                                                   reserved52;	//0xF00000E8
+	UINT32                                                   reserved53;	//0xF00000EC
+	UINT32                                                   reserved54;	//0xF00000F0
+	UINT32                                                   reserved55;	//0xF00000F4
+	UINT32                                                   reserved56;	//0xF00000F8
+	UINT32                                                   reserved57;	//0xF00000FC
+	UINT32                                                   reserved58;	//0xF0000100
+	UINT32                                                   reserved59;	//0xF0000104
+	UINT32                                                   reserved60;	//0xF0000108
+	UINT32                                                   reserved61;	//0xF000010C
+	UINT32                                                   reserved62;	//0xF0000110
+	UINT32                                                   reserved63;	//0xF0000114
+	UINT32                                                   reserved64;	//0xF0000118
+	UINT32                                                   reserved65;	//0xF000011C
+	UINT32                                                   reserved66;	//0xF0000120
+	UINT32                                                   reserved67;	//0xF0000124
+	UINT32                                                   reserved68;	//0xF0000128
+	UINT32                                                   reserved69;	//0xF000012C
+	UINT32                                                   reserved70;	//0xF0000130
+	UINT32                                                   reserved71;	//0xF0000134
+	UINT32                                                   reserved72;	//0xF0000138
+	UINT32                                                   reserved73;	//0xF000013C
+	UINT32                                                   reserved74;	//0xF0000140
+	UINT32                                                   reserved75;	//0xF0000144
+	UINT32                                                   reserved76;	//0xF0000148
+	UINT32                                                   reserved77;	//0xF000014C
+	UINT32                                                   reserved78;	//0xF0000150
+	UINT32                                                   reserved79;	//0xF0000154
+	UINT32                                                   reserved80;	//0xF0000158
+	UINT32                                                   reserved81;	//0xF000015C
+	UINT32                                                   reserved82;	//0xF0000160
+	UINT32                                                   reserved83;	//0xF0000164
+	UINT32                                                   reserved84;	//0xF0000168
+	UINT32                                                   reserved85;	//0xF000016C
+	UINT32                                                   reserved86;	//0xF0000170
+	UINT32                                                   reserved87;	//0xF0000174
+	UINT32                                                   reserved88;	//0xF0000178
+	UINT32                                                   reserved89;	//0xF000017C
+	UINT32                                                   reserved90;	//0xF0000180
+	UINT32                                                   reserved91;	//0xF0000184
+	UINT32                                                   reserved92;	//0xF0000188
+	UINT32                                                   reserved93;	//0xF000018C
+	UINT32                                                   reserved94;	//0xF0000190
+	UINT32                                                   reserved95;	//0xF0000194
+	UINT32                                                   reserved96;	//0xF0000198
+	UINT32                                                   reserved97;	//0xF000019C
+	UINT32                                                   reserved98;	//0xF00001A0
+	UINT32                                                   reserved99;	//0xF00001A4
+	UINT32                                                  reserved100;	//0xF00001A8
+	UINT32                                                  reserved101;	//0xF00001AC
+	UINT32                                                  reserved102;	//0xF00001B0
+	UINT32                                                  reserved103;	//0xF00001B4
+	UINT32                                                  reserved104;	//0xF00001B8
+	UINT32                                                  reserved105;	//0xF00001BC
+	UINT32                                                  reserved106;	//0xF00001C0
+	UINT32                                                  reserved107;	//0xF00001C4
+	UINT32                                                  reserved108;	//0xF00001C8
+	UINT32                                                  reserved109;	//0xF00001CC
+	UINT32                                                  reserved110;	//0xF00001D0
+	UINT32                                                  reserved111;	//0xF00001D4
+	UINT32                                                  reserved112;	//0xF00001D8
+	UINT32                                                  reserved113;	//0xF00001DC
+	UINT32                                                  reserved114;	//0xF00001E0
+	UINT32                                                  reserved115;	//0xF00001E4
+	UINT32                                                  reserved116;	//0xF00001E8
+	UINT32                                                  reserved117;	//0xF00001EC
+	UINT32                                                  reserved118;	//0xF00001F0
+	UINT32                                                  reserved119;	//0xF00001F4
+	UINT32                                                  reserved120;	//0xF00001F8
+	UINT32                                                  reserved121;	//0xF00001FC
+	UINT32                                                  reserved122;	//0xF0000200
+	UINT32                                                  reserved123;	//0xF0000204
+	UINT32                                                  reserved124;	//0xF0000208
+	UINT32                                                  reserved125;	//0xF000020C
+	UINT32                                                  reserved126;	//0xF0000210
+	UINT32                                                  reserved127;	//0xF0000214
+	UINT32                                                  reserved128;	//0xF0000218
+	UINT32                                                  reserved129;	//0xF000021C
+	UINT32                                                  reserved130;	//0xF0000220
+	UINT32                                                  reserved131;	//0xF0000224
+	UINT32                                                  reserved132;	//0xF0000228
+	UINT32                                                  reserved133;	//0xF000022C
+	UINT32                                                  reserved134;	//0xF0000230
+	UINT32                                                  reserved135;	//0xF0000234
+	UINT32                                                  reserved136;	//0xF0000238
+	UINT32                                                  reserved137;	//0xF000023C
+	UINT32                                                  reserved138;	//0xF0000240
+	UINT32                                                  reserved139;	//0xF0000244
+	UINT32                                                  reserved140;	//0xF0000248
+	UINT32                                                  reserved141;	//0xF000024C
+	UINT32                                                  reserved142;	//0xF0000250
+	UINT32                                                  reserved143;	//0xF0000254
+	UINT32                                                  reserved144;	//0xF0000258
+	UINT32                                                  reserved145;	//0xF000025C
+	UINT32                                                  reserved146;	//0xF0000260
+	UINT32                                                  reserved147;	//0xF0000264
+	UINT32                                                  reserved148;	//0xF0000268
+	UINT32                                                  reserved149;	//0xF000026C
+	UINT32                                                  reserved150;	//0xF0000270
+	UINT32                                                  reserved151;	//0xF0000274
+	UINT32                                                  reserved152;	//0xF0000278
+	UINT32                                                  reserved153;	//0xF000027C
+	UINT32                                                  reserved154;	//0xF0000280
+	UINT32                                                  reserved155;	//0xF0000284
+	UINT32                                                  reserved156;	//0xF0000288
+	UINT32                                                  reserved157;	//0xF000028C
+	UINT32                                                  reserved158;	//0xF0000290
+	UINT32                                                  reserved159;	//0xF0000294
+	UINT32                                                  reserved160;	//0xF0000298
+	UINT32                                                  reserved161;	//0xF000029C
+	UINT32                                                  reserved162;	//0xF00002A0
+	UINT32                                                  reserved163;	//0xF00002A4
+	UINT32                                                  reserved164;	//0xF00002A8
+	UINT32                                                  reserved165;	//0xF00002AC
+	UINT32                                                  reserved166;	//0xF00002B0
+	UINT32                                                  reserved167;	//0xF00002B4
+	UINT32                                                  reserved168;	//0xF00002B8
+	UINT32                                                  reserved169;	//0xF00002BC
+	UINT32                                                  reserved170;	//0xF00002C0
+	UINT32                                                  reserved171;	//0xF00002C4
+	UINT32                                                  reserved172;	//0xF00002C8
+	UINT32                                                  reserved173;	//0xF00002CC
+	UINT32                                                  reserved174;	//0xF00002D0
+	UINT32                                                  reserved175;	//0xF00002D4
+	UINT32                                                  reserved176;	//0xF00002D8
+	UINT32                                                  reserved177;	//0xF00002DC
+	UINT32                                                  reserved178;	//0xF00002E0
+	UINT32                                                  reserved179;	//0xF00002E4
+	UINT32                                                  reserved180;	//0xF00002E8
+	UINT32                                                  reserved181;	//0xF00002EC
+	UINT32                                                  reserved182;	//0xF00002F0
+	UINT32                                                  reserved183;	//0xF00002F4
+	UINT32                                                  reserved184;	//0xF00002F8
+	UINT32                                                  reserved185;	//0xF00002FC
+	UINT32                                                  reserved186;	//0xF0000300
+	UINT32                                                  reserved187;	//0xF0000304
+	UINT32                                                  reserved188;	//0xF0000308
+	UINT32                                                  reserved189;	//0xF000030C
+	UINT32                                                  reserved190;	//0xF0000310
+	UINT32                                                  reserved191;	//0xF0000314
+	UINT32                                                  reserved192;	//0xF0000318
+	UINT32                                                  reserved193;	//0xF000031C
+	UINT32                                                  reserved194;	//0xF0000320
+	UINT32                                                  reserved195;	//0xF0000324
+	UINT32                                                  reserved196;	//0xF0000328
+	UINT32                                                  reserved197;	//0xF000032C
+	UINT32                                                  reserved198;	//0xF0000330
+	UINT32                                                  reserved199;	//0xF0000334
+	UINT32                                                  reserved200;	//0xF0000338
+	UINT32                                                  reserved201;	//0xF000033C
+	UINT32                                                  reserved202;	//0xF0000340
+	UINT32                                                  reserved203;	//0xF0000344
+	UINT32                                                  reserved204;	//0xF0000348
+	UINT32                                                  reserved205;	//0xF000034C
+	UINT32                                                  reserved206;	//0xF0000350
+	UINT32                                                  reserved207;	//0xF0000354
+	UINT32                                                  reserved208;	//0xF0000358
+	UINT32                                                  reserved209;	//0xF000035C
+	UINT32                                                  reserved210;	//0xF0000360
+	UINT32                                                  reserved211;	//0xF0000364
+	UINT32                                                  reserved212;	//0xF0000368
+	UINT32                                                  reserved213;	//0xF000036C
+	UINT32                                                  reserved214;	//0xF0000370
+	UINT32                                                  reserved215;	//0xF0000374
+	UINT32                                                  reserved216;	//0xF0000378
+	UINT32                                                  reserved217;	//0xF000037C
+	UINT32                                                  reserved218;	//0xF0000380
+	UINT32                                                  reserved219;	//0xF0000384
+	UINT32                                                  reserved220;	//0xF0000388
+	UINT32                                                  reserved221;	//0xF000038C
+	UINT32                                                  reserved222;	//0xF0000390
+	UINT32                                                  reserved223;	//0xF0000394
+	UINT32                                                  reserved224;	//0xF0000398
+	UINT32                                                  reserved225;	//0xF000039C
+	UINT32                                                  reserved226;	//0xF00003A0
+	UINT32                                                  reserved227;	//0xF00003A4
+	UINT32                                                  reserved228;	//0xF00003A8
+	UINT32                                                  reserved229;	//0xF00003AC
+	UINT32                                                  reserved230;	//0xF00003B0
+	UINT32                                                  reserved231;	//0xF00003B4
+	UINT32                                                  reserved232;	//0xF00003B8
+	UINT32                                                  reserved233;	//0xF00003BC
+	UINT32                                                  reserved234;	//0xF00003C0
+	UINT32                                                  reserved235;	//0xF00003C4
+	UINT32                                                  reserved236;	//0xF00003C8
+	UINT32                                                  reserved237;	//0xF00003CC
+	UINT32                                                  reserved238;	//0xF00003D0
+	UINT32                                                  reserved239;	//0xF00003D4
+	UINT32                                                  reserved240;	//0xF00003D8
+	UINT32                                                  reserved241;	//0xF00003DC
+	UINT32                                                  reserved242;	//0xF00003E0
+	UINT32                                                  reserved243;	//0xF00003E4
+	UINT32                                                  reserved244;	//0xF00003E8
+	UINT32                                                  reserved245;	//0xF00003EC
+	UINT32                                                  reserved246;	//0xF00003F0
+	UINT32                                                  reserved247;	//0xF00003F4
+	UINT32                                                  reserved248;	//0xF00003F8
+	UINT32                                                  reserved249;	//0xF00003FC
+	UINT32                                                  reserved250;	//0xF0000400
+	UINT32                                                  reserved251;	//0xF0000404
+	UINT32                                                  reserved252;	//0xF0000408
+	UINT32                                                  reserved253;	//0xF000040C
+	UINT32                                                  reserved254;	//0xF0000410
+	UINT32                                                  reserved255;	//0xF0000414
+	UINT32                                                  reserved256;	//0xF0000418
+	UINT32                                                  reserved257;	//0xF000041C
+	UINT32                                                  reserved258;	//0xF0000420
+	UINT32                                                  reserved259;	//0xF0000424
+	UINT32                                                  reserved260;	//0xF0000428
+	UINT32                                                  reserved261;	//0xF000042C
+	UINT32                                                  reserved262;	//0xF0000430
+	UINT32                                                  reserved263;	//0xF0000434
+	UINT32                                                  reserved264;	//0xF0000438
+	UINT32                                                  reserved265;	//0xF000043C
+	UINT32                                                  reserved266;	//0xF0000440
+	UINT32                                                  reserved267;	//0xF0000444
+	UINT32                                                  reserved268;	//0xF0000448
+	UINT32                                                  reserved269;	//0xF000044C
+	UINT32                                                  reserved270;	//0xF0000450
+	UINT32                                                  reserved271;	//0xF0000454
+	UINT32                                                  reserved272;	//0xF0000458
+	UINT32                                                  reserved273;	//0xF000045C
+	UINT32                                                  reserved274;	//0xF0000460
+	UINT32                                                  reserved275;	//0xF0000464
+	UINT32                                                  reserved276;	//0xF0000468
+	UINT32                                                  reserved277;	//0xF000046C
+	UINT32                                                  reserved278;	//0xF0000470
+	UINT32                                                  reserved279;	//0xF0000474
+	UINT32                                                  reserved280;	//0xF0000478
+	UINT32                                                  reserved281;	//0xF000047C
+	UINT32                                                  reserved282;	//0xF0000480
+	UINT32                                                  reserved283;	//0xF0000484
+	UINT32                                                  reserved284;	//0xF0000488
+	UINT32                                                  reserved285;	//0xF000048C
+	UINT32                                                  reserved286;	//0xF0000490
+	UINT32                                                  reserved287;	//0xF0000494
+	UINT32                                                  reserved288;	//0xF0000498
+	UINT32                                                  reserved289;	//0xF000049C
+	UINT32                                                  reserved290;	//0xF00004A0
+	UINT32                                                  reserved291;	//0xF00004A4
+	UINT32                                                  reserved292;	//0xF00004A8
+	UINT32                                                  reserved293;	//0xF00004AC
+	UINT32                                                  reserved294;	//0xF00004B0
+	UINT32                                                  reserved295;	//0xF00004B4
+	UINT32                                                  reserved296;	//0xF00004B8
+	UINT32                                                  reserved297;	//0xF00004BC
+	UINT32                                                  reserved298;	//0xF00004C0
+	UINT32                                                  reserved299;	//0xF00004C4
+	UINT32                                                  reserved300;	//0xF00004C8
+	UINT32                                                  reserved301;	//0xF00004CC
+	UINT32                                                  reserved302;	//0xF00004D0
+	UINT32                                                  reserved303;	//0xF00004D4
+	UINT32                                                  reserved304;	//0xF00004D8
+	UINT32                                                  reserved305;	//0xF00004DC
+	UINT32                                                  reserved306;	//0xF00004E0
+	UINT32                                                  reserved307;	//0xF00004E4
+	UINT32                                                  reserved308;	//0xF00004E8
+	UINT32                                                  reserved309;	//0xF00004EC
+	UINT32                                                  reserved310;	//0xF00004F0
+	UINT32                                                  reserved311;	//0xF00004F4
+	UINT32                                                  reserved312;	//0xF00004F8
+	UINT32                                                  reserved313;	//0xF00004FC
+	UINT32                                                  reserved314;	//0xF0000500
+	UINT32                                                  reserved315;	//0xF0000504
+	UINT32                                                  reserved316;	//0xF0000508
+	UINT32                                                  reserved317;	//0xF000050C
+	UINT32                                                  reserved318;	//0xF0000510
+	UINT32                                                  reserved319;	//0xF0000514
+	UINT32                                                  reserved320;	//0xF0000518
+	UINT32                                                  reserved321;	//0xF000051C
+	UINT32                                                  reserved322;	//0xF0000520
+	UINT32                                                  reserved323;	//0xF0000524
+	UINT32                                                  reserved324;	//0xF0000528
+	UINT32                                                  reserved325;	//0xF000052C
+	UINT32                                                  reserved326;	//0xF0000530
+	UINT32                                                  reserved327;	//0xF0000534
+	UINT32                                                  reserved328;	//0xF0000538
+	UINT32                                                  reserved329;	//0xF000053C
+	UINT32                                                  reserved330;	//0xF0000540
+	UINT32                                                  reserved331;	//0xF0000544
+	UINT32                                                  reserved332;	//0xF0000548
+	UINT32                                                  reserved333;	//0xF000054C
+	UINT32                                                  reserved334;	//0xF0000550
+	UINT32                                                  reserved335;	//0xF0000554
+	UINT32                                                  reserved336;	//0xF0000558
+	UINT32                                                  reserved337;	//0xF000055C
+	UINT32                                                  reserved338;	//0xF0000560
+	UINT32                                                  reserved339;	//0xF0000564
+	UINT32                                                  reserved340;	//0xF0000568
+	UINT32                                                  reserved341;	//0xF000056C
+	UINT32                                                  reserved342;	//0xF0000570
+	UINT32                                                  reserved343;	//0xF0000574
+	UINT32                                                  reserved344;	//0xF0000578
+	UINT32                                                  reserved345;	//0xF000057C
+	UINT32                                                  reserved346;	//0xF0000580
+	UINT32                                                  reserved347;	//0xF0000584
+	UINT32                                                  reserved348;	//0xF0000588
+	UINT32                                                  reserved349;	//0xF000058C
+	UINT32                                                  reserved350;	//0xF0000590
+	UINT32                                                  reserved351;	//0xF0000594
+	UINT32                                                  reserved352;	//0xF0000598
+	UINT32                                                  reserved353;	//0xF000059C
+	UINT32                                                  reserved354;	//0xF00005A0
+	UINT32                                                  reserved355;	//0xF00005A4
+	UINT32                                                  reserved356;	//0xF00005A8
+	UINT32                                                  reserved357;	//0xF00005AC
+	UINT32                                                  reserved358;	//0xF00005B0
+	UINT32                                                  reserved359;	//0xF00005B4
+	UINT32                                                  reserved360;	//0xF00005B8
+	UINT32                                                  reserved361;	//0xF00005BC
+	UINT32                                                  reserved362;	//0xF00005C0
+	UINT32                                                  reserved363;	//0xF00005C4
+	UINT32                                                  reserved364;	//0xF00005C8
+	UINT32                                                  reserved365;	//0xF00005CC
+	UINT32                                                  reserved366;	//0xF00005D0
+	UINT32                                                  reserved367;	//0xF00005D4
+	UINT32                                                  reserved368;	//0xF00005D8
+	UINT32                                                  reserved369;	//0xF00005DC
+	UINT32                                                  reserved370;	//0xF00005E0
+	UINT32                                                  reserved371;	//0xF00005E4
+	UINT32                                                  reserved372;	//0xF00005E8
+	UINT32                                                  reserved373;	//0xF00005EC
+	UINT32                                                  reserved374;	//0xF00005F0
+	UINT32                                                  reserved375;	//0xF00005F4
+	UINT32                                                  reserved376;	//0xF00005F8
+	UINT32                                                  reserved377;	//0xF00005FC
+	UINT32                                                  reserved378;	//0xF0000600
+	UINT32                                                  reserved379;	//0xF0000604
+	UINT32                                                  reserved380;	//0xF0000608
+	UINT32                                                  reserved381;	//0xF000060C
+	UINT32                                                  reserved382;	//0xF0000610
+	UINT32                                                  reserved383;	//0xF0000614
+	UINT32                                                  reserved384;	//0xF0000618
+	UINT32                                                  reserved385;	//0xF000061C
+	UINT32                                                  reserved386;	//0xF0000620
+	UINT32                                                  reserved387;	//0xF0000624
+	UINT32                                                  reserved388;	//0xF0000628
+	UINT32                                                  reserved389;	//0xF000062C
+	UINT32                                                  reserved390;	//0xF0000630
+	UINT32                                                  reserved391;	//0xF0000634
+	UINT32                                                  reserved392;	//0xF0000638
+	UINT32                                                  reserved393;	//0xF000063C
+	UINT32                                                  reserved394;	//0xF0000640
+	UINT32                                                  reserved395;	//0xF0000644
+	UINT32                                                  reserved396;	//0xF0000648
+	UINT32                                                  reserved397;	//0xF000064C
+	UINT32                                                  reserved398;	//0xF0000650
+	UINT32                                                  reserved399;	//0xF0000654
+	UINT32                                                  reserved400;	//0xF0000658
+	UINT32                                                  reserved401;	//0xF000065C
+	UINT32                                                  reserved402;	//0xF0000660
+	UINT32                                                  reserved403;	//0xF0000664
+	UINT32                                                  reserved404;	//0xF0000668
+	UINT32                                                  reserved405;	//0xF000066C
+	UINT32                                                  reserved406;	//0xF0000670
+	UINT32                                                  reserved407;	//0xF0000674
+	UINT32                                                  reserved408;	//0xF0000678
+	UINT32                                                  reserved409;	//0xF000067C
+	UINT32                                                  reserved410;	//0xF0000680
+	UINT32                                                  reserved411;	//0xF0000684
+	UINT32                                                  reserved412;	//0xF0000688
+	UINT32                                                  reserved413;	//0xF000068C
+	UINT32                                                  reserved414;	//0xF0000690
+	UINT32                                                  reserved415;	//0xF0000694
+	UINT32                                                  reserved416;	//0xF0000698
+	UINT32                                                  reserved417;	//0xF000069C
+	UINT32                                                  reserved418;	//0xF00006A0
+	UINT32                                                  reserved419;	//0xF00006A4
+	UINT32                                                  reserved420;	//0xF00006A8
+	UINT32                                                  reserved421;	//0xF00006AC
+	UINT32                                                  reserved422;	//0xF00006B0
+	UINT32                                                  reserved423;	//0xF00006B4
+	UINT32                                                  reserved424;	//0xF00006B8
+	UINT32                                                  reserved425;	//0xF00006BC
+	UINT32                                                  reserved426;	//0xF00006C0
+	UINT32                                                  reserved427;	//0xF00006C4
+	UINT32                                                  reserved428;	//0xF00006C8
+	UINT32                                                  reserved429;	//0xF00006CC
+	UINT32                                                  reserved430;	//0xF00006D0
+	UINT32                                                  reserved431;	//0xF00006D4
+	UINT32                                                  reserved432;	//0xF00006D8
+	UINT32                                                  reserved433;	//0xF00006DC
+	UINT32                                                  reserved434;	//0xF00006E0
+	UINT32                                                  reserved435;	//0xF00006E4
+	UINT32                                                  reserved436;	//0xF00006E8
+	UINT32                                                  reserved437;	//0xF00006EC
+	UINT32                                                  reserved438;	//0xF00006F0
+	UINT32                                                  reserved439;	//0xF00006F4
+	UINT32                                                  reserved440;	//0xF00006F8
+	UINT32                                                  reserved441;	//0xF00006FC
+	UINT32                                                  reserved442;	//0xF0000700
+	UINT32                                                  reserved443;	//0xF0000704
+	UINT32                                                  reserved444;	//0xF0000708
+	UINT32                                                  reserved445;	//0xF000070C
+	UINT32                                                  reserved446;	//0xF0000710
+	UINT32                                                  reserved447;	//0xF0000714
+	UINT32                                                  reserved448;	//0xF0000718
+	UINT32                                                  reserved449;	//0xF000071C
+	UINT32                                                  reserved450;	//0xF0000720
+	UINT32                                                  reserved451;	//0xF0000724
+	UINT32                                                  reserved452;	//0xF0000728
+	UINT32                                                  reserved453;	//0xF000072C
+	UINT32                                                  reserved454;	//0xF0000730
+	UINT32                                                  reserved455;	//0xF0000734
+	UINT32                                                  reserved456;	//0xF0000738
+	UINT32                                                  reserved457;	//0xF000073C
+	UINT32                                                  reserved458;	//0xF0000740
+	UINT32                                                  reserved459;	//0xF0000744
+	UINT32                                                  reserved460;	//0xF0000748
+	UINT32                                                  reserved461;	//0xF000074C
+	UINT32                                                  reserved462;	//0xF0000750
+	UINT32                                                  reserved463;	//0xF0000754
+	UINT32                                                  reserved464;	//0xF0000758
+	UINT32                                                  reserved465;	//0xF000075C
+	UINT32                                                  reserved466;	//0xF0000760
+	UINT32                                                  reserved467;	//0xF0000764
+	UINT32                                                  reserved468;	//0xF0000768
+	UINT32                                                  reserved469;	//0xF000076C
+	UINT32                                                  reserved470;	//0xF0000770
+	UINT32                                                  reserved471;	//0xF0000774
+	UINT32                                                  reserved472;	//0xF0000778
+	UINT32                                                  reserved473;	//0xF000077C
+	UINT32                                                  reserved474;	//0xF0000780
+	UINT32                                                  reserved475;	//0xF0000784
+	UINT32                                                  reserved476;	//0xF0000788
+	UINT32                                                  reserved477;	//0xF000078C
+	UINT32                                                  reserved478;	//0xF0000790
+	UINT32                                                  reserved479;	//0xF0000794
+	UINT32                                                  reserved480;	//0xF0000798
+	UINT32                                                  reserved481;	//0xF000079C
+	UINT32                                                  reserved482;	//0xF00007A0
+	UINT32                                                  reserved483;	//0xF00007A4
+	UINT32                                                  reserved484;	//0xF00007A8
+	UINT32                                                  reserved485;	//0xF00007AC
+	UINT32                                                  reserved486;	//0xF00007B0
+	UINT32                                                  reserved487;	//0xF00007B4
+	UINT32                                                  reserved488;	//0xF00007B8
+	UINT32                                                  reserved489;	//0xF00007BC
+	UINT32                                                  reserved490;	//0xF00007C0
+	UINT32                                                  reserved491;	//0xF00007C4
+	UINT32                                                  reserved492;	//0xF00007C8
+	UINT32                                                  reserved493;	//0xF00007CC
+	UINT32                                                  reserved494;	//0xF00007D0
+	UINT32                                                  reserved495;	//0xF00007D4
+	UINT32                                                  reserved496;	//0xF00007D8
+	UINT32                                                  reserved497;	//0xF00007DC
+	UINT32                                                  reserved498;	//0xF00007E0
+	UINT32                                                  reserved499;	//0xF00007E4
+	UINT32                                                  reserved500;	//0xF00007E8
+	UINT32                                                  reserved501;	//0xF00007EC
+	UINT32                                                  reserved502;	//0xF00007F0
+	UINT32                                                  reserved503;	//0xF00007F4
+	UINT32                                                  reserved504;	//0xF00007F8
+	UINT32                                                  reserved505;	//0xF00007FC
+	UINT32                                                  reserved506;	//0xF0000800
+	UINT32                                                  reserved507;	//0xF0000804
+	UINT32                                                  reserved508;	//0xF0000808
+	UINT32                                                  reserved509;	//0xF000080C
+	UINT32                                                  reserved510;	//0xF0000810
+	UINT32                                                  reserved511;	//0xF0000814
+	UINT32                                                  reserved512;	//0xF0000818
+	UINT32                                                  reserved513;	//0xF000081C
+	UINT32                                                  reserved514;	//0xF0000820
+	UINT32                                                  reserved515;	//0xF0000824
+	UINT32                                                  reserved516;	//0xF0000828
+	UINT32                                                  reserved517;	//0xF000082C
+	UINT32                                                  reserved518;	//0xF0000830
+	UINT32                                                  reserved519;	//0xF0000834
+	UINT32                                                  reserved520;	//0xF0000838
+	UINT32                                                  reserved521;	//0xF000083C
+	UINT32                                                  reserved522;	//0xF0000840
+	UINT32                                                  reserved523;	//0xF0000844
+	UINT32                                                  reserved524;	//0xF0000848
+	UINT32                                                  reserved525;	//0xF000084C
+	UINT32                                                  reserved526;	//0xF0000850
+	UINT32                                                  reserved527;	//0xF0000854
+	UINT32                                                  reserved528;	//0xF0000858
+	UINT32                                                  reserved529;	//0xF000085C
+	UINT32                                                  reserved530;	//0xF0000860
+	UINT32                                                  reserved531;	//0xF0000864
+	UINT32                                                  reserved532;	//0xF0000868
+	UINT32                                                  reserved533;	//0xF000086C
+	UINT32                                                  reserved534;	//0xF0000870
+	UINT32                                                  reserved535;	//0xF0000874
+	UINT32                                                  reserved536;	//0xF0000878
+	UINT32                                                  reserved537;	//0xF000087C
+	UINT32                                                  reserved538;	//0xF0000880
+	UINT32                                                  reserved539;	//0xF0000884
+	UINT32                                                  reserved540;	//0xF0000888
+	UINT32                                                  reserved541;	//0xF000088C
+	UINT32                                                  reserved542;	//0xF0000890
+	UINT32                                                  reserved543;	//0xF0000894
+	UINT32                                                  reserved544;	//0xF0000898
+	UINT32                                                  reserved545;	//0xF000089C
+	UINT32                                                  reserved546;	//0xF00008A0
+	UINT32                                                  reserved547;	//0xF00008A4
+	UINT32                                                  reserved548;	//0xF00008A8
+	UINT32                                                  reserved549;	//0xF00008AC
+	UINT32                                                  reserved550;	//0xF00008B0
+	UINT32                                                  reserved551;	//0xF00008B4
+	UINT32                                                  reserved552;	//0xF00008B8
+	UINT32                                                  reserved553;	//0xF00008BC
+	UINT32                                                  reserved554;	//0xF00008C0
+	UINT32                                                  reserved555;	//0xF00008C4
+	UINT32                                                  reserved556;	//0xF00008C8
+	UINT32                                                  reserved557;	//0xF00008CC
+	UINT32                                                  reserved558;	//0xF00008D0
+	UINT32                                                  reserved559;	//0xF00008D4
+	UINT32                                                  reserved560;	//0xF00008D8
+	UINT32                                                  reserved561;	//0xF00008DC
+	UINT32                                                  reserved562;	//0xF00008E0
+	UINT32                                                  reserved563;	//0xF00008E4
+	UINT32                                                  reserved564;	//0xF00008E8
+	UINT32                                                  reserved565;	//0xF00008EC
+	UINT32                                                  reserved566;	//0xF00008F0
+	UINT32                                                  reserved567;	//0xF00008F4
+	UINT32                                                  reserved568;	//0xF00008F8
+	UINT32                                                  reserved569;	//0xF00008FC
+	UINT32                                                  reserved570;	//0xF0000900
+	UINT32                                                  reserved571;	//0xF0000904
+	UINT32                                                  reserved572;	//0xF0000908
+	UINT32                                                  reserved573;	//0xF000090C
+	UINT32                                                  reserved574;	//0xF0000910
+	UINT32                                                  reserved575;	//0xF0000914
+	UINT32                                                  reserved576;	//0xF0000918
+	UINT32                                                  reserved577;	//0xF000091C
+	UINT32                                                  reserved578;	//0xF0000920
+	UINT32                                                  reserved579;	//0xF0000924
+	UINT32                                                  reserved580;	//0xF0000928
+	UINT32                                                  reserved581;	//0xF000092C
+	UINT32                                                  reserved582;	//0xF0000930
+	UINT32                                                  reserved583;	//0xF0000934
+	UINT32                                                  reserved584;	//0xF0000938
+	UINT32                                                  reserved585;	//0xF000093C
+	UINT32                                                  reserved586;	//0xF0000940
+	UINT32                                                  reserved587;	//0xF0000944
+	UINT32                                                  reserved588;	//0xF0000948
+	UINT32                                                  reserved589;	//0xF000094C
+	UINT32                                                  reserved590;	//0xF0000950
+	UINT32                                                  reserved591;	//0xF0000954
+	UINT32                                                  reserved592;	//0xF0000958
+	UINT32                                                  reserved593;	//0xF000095C
+	UINT32                                                  reserved594;	//0xF0000960
+	UINT32                                                  reserved595;	//0xF0000964
+	UINT32                                                  reserved596;	//0xF0000968
+	UINT32                                                  reserved597;	//0xF000096C
+	UINT32                                                  reserved598;	//0xF0000970
+	UINT32                                                  reserved599;	//0xF0000974
+	UINT32                                                  reserved600;	//0xF0000978
+	UINT32                                                  reserved601;	//0xF000097C
+	UINT32                                                  reserved602;	//0xF0000980
+	UINT32                                                  reserved603;	//0xF0000984
+	UINT32                                                  reserved604;	//0xF0000988
+	UINT32                                                  reserved605;	//0xF000098C
+	UINT32                                                  reserved606;	//0xF0000990
+	UINT32                                                  reserved607;	//0xF0000994
+	UINT32                                                  reserved608;	//0xF0000998
+	UINT32                                                  reserved609;	//0xF000099C
+	UINT32                                                  reserved610;	//0xF00009A0
+	UINT32                                                  reserved611;	//0xF00009A4
+	UINT32                                                  reserved612;	//0xF00009A8
+	UINT32                                                  reserved613;	//0xF00009AC
+	UINT32                                                  reserved614;	//0xF00009B0
+	UINT32                                                  reserved615;	//0xF00009B4
+	UINT32                                                  reserved616;	//0xF00009B8
+	UINT32                                                  reserved617;	//0xF00009BC
+	UINT32                                                  reserved618;	//0xF00009C0
+	UINT32                                                  reserved619;	//0xF00009C4
+	UINT32                                                  reserved620;	//0xF00009C8
+	UINT32                                                  reserved621;	//0xF00009CC
+	UINT32                                                  reserved622;	//0xF00009D0
+	UINT32                                                  reserved623;	//0xF00009D4
+	UINT32                                                  reserved624;	//0xF00009D8
+	UINT32                                                  reserved625;	//0xF00009DC
+	UINT32                                                  reserved626;	//0xF00009E0
+	UINT32                                                  reserved627;	//0xF00009E4
+	UINT32                                                  reserved628;	//0xF00009E8
+	UINT32                                                  reserved629;	//0xF00009EC
+	UINT32                                                  reserved630;	//0xF00009F0
+	UINT32                                                  reserved631;	//0xF00009F4
+	UINT32                                                  reserved632;	//0xF00009F8
+	UINT32                                                  reserved633;	//0xF00009FC
+	UINT32                                                  reserved634;	//0xF0000A00
+	UINT32                                                  reserved635;	//0xF0000A04
+	UINT32                                                  reserved636;	//0xF0000A08
+	UINT32                                                  reserved637;	//0xF0000A0C
+	UINT32                                                  reserved638;	//0xF0000A10
+	UINT32                                                  reserved639;	//0xF0000A14
+	UINT32                                                  reserved640;	//0xF0000A18
+	UINT32                                                  reserved641;	//0xF0000A1C
+	UINT32                                                  reserved642;	//0xF0000A20
+	UINT32                                                  reserved643;	//0xF0000A24
+	UINT32                                                  reserved644;	//0xF0000A28
+	UINT32                                                  reserved645;	//0xF0000A2C
+	UINT32                                                  reserved646;	//0xF0000A30
+	UINT32                                                  reserved647;	//0xF0000A34
+	UINT32                                                  reserved648;	//0xF0000A38
+	UINT32                                                  reserved649;	//0xF0000A3C
+	UINT32                                                  reserved650;	//0xF0000A40
+	UINT32                                                  reserved651;	//0xF0000A44
+	UINT32                                                  reserved652;	//0xF0000A48
+	UINT32                                                  reserved653;	//0xF0000A4C
+	UINT32                                                  reserved654;	//0xF0000A50
+	UINT32                                                  reserved655;	//0xF0000A54
+	UINT32                                                  reserved656;	//0xF0000A58
+	UINT32                                                  reserved657;	//0xF0000A5C
+	UINT32                                                  reserved658;	//0xF0000A60
+	UINT32                                                  reserved659;	//0xF0000A64
+	UINT32                                                  reserved660;	//0xF0000A68
+	UINT32                                                  reserved661;	//0xF0000A6C
+	UINT32                                                  reserved662;	//0xF0000A70
+	UINT32                                                  reserved663;	//0xF0000A74
+	UINT32                                                  reserved664;	//0xF0000A78
+	UINT32                                                  reserved665;	//0xF0000A7C
+	UINT32                                                  reserved666;	//0xF0000A80
+	UINT32                                                  reserved667;	//0xF0000A84
+	UINT32                                                  reserved668;	//0xF0000A88
+	UINT32                                                  reserved669;	//0xF0000A8C
+	UINT32                                                  reserved670;	//0xF0000A90
+	UINT32                                                  reserved671;	//0xF0000A94
+	UINT32                                                  reserved672;	//0xF0000A98
+	UINT32                                                  reserved673;	//0xF0000A9C
+	UINT32                                                  reserved674;	//0xF0000AA0
+	UINT32                                                  reserved675;	//0xF0000AA4
+	UINT32                                                  reserved676;	//0xF0000AA8
+	UINT32                                                  reserved677;	//0xF0000AAC
+	UINT32                                                  reserved678;	//0xF0000AB0
+	UINT32                                                  reserved679;	//0xF0000AB4
+	UINT32                                                  reserved680;	//0xF0000AB8
+	UINT32                                                  reserved681;	//0xF0000ABC
+	UINT32                                                  reserved682;	//0xF0000AC0
+	UINT32                                                  reserved683;	//0xF0000AC4
+	UINT32                                                  reserved684;	//0xF0000AC8
+	UINT32                                                  reserved685;	//0xF0000ACC
+	UINT32                                                  reserved686;	//0xF0000AD0
+	UINT32                                                  reserved687;	//0xF0000AD4
+	UINT32                                                  reserved688;	//0xF0000AD8
+	UINT32                                                  reserved689;	//0xF0000ADC
+	UINT32                                                  reserved690;	//0xF0000AE0
+	UINT32                                                  reserved691;	//0xF0000AE4
+	UINT32                                                  reserved692;	//0xF0000AE8
+	UINT32                                                  reserved693;	//0xF0000AEC
+	UINT32                                                  reserved694;	//0xF0000AF0
+	UINT32                                                  reserved695;	//0xF0000AF4
+	UINT32                                                  reserved696;	//0xF0000AF8
+	UINT32                                                  reserved697;	//0xF0000AFC
+	UINT32                                                  reserved698;	//0xF0000B00
+	UINT32                                                  reserved699;	//0xF0000B04
+	UINT32                                                  reserved700;	//0xF0000B08
+	UINT32                                                  reserved701;	//0xF0000B0C
+	UINT32                                                  reserved702;	//0xF0000B10
+	UINT32                                                  reserved703;	//0xF0000B14
+	UINT32                                                  reserved704;	//0xF0000B18
+	UINT32                                                  reserved705;	//0xF0000B1C
+	UINT32                                                  reserved706;	//0xF0000B20
+	UINT32                                                  reserved707;	//0xF0000B24
+	UINT32                                                  reserved708;	//0xF0000B28
+	UINT32                                                  reserved709;	//0xF0000B2C
+	UINT32                                                  reserved710;	//0xF0000B30
+	UINT32                                                  reserved711;	//0xF0000B34
+	UINT32                                                  reserved712;	//0xF0000B38
+	UINT32                                                  reserved713;	//0xF0000B3C
+	UINT32                                                  reserved714;	//0xF0000B40
+	UINT32                                                  reserved715;	//0xF0000B44
+	UINT32                                                  reserved716;	//0xF0000B48
+	UINT32                                                  reserved717;	//0xF0000B4C
+	UINT32                                                  reserved718;	//0xF0000B50
+	UINT32                                                  reserved719;	//0xF0000B54
+	UINT32                                                  reserved720;	//0xF0000B58
+	UINT32                                                  reserved721;	//0xF0000B5C
+	UINT32                                                  reserved722;	//0xF0000B60
+	UINT32                                                  reserved723;	//0xF0000B64
+	UINT32                                                  reserved724;	//0xF0000B68
+	UINT32                                                  reserved725;	//0xF0000B6C
+	UINT32                                                  reserved726;	//0xF0000B70
+	UINT32                                                  reserved727;	//0xF0000B74
+	UINT32                                                  reserved728;	//0xF0000B78
+	UINT32                                                  reserved729;	//0xF0000B7C
+	UINT32                                                  reserved730;	//0xF0000B80
+	UINT32                                                  reserved731;	//0xF0000B84
+	UINT32                                                  reserved732;	//0xF0000B88
+	UINT32                                                  reserved733;	//0xF0000B8C
+	UINT32                                                  reserved734;	//0xF0000B90
+	UINT32                                                  reserved735;	//0xF0000B94
+	UINT32                                                  reserved736;	//0xF0000B98
+	UINT32                                                  reserved737;	//0xF0000B9C
+	UINT32                                                  reserved738;	//0xF0000BA0
+	UINT32                                                  reserved739;	//0xF0000BA4
+	UINT32                                                  reserved740;	//0xF0000BA8
+	UINT32                                                  reserved741;	//0xF0000BAC
+	UINT32                                                  reserved742;	//0xF0000BB0
+	UINT32                                                  reserved743;	//0xF0000BB4
+	UINT32                                                  reserved744;	//0xF0000BB8
+	UINT32                                                  reserved745;	//0xF0000BBC
+	UINT32                                                  reserved746;	//0xF0000BC0
+	UINT32                                                  reserved747;	//0xF0000BC4
+	UINT32                                                  reserved748;	//0xF0000BC8
+	UINT32                                                  reserved749;	//0xF0000BCC
+	UINT32                                                  reserved750;	//0xF0000BD0
+	UINT32                                                  reserved751;	//0xF0000BD4
+	UINT32                                                  reserved752;	//0xF0000BD8
+	UINT32                                                  reserved753;	//0xF0000BDC
+	UINT32                                                  reserved754;	//0xF0000BE0
+	UINT32                                                  reserved755;	//0xF0000BE4
+	UINT32                                                  reserved756;	//0xF0000BE8
+	UINT32                                                  reserved757;	//0xF0000BEC
+	UINT32                                                  reserved758;	//0xF0000BF0
+	UINT32                                                  reserved759;	//0xF0000BF4
+	UINT32                                                  reserved760;	//0xF0000BF8
+	UINT32                                                  reserved761;	//0xF0000BFC
+	REG_WDOG_WDOGLOCK_T                                        wdoglock;	//0xF0000C00
+	UINT32                                                  reserved762;	//0xF0000C04
+	UINT32                                                  reserved763;	//0xF0000C08
+	UINT32                                                  reserved764;	//0xF0000C0C
+	UINT32                                                  reserved765;	//0xF0000C10
+	UINT32                                                  reserved766;	//0xF0000C14
+	UINT32                                                  reserved767;	//0xF0000C18
+	UINT32                                                  reserved768;	//0xF0000C1C
+	UINT32                                                  reserved769;	//0xF0000C20
+	UINT32                                                  reserved770;	//0xF0000C24
+	UINT32                                                  reserved771;	//0xF0000C28
+	UINT32                                                  reserved772;	//0xF0000C2C
+	UINT32                                                  reserved773;	//0xF0000C30
+	UINT32                                                  reserved774;	//0xF0000C34
+	UINT32                                                  reserved775;	//0xF0000C38
+	UINT32                                                  reserved776;	//0xF0000C3C
+	UINT32                                                  reserved777;	//0xF0000C40
+	UINT32                                                  reserved778;	//0xF0000C44
+	UINT32                                                  reserved779;	//0xF0000C48
+	UINT32                                                  reserved780;	//0xF0000C4C
+	UINT32                                                  reserved781;	//0xF0000C50
+	UINT32                                                  reserved782;	//0xF0000C54
+	UINT32                                                  reserved783;	//0xF0000C58
+	UINT32                                                  reserved784;	//0xF0000C5C
+	UINT32                                                  reserved785;	//0xF0000C60
+	UINT32                                                  reserved786;	//0xF0000C64
+	UINT32                                                  reserved787;	//0xF0000C68
+	UINT32                                                  reserved788;	//0xF0000C6C
+	UINT32                                                  reserved789;	//0xF0000C70
+	UINT32                                                  reserved790;	//0xF0000C74
+	UINT32                                                  reserved791;	//0xF0000C78
+	UINT32                                                  reserved792;	//0xF0000C7C
+	UINT32                                                  reserved793;	//0xF0000C80
+	UINT32                                                  reserved794;	//0xF0000C84
+	UINT32                                                  reserved795;	//0xF0000C88
+	UINT32                                                  reserved796;	//0xF0000C8C
+	UINT32                                                  reserved797;	//0xF0000C90
+	UINT32                                                  reserved798;	//0xF0000C94
+	UINT32                                                  reserved799;	//0xF0000C98
+	UINT32                                                  reserved800;	//0xF0000C9C
+	UINT32                                                  reserved801;	//0xF0000CA0
+	UINT32                                                  reserved802;	//0xF0000CA4
+	UINT32                                                  reserved803;	//0xF0000CA8
+	UINT32                                                  reserved804;	//0xF0000CAC
+	UINT32                                                  reserved805;	//0xF0000CB0
+	UINT32                                                  reserved806;	//0xF0000CB4
+	UINT32                                                  reserved807;	//0xF0000CB8
+	UINT32                                                  reserved808;	//0xF0000CBC
+	UINT32                                                  reserved809;	//0xF0000CC0
+	UINT32                                                  reserved810;	//0xF0000CC4
+	UINT32                                                  reserved811;	//0xF0000CC8
+	UINT32                                                  reserved812;	//0xF0000CCC
+	UINT32                                                  reserved813;	//0xF0000CD0
+	UINT32                                                  reserved814;	//0xF0000CD4
+	UINT32                                                  reserved815;	//0xF0000CD8
+	UINT32                                                  reserved816;	//0xF0000CDC
+	UINT32                                                  reserved817;	//0xF0000CE0
+	UINT32                                                  reserved818;	//0xF0000CE4
+	UINT32                                                  reserved819;	//0xF0000CE8
+	UINT32                                                  reserved820;	//0xF0000CEC
+	UINT32                                                  reserved821;	//0xF0000CF0
+	UINT32                                                  reserved822;	//0xF0000CF4
+	UINT32                                                  reserved823;	//0xF0000CF8
+	UINT32                                                  reserved824;	//0xF0000CFC
+	UINT32                                                  reserved825;	//0xF0000D00
+	UINT32                                                  reserved826;	//0xF0000D04
+	UINT32                                                  reserved827;	//0xF0000D08
+	UINT32                                                  reserved828;	//0xF0000D0C
+	UINT32                                                  reserved829;	//0xF0000D10
+	UINT32                                                  reserved830;	//0xF0000D14
+	UINT32                                                  reserved831;	//0xF0000D18
+	UINT32                                                  reserved832;	//0xF0000D1C
+	UINT32                                                  reserved833;	//0xF0000D20
+	UINT32                                                  reserved834;	//0xF0000D24
+	UINT32                                                  reserved835;	//0xF0000D28
+	UINT32                                                  reserved836;	//0xF0000D2C
+	UINT32                                                  reserved837;	//0xF0000D30
+	UINT32                                                  reserved838;	//0xF0000D34
+	UINT32                                                  reserved839;	//0xF0000D38
+	UINT32                                                  reserved840;	//0xF0000D3C
+	UINT32                                                  reserved841;	//0xF0000D40
+	UINT32                                                  reserved842;	//0xF0000D44
+	UINT32                                                  reserved843;	//0xF0000D48
+	UINT32                                                  reserved844;	//0xF0000D4C
+	UINT32                                                  reserved845;	//0xF0000D50
+	UINT32                                                  reserved846;	//0xF0000D54
+	UINT32                                                  reserved847;	//0xF0000D58
+	UINT32                                                  reserved848;	//0xF0000D5C
+	UINT32                                                  reserved849;	//0xF0000D60
+	UINT32                                                  reserved850;	//0xF0000D64
+	UINT32                                                  reserved851;	//0xF0000D68
+	UINT32                                                  reserved852;	//0xF0000D6C
+	UINT32                                                  reserved853;	//0xF0000D70
+	UINT32                                                  reserved854;	//0xF0000D74
+	UINT32                                                  reserved855;	//0xF0000D78
+	UINT32                                                  reserved856;	//0xF0000D7C
+	UINT32                                                  reserved857;	//0xF0000D80
+	UINT32                                                  reserved858;	//0xF0000D84
+	UINT32                                                  reserved859;	//0xF0000D88
+	UINT32                                                  reserved860;	//0xF0000D8C
+	UINT32                                                  reserved861;	//0xF0000D90
+	UINT32                                                  reserved862;	//0xF0000D94
+	UINT32                                                  reserved863;	//0xF0000D98
+	UINT32                                                  reserved864;	//0xF0000D9C
+	UINT32                                                  reserved865;	//0xF0000DA0
+	UINT32                                                  reserved866;	//0xF0000DA4
+	UINT32                                                  reserved867;	//0xF0000DA8
+	UINT32                                                  reserved868;	//0xF0000DAC
+	UINT32                                                  reserved869;	//0xF0000DB0
+	UINT32                                                  reserved870;	//0xF0000DB4
+	UINT32                                                  reserved871;	//0xF0000DB8
+	UINT32                                                  reserved872;	//0xF0000DBC
+	UINT32                                                  reserved873;	//0xF0000DC0
+	UINT32                                                  reserved874;	//0xF0000DC4
+	UINT32                                                  reserved875;	//0xF0000DC8
+	UINT32                                                  reserved876;	//0xF0000DCC
+	UINT32                                                  reserved877;	//0xF0000DD0
+	UINT32                                                  reserved878;	//0xF0000DD4
+	UINT32                                                  reserved879;	//0xF0000DD8
+	UINT32                                                  reserved880;	//0xF0000DDC
+	UINT32                                                  reserved881;	//0xF0000DE0
+	UINT32                                                  reserved882;	//0xF0000DE4
+	UINT32                                                  reserved883;	//0xF0000DE8
+	UINT32                                                  reserved884;	//0xF0000DEC
+	UINT32                                                  reserved885;	//0xF0000DF0
+	UINT32                                                  reserved886;	//0xF0000DF4
+	UINT32                                                  reserved887;	//0xF0000DF8
+	UINT32                                                  reserved888;	//0xF0000DFC
+	UINT32                                                  reserved889;	//0xF0000E00
+	UINT32                                                  reserved890;	//0xF0000E04
+	UINT32                                                  reserved891;	//0xF0000E08
+	UINT32                                                  reserved892;	//0xF0000E0C
+	UINT32                                                  reserved893;	//0xF0000E10
+	UINT32                                                  reserved894;	//0xF0000E14
+	UINT32                                                  reserved895;	//0xF0000E18
+	UINT32                                                  reserved896;	//0xF0000E1C
+	UINT32                                                  reserved897;	//0xF0000E20
+	UINT32                                                  reserved898;	//0xF0000E24
+	UINT32                                                  reserved899;	//0xF0000E28
+	UINT32                                                  reserved900;	//0xF0000E2C
+	UINT32                                                  reserved901;	//0xF0000E30
+	UINT32                                                  reserved902;	//0xF0000E34
+	UINT32                                                  reserved903;	//0xF0000E38
+	UINT32                                                  reserved904;	//0xF0000E3C
+	UINT32                                                  reserved905;	//0xF0000E40
+	UINT32                                                  reserved906;	//0xF0000E44
+	UINT32                                                  reserved907;	//0xF0000E48
+	UINT32                                                  reserved908;	//0xF0000E4C
+	UINT32                                                  reserved909;	//0xF0000E50
+	UINT32                                                  reserved910;	//0xF0000E54
+	UINT32                                                  reserved911;	//0xF0000E58
+	UINT32                                                  reserved912;	//0xF0000E5C
+	UINT32                                                  reserved913;	//0xF0000E60
+	UINT32                                                  reserved914;	//0xF0000E64
+	UINT32                                                  reserved915;	//0xF0000E68
+	UINT32                                                  reserved916;	//0xF0000E6C
+	UINT32                                                  reserved917;	//0xF0000E70
+	UINT32                                                  reserved918;	//0xF0000E74
+	UINT32                                                  reserved919;	//0xF0000E78
+	UINT32                                                  reserved920;	//0xF0000E7C
+	UINT32                                                  reserved921;	//0xF0000E80
+	UINT32                                                  reserved922;	//0xF0000E84
+	UINT32                                                  reserved923;	//0xF0000E88
+	UINT32                                                  reserved924;	//0xF0000E8C
+	UINT32                                                  reserved925;	//0xF0000E90
+	UINT32                                                  reserved926;	//0xF0000E94
+	UINT32                                                  reserved927;	//0xF0000E98
+	UINT32                                                  reserved928;	//0xF0000E9C
+	UINT32                                                  reserved929;	//0xF0000EA0
+	UINT32                                                  reserved930;	//0xF0000EA4
+	UINT32                                                  reserved931;	//0xF0000EA8
+	UINT32                                                  reserved932;	//0xF0000EAC
+	UINT32                                                  reserved933;	//0xF0000EB0
+	UINT32                                                  reserved934;	//0xF0000EB4
+	UINT32                                                  reserved935;	//0xF0000EB8
+	UINT32                                                  reserved936;	//0xF0000EBC
+	UINT32                                                  reserved937;	//0xF0000EC0
+	UINT32                                                  reserved938;	//0xF0000EC4
+	UINT32                                                  reserved939;	//0xF0000EC8
+	UINT32                                                  reserved940;	//0xF0000ECC
+	UINT32                                                  reserved941;	//0xF0000ED0
+	UINT32                                                  reserved942;	//0xF0000ED4
+	UINT32                                                  reserved943;	//0xF0000ED8
+	UINT32                                                  reserved944;	//0xF0000EDC
+	UINT32                                                  reserved945;	//0xF0000EE0
+	UINT32                                                  reserved946;	//0xF0000EE4
+	UINT32                                                  reserved947;	//0xF0000EE8
+	UINT32                                                  reserved948;	//0xF0000EEC
+	UINT32                                                  reserved949;	//0xF0000EF0
+	UINT32                                                  reserved950;	//0xF0000EF4
+	UINT32                                                  reserved951;	//0xF0000EF8
+	UINT32                                                  reserved952;	//0xF0000EFC
+	REG_WDOG_WDOGITCR_T                                        wdogitcr;	//0xF0000F00
+	REG_WDOG_WDOGITOP_T                                        wdogitop;	//0xF0000F04
+	UINT32                                                  reserved953;	//0xF0000F08
+	UINT32                                                  reserved954;	//0xF0000F0C
+	UINT32                                                  reserved955;	//0xF0000F10
+	UINT32                                                  reserved956;	//0xF0000F14
+	UINT32                                                  reserved957;	//0xF0000F18
+	UINT32                                                  reserved958;	//0xF0000F1C
+	UINT32                                                  reserved959;	//0xF0000F20
+	UINT32                                                  reserved960;	//0xF0000F24
+	UINT32                                                  reserved961;	//0xF0000F28
+	UINT32                                                  reserved962;	//0xF0000F2C
+	UINT32                                                  reserved963;	//0xF0000F30
+	UINT32                                                  reserved964;	//0xF0000F34
+	UINT32                                                  reserved965;	//0xF0000F38
+	UINT32                                                  reserved966;	//0xF0000F3C
+	UINT32                                                  reserved967;	//0xF0000F40
+	UINT32                                                  reserved968;	//0xF0000F44
+	UINT32                                                  reserved969;	//0xF0000F48
+	UINT32                                                  reserved970;	//0xF0000F4C
+	UINT32                                                  reserved971;	//0xF0000F50
+	UINT32                                                  reserved972;	//0xF0000F54
+	UINT32                                                  reserved973;	//0xF0000F58
+	UINT32                                                  reserved974;	//0xF0000F5C
+	UINT32                                                  reserved975;	//0xF0000F60
+	UINT32                                                  reserved976;	//0xF0000F64
+	UINT32                                                  reserved977;	//0xF0000F68
+	UINT32                                                  reserved978;	//0xF0000F6C
+	UINT32                                                  reserved979;	//0xF0000F70
+	UINT32                                                  reserved980;	//0xF0000F74
+	UINT32                                                  reserved981;	//0xF0000F78
+	UINT32                                                  reserved982;	//0xF0000F7C
+	UINT32                                                  reserved983;	//0xF0000F80
+	UINT32                                                  reserved984;	//0xF0000F84
+	UINT32                                                  reserved985;	//0xF0000F88
+	UINT32                                                  reserved986;	//0xF0000F8C
+	UINT32                                                  reserved987;	//0xF0000F90
+	UINT32                                                  reserved988;	//0xF0000F94
+	UINT32                                                  reserved989;	//0xF0000F98
+	UINT32                                                  reserved990;	//0xF0000F9C
+	UINT32                                                  reserved991;	//0xF0000FA0
+	UINT32                                                  reserved992;	//0xF0000FA4
+	UINT32                                                  reserved993;	//0xF0000FA8
+	UINT32                                                  reserved994;	//0xF0000FAC
+	UINT32                                                  reserved995;	//0xF0000FB0
+	UINT32                                                  reserved996;	//0xF0000FB4
+	UINT32                                                  reserved997;	//0xF0000FB8
+	UINT32                                                  reserved998;	//0xF0000FBC
+	UINT32                                                  reserved999;	//0xF0000FC0
+	UINT32                                                 reserved1000;	//0xF0000FC4
+	UINT32                                                 reserved1001;	//0xF0000FC8
+	UINT32                                                 reserved1002;	//0xF0000FCC
+	UINT32                                                 reserved1003;	//0xF0000FD0
+	UINT32                                                 reserved1004;	//0xF0000FD4
+	UINT32                                                 reserved1005;	//0xF0000FD8
+	UINT32                                                 reserved1006;	//0xF0000FDC
+	REG_WDOG_WDOGPERIPHID0_T                              wdogperiphid0;	//0xF0000FE0
+	REG_WDOG_WDOGPERIPHID1_T                              wdogperiphid1;	//0xF0000FE4
+	REG_WDOG_WDOGPERIPHID2_T                              wdogperiphid2;	//0xF0000FE8
+	REG_WDOG_WDOGPERIPHID3_T                              wdogperiphid3;	//0xF0000FEC
+	REG_WDOG_WDOGPCELLID0_T                                wdogpcellid0;	//0xF0000FF0
+	REG_WDOG_WDOGPCELLID1_T                                wdogpcellid1;	//0xF0000FF4
+	REG_WDOG_WDOGPCELLID2_T                                wdogpcellid2;	//0xF0000FF8
+	REG_WDOG_WDOGPCELLID3_T                                wdogpcellid3;	//0xF0000FFC
+}REG_WDOG_T;
+
+extern volatile REG_WDOG_T*                        gpREG_WDOG;
+     
+#endif

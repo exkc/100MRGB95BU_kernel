@@ -1,0 +1,51 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T rce_objt_l_hd_default_f20[] =
+{
+	{0xB200, 0x00000000 } , // REG_RCE_OBJT_CTRL_00
+	{0xB204, 0x000000FF } , // REG_RCE_OBJT_CTRL_01
+	{0xB208, 0x02000200 } , // REG_RCE_OBJT_CTRL_02
+	{0xB20C, 0x00000000 } , // REG_RCE_OBJT_CTRL_03
+	{0xB210, 0x010000FE } , // REG_RCE_OBJT_CTRL_04
+	{0xB214, 0x01600150 } , // REG_RCE_OBJT_CTRL_05
+	{0xB218, 0x020002A0 } , // REG_RCE_OBJT_CTRL_06
+	{0xB21C, 0x02800300 } , // REG_RCE_OBJT_CTRL_07
+	{0xB220, 0x03000340 } , // REG_RCE_OBJT_CTRL_08
+	{0xB224, 0x036003C0 } , // REG_RCE_OBJT_CTRL_09
+	{0xB228, 0x03FF03FF } , // REG_RCE_OBJT_CTRL_10
+	{0xB22C, 0x00000000 } , // REG_RCE_OBJT_CTRL_11
+	{0xB230, 0x00920080 } , // REG_RCE_OBJT_CTRL_12
+	{0xB234, 0x01240100 } , // REG_RCE_OBJT_CTRL_13
+	{0xB238, 0x01860140 } , // REG_RCE_OBJT_CTRL_14
+	{0xB23C, 0x024801E4 } , // REG_RCE_OBJT_CTRL_15
+	{0xB240, 0x02DA0214 } , // REG_RCE_OBJT_CTRL_16
+	{0xB244, 0x036C02A8 } , // REG_RCE_OBJT_CTRL_17
+	{0xB248, 0x03FF03DC } , // REG_RCE_OBJT_CTRL_18
+	{0xB24C, 0xFF806000 } , // REG_RCE_OBJT_CTRL_19
+	{0xB250, 0x60000040 } , // REG_RCE_OBJT_CTRL_20
+	{0xB254, 0x00000080 } , // REG_RCE_OBJT_CTRL_21
+	{0xB258, 0x020003FF } , // REG_RCE_OBJT_CTRL_22
+	{0xB25C, 0xFFFFFFFF } , // REG_RCE_OBJT_CTRL_23
+	{0xB260, 0x10FF20E0 } , // REG_RCE_OBJT_CTRL_24
+	{0xB264, 0x30D040C0 } , // REG_RCE_OBJT_CTRL_25
+	{0xB268, 0x00806080 } , // REG_RCE_OBJT_CTRL_26
+	{0xB26C, 0x8080FFA0 } , // REG_RCE_OBJT_CTRL_27
+	{0xB270, 0x00000000 } , // REG_RCE_OBJT_CTRL_28
+	{0xB274, 0x07800438 } , // REG_RCE_OBJT_CTRL_29
+	{0xB278, 0x07800438 } , // REG_RCE_OBJT_CTRL_30
+	{0xB27C, 0x0F000870 } , // REG_RCE_OBJT_CTRL_31	
+	
+	
+};

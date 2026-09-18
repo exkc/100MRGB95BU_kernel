@@ -1,0 +1,26 @@
+#Jongsung, 2016-05-11, Ignore register writing to GC520 base register when value is '0x207' 
+diff --git a/hal/os/linux/kernel/gc_hal_kernel_os.c b/hal/os/linux/kernel/gc_hal_kernel_os.c
+index 2841357..7de3921 100755
+--- a/hal/os/linux/kernel/gc_hal_kernel_os.c
++++ b/hal/os/linux/kernel/gc_hal_kernel_os.c
+@@ -1993,7 +1993,19 @@ gckOS_WriteRegisterEx(
+     BUG_ON(!_AllowAccess(Os, Core, Address));
+ 
+     {
+-        writel(Data, (gctUINT8 *)Os->device->registerBases[Core] + Address);
++		
++		if (Address == 0x0 && Data == 0x207) 
++		{
++			gcmkTRACE(
++					gcvLEVEL_ERROR,
++					"Ignore reg write to %x when value is %x\n",
++					(0xC9811000 + Address), Data
++					);
++		}
++		else 
++		{
++			writel(Data, (gctUINT8 *)Os->device->registerBases[Core] + Address);
++		}
+     }
+ 
+     if (!in_interrupt())

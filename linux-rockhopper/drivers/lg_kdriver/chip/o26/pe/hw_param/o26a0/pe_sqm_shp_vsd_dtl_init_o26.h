@@ -1,0 +1,88 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const UINT32 sqm_shp_vsd_dtl_init_o26[] =
+{
+	0x01010101,
+	0x90909090,
+	0x80808080,
+	0x80808080,
+	0x70707070,
+	0x90909090,
+	0x80808080,
+	0x60606060,
+	0x40404040,
+	0x08080808,
+	0x00000000,
+	0x60606060,
+	0xA0A0A0A0,
+	0xFFFFFFFF,
+	0xA0A0A0A0,
+	0xFFFFFFFF,
+	0xA0A0A0A0,
+	0x04040404,
+	0x00000000,
+	0x10101010,
+	0x20202020,
+	0x40404040,
+	0x80808080,
+	0x80808080,
+	0x90909090,
+	0x08080808,
+	0x00000000,
+	0x60606060,
+	0xA0A0A0A0,
+	0xFFFFFFFF,
+	0xA0A0A0A0,
+	0xFFFFFFFF,
+	0xA0A0A0A0,
+	0x04040404,
+	0x00000000,
+	0x10101010,
+	0x20202020,
+	0x40404040,
+	0x80808080,
+	0x80808080,
+	0x90909090,
+	0x00000000,
+	0x80808080,
+	0x30303030,
+	0x90909090,
+	0x30303030,
+	0xA0A0A0A0,
+	0x40404040,
+	0x80808080,
+	0x0A0A0A0A,
+	0x00000000,
+	0x28282828,
+	0x40404040,
+	0x3C3C3C3C,
+	0x60606060,
+	0x50505050,
+	0x80808080,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+};

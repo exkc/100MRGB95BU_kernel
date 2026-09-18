@@ -1,0 +1,1364 @@
+/*
+ * SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+ * Copyright(c) 2013 by LG Electronics Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+
+/*
+ *
+ *  #MOD# register details. ( used only within kdriver )
+ *
+ *  author     user name (user_name@lge.com)
+ *  version    1.0
+ *  date       2010.xx.xx
+ *
+ */
+
+#ifndef __OSD_AFBC_REG_O18_H__
+#define __OSD_AFBC_REG_O18_H__
+
+/*----------------------------------------------------------------------------------------
+    Control Constants
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+    File Inclusions
+----------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+	0x0000 ctrl_afbc_0 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	start                           : 1,	//     0
+	                                : 3,	//  1: 3 reserved
+	ready                           :12,	//  4:15
+	sw_reset                        : 1,	//    16
+	sw_reset_fifo                   : 1,	//    17
+	run_mode                        : 1,	//    18
+	pl_addr_mode                    : 1,	//    19
+	sw_reset_ack                    : 2,	// 20:21
+	hd_gmau_pri_gen_en              : 1,	//    22
+	pl_gmau_pri_gen_en              : 1,	//    23
+	gmau_arb_sw_reset               : 1,	//    24
+	update_ready_flag_en            : 1,	//    25
+	update_ready_flag               : 1,	//    26
+	                                : 1,	//    27 reserved
+	flip_mode                       : 1,	//    28
+	ignore_q_full                   : 1,	//    29
+	wrap_en                         : 1;	//    30
+} CTRL_AFBC_0;
+
+/*-----------------------------------------------------------------------------
+	0x0004 ctrl_afbc_1 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_base                         ;   	// 31: 0
+} CTRL_AFBC_1;
+
+/*-----------------------------------------------------------------------------
+	0x0008 ctrl_afbc_2 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	start_x                         :12,	//  0:11
+	                                : 4,	// 12:15 reserved
+	start_y                         :12;	// 16:27
+} CTRL_AFBC_2;
+
+/*-----------------------------------------------------------------------------
+	0x000c ctrl_afbc_3 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	end_x                           :12,	//  0:11
+	                                : 4,	// 12:15 reserved
+	end_y                           :12;	// 16:27
+} CTRL_AFBC_3;
+
+/*-----------------------------------------------------------------------------
+	0x0010 ctrl_afbc_4 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	img_width                       :12;	//  0:11
+} CTRL_AFBC_4;
+
+/*-----------------------------------------------------------------------------
+	0x0014 ctrl_afbc_5 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pl_buf_depth_m1                 : 8,	//  0: 7
+	                                : 8,	//  8:15 reserved
+	dec_buf_depth_m1                :12;	// 16:27
+} CTRL_AFBC_5;
+
+/*-----------------------------------------------------------------------------
+	0x0018 ctrl_afbc_6 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_data_base                    ;   	// 31: 0
+} CTRL_AFBC_6;
+
+/*-----------------------------------------------------------------------------
+	0x001c ctrl_afbc_7 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_data_end                     ;   	// 31: 0
+} CTRL_AFBC_7;
+
+/*-----------------------------------------------------------------------------
+	0x0020 ctrl_afbc_8 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pl_data_base                    ;   	// 31: 0
+} CTRL_AFBC_8;
+
+/*-----------------------------------------------------------------------------
+	0x0024 ctrl_afbc_9 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pl_data_end                     ;   	// 31: 0
+} CTRL_AFBC_9;
+
+/*-----------------------------------------------------------------------------
+	0x0028 ctrl_afbc_a ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_gmau_dly_cnt                 :16,	//  0:15
+	pl_gmau_dly_cnt                 :16;	// 16:31
+} CTRL_AFBC_A;
+
+/*-----------------------------------------------------------------------------
+	0x002c ctrl_afbc_b ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_gmau_pri1                    : 4,	//  0: 3
+	                                : 4,	//  4: 7 reserved
+	hd_gmau_pri2                    : 4,	//  8:11
+	                                : 4,	// 12:15 reserved
+	pl_gmau_pri1                    : 4,	// 16:19
+	                                : 4,	// 20:23 reserved
+	pl_gmau_pri2                    : 4;	// 24:27
+} CTRL_AFBC_B;
+
+/*-----------------------------------------------------------------------------
+	0x0030 ctrl_afbc_c ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_gmau_txid                    : 4,	//  0: 3
+	pl_gmau_id                      : 4,	//  4: 7
+	hd_endian_sw                    : 4,	//  8:11
+	pl_endian_sw                    : 4,	// 12:15
+	hd_endian_arb                   : 1,	//    16
+	                                : 3,	// 17:19 reserved
+	pl_endian_arb                   : 1;	//    20
+} CTRL_AFBC_C;
+
+/*-----------------------------------------------------------------------------
+	0x0034 ctrl_afbc_d ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_stride                       ;   	// 31: 0
+} CTRL_AFBC_D;
+
+/*-----------------------------------------------------------------------------
+	0x0038 ctrl_afbc_e ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pl_stride                       ;   	// 31: 0
+} CTRL_AFBC_E;
+
+/*-----------------------------------------------------------------------------
+	0x003c ctrl_afbc_f ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	port0_max_cnt                   : 6,	//  0: 5
+	                                : 2,	//  6: 7 reserved
+	port1_max_cnt                   : 6,	//  8:13
+	                                : 2,	// 14:15 reserved
+	port2_max_cnt                   : 6;	// 16:21
+} CTRL_AFBC_F;
+
+/*-----------------------------------------------------------------------------
+	0x0040 info_dbg_hd0 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	gmau_cmd_len                    :10,	//  0: 9
+	gmau_cmd_ack                    : 1,	//    10
+	gmau_cmd_val                    : 1,	//    11
+	push_data                       :18,	// 12:29
+	full                            : 1,	//    30
+	push                            : 1;	//    31
+} INFO_DBG_HD0;
+
+/*-----------------------------------------------------------------------------
+	0x0044 info_dbg_hd1 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_wptr_req                     :13,	//  0:12
+	y_div16                         :12,	// 13:24
+	loader_state                    : 2,	// 25:26
+	pop                             : 1,	//    27
+	flip_mode                       : 1,	//    28
+	reserved                        : 3;	// 29:31
+} INFO_DBG_HD1;
+
+/*-----------------------------------------------------------------------------
+	0x0048 info_dbg_hd2 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	cal_req_len_128bit              : 8,	//  0: 7
+	state                           : 2,	//  8: 9
+	reserved                        : 4,	// 10:13
+	last_flag                       : 1,	//    14
+	wptr_full                       : 1,	//    15
+	x_div16                         : 8,	// 16:23
+	wptr                            : 8;	// 24:31
+} INFO_DBG_HD2;
+
+/*-----------------------------------------------------------------------------
+	0x004c info_dbg_hd3 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	first_data                      ;   	// 31: 0
+} INFO_DBG_HD3;
+
+/*-----------------------------------------------------------------------------
+	0x0050 info_dbg_hd4 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_wptr                         : 8,	//  0: 7
+	state                           : 2,	//  8: 9
+	last_flag                       : 1,	//    10
+	rd_cnt                          : 4,	// 11:14
+	len_m1                          : 4,	// 15:18
+	wptr                            :13;	// 19:31
+} INFO_DBG_HD4;
+
+/*-----------------------------------------------------------------------------
+	0x0054 info_dbg_hd5 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	gmau_rd_ack                     : 1,	//     0
+	gmau_rd_val                     : 1,	//     1
+	gmau_rd_txid                    : 2,	//  2: 3
+	hd_waddr                        :13,	//  4:16
+	hd_we                           : 1,	//    17
+	reserved                        : 4,	// 18:21
+	pop                             : 1,	//    22
+	empty                           : 1,	//    23
+	reserved_1                      : 8;	// 24:31
+} INFO_DBG_HD5;
+
+/*-----------------------------------------------------------------------------
+	0x0058 info_dbg_pl0 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	is_last_x                       : 1,	//     0
+	real_last_flag                  : 1,	//     1
+	last_flag                       : 1,	//     2
+	state_load                      : 2,	//  3: 4
+	state_cmd                       : 3,	//  5: 7
+	state                           : 3,	//  8:10
+	y_div4                          :10,	// 11:20
+	x_div4                          :10,	// 21:30
+	reserved                        : 1;	//    31
+} INFO_DBG_PL0;
+
+/*-----------------------------------------------------------------------------
+	0x005c info_dbg_pl1 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	total_buffer_count              : 8,	//  0: 7
+	pl_rptr_temp                    : 9,	//  8:16
+	pl_wptr_temp                    : 9,	// 17:25
+	pl_req_load_ready               : 1,	//    26
+	pl_req_cmd_ready                : 1,	//    27
+	interrupt_for_error_stream      : 1,	//    28
+	reserved                        : 3;	// 29:31
+} INFO_DBG_PL1;
+
+/*-----------------------------------------------------------------------------
+	0x0060 info_dbg_pl2 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	state                           : 2,	//  0: 1
+	reserved                        : 1,	//     2
+	last_cmd                        : 2,	//  3: 4
+	reserved_1                      : 1,	//     5
+	psk_cmd_txid                    : 2,	//  6: 7
+	psk_cmd_ack                     : 1,	//     8
+	psk_cmd_val                     : 1,	//     9
+	psk_cmd_len                     : 8,	// 10:17
+	reserved_2                      :14;	// 18:31
+} INFO_DBG_PL2;
+
+/*-----------------------------------------------------------------------------
+	0x0064 info_dbg_pl3 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	first_data                      ;   	// 31: 0
+} INFO_DBG_PL3;
+
+/*-----------------------------------------------------------------------------
+	0x0068 info_dbg_dec00 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 2,	//  0: 1
+	state                           : 2,	//  2: 3
+	dec_rptr                        :12,	//  4:15
+	len_128bit                      : 8,	// 16:23
+	reserved                        : 4,	// 24:27
+	y_div16_error                   : 1,	//    28
+	sync_error                      : 1,	//    29
+	last_flag                       : 1,	//    30
+	ready_unpack                    : 1;	//    31
+} INFO_DBG_DEC00;
+
+/*-----------------------------------------------------------------------------
+	0x006c info_dbg_dec01 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 3,	//  0: 2
+	state                           : 3,	//  3: 5
+	buf_status                      : 2,	//  6: 7
+	idx4x4                          : 4,	//  8:11
+	i_blk4x4_idx                    : 4,	// 12:15
+	i_y_div16                       : 8,	// 16:23
+	i_x_div16                       : 8;	// 24:31
+} INFO_DBG_DEC01;
+
+/*-----------------------------------------------------------------------------
+	0x0070 info_dbg_dec02 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_payload_rptr                  : 9,	//  0: 8
+	i_payload_wptr                  : 9,	//  9:17
+	have_bits                       : 8,	// 18:25
+	next_sft_state                  : 3,	// 26:28
+	error_detection_flag            : 1,	//    29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC02;
+
+/*-----------------------------------------------------------------------------
+	0x0074 info_dbg_dec03 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	byte_length                     : 9,	//  0: 8
+	byte_offset                     : 5,	//  9:13
+	memory_read_cnt                 : 6,	// 14:19
+	memory_read_length              : 6,	// 20:25
+	o_payload_sft_rdy               : 1,	//    26
+	reserved                        : 5;	// 27:31
+} INFO_DBG_DEC03;
+
+/*-----------------------------------------------------------------------------
+	0x0078 info_dbg_dec04 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	dec_wptr                        :12,	//  0:11
+	i_idx4x4_wr                     : 4,	// 12:15
+	ycnt                            : 2,	// 16:17
+	xcnt_div2                       : 1,	//    18
+	i_naddr_msb                     : 1,	//    19
+	state                           : 1,	//    20
+	i_bank_last                     : 1,	//    21
+	i_base_waddr                    : 8,	// 22:29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC04;
+
+/*-----------------------------------------------------------------------------
+	0x007c info_dbg_dec05 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 2,	//  0: 1
+	state                           : 2,	//  2: 3
+	dec_rptr                        :12,	//  4:15
+	len_128bit                      : 8,	// 16:23
+	reserved                        : 4,	// 24:27
+	y_div16_error                   : 1,	//    28
+	sync_error                      : 1,	//    29
+	last_flag                       : 1,	//    30
+	ready_unpack                    : 1;	//    31
+} INFO_DBG_DEC05;
+
+/*-----------------------------------------------------------------------------
+	0x0080 info_dbg_dec06 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 3,	//  0: 2
+	state                           : 3,	//  3: 5
+	buf_state                       : 2,	//  6: 7
+	idx4x4                          : 4,	//  8:11
+	i_blk4x4_idx                    : 4,	// 12:15
+	i_y_div16                       : 8,	// 16:23
+	i_x_div16                       : 8;	// 24:31
+} INFO_DBG_DEC06;
+
+/*-----------------------------------------------------------------------------
+	0x0084 info_dbg_dec07 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_payload_rptr                  : 9,	//  0: 8
+	i_payload_wptr                  : 9,	//  9:17
+	have_bits                       : 8,	// 18:25
+	next_sft_state                  : 3,	// 26:28
+	error_detection_flag            : 1,	//    29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC07;
+
+/*-----------------------------------------------------------------------------
+	0x0088 info_dbg_dec08 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	byte_cnt                        : 9,	//  0: 8
+	byte_offset                     : 5,	//  9:13
+	memory_read_cnt                 : 6,	// 14:19
+	memory_read_length              : 6,	// 20:25
+	o_payload_sft_rdy               : 1,	//    26
+	reserved                        : 5;	// 27:31
+} INFO_DBG_DEC08;
+
+/*-----------------------------------------------------------------------------
+	0x008c info_dbg_dec09 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	dec_wptr                        :12,	//  0:11
+	i_idx4x4_wr                     : 4,	// 12:15
+	ycnt                            : 2,	// 16:17
+	xcnt_div2                       : 1,	//    18
+	i_naddr_msb                     : 1,	//    19
+	state                           : 1,	//    20
+	i_bank_last                     : 1,	//    21
+	i_base_waddr                    : 8,	// 22:29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC09;
+
+/*-----------------------------------------------------------------------------
+	0x0090 info_dbg_dec10 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 2,	//  0: 1
+	state                           : 2,	//  2: 3
+	dec_rptr                        :12,	//  4:15
+	len_128bit                      : 8,	// 16:23
+	reserved                        : 4,	// 24:27
+	y_div16_error                   : 1,	//    28
+	sync_error                      : 1,	//    29
+	last_flag                       : 1,	//    30
+	ready_unpack                    : 1;	//    31
+} INFO_DBG_DEC10;
+
+/*-----------------------------------------------------------------------------
+	0x0094 info_dbg_dec11 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 3,	//  0: 2
+	state                           : 3,	//  3: 5
+	buf_state                       : 2,	//  6: 7
+	idx4x4                          : 4,	//  8:11
+	i_blk4x4_idx                    : 4,	// 12:15
+	i_y_div16                       : 8,	// 16:23
+	i_x_div16                       : 8;	// 24:31
+} INFO_DBG_DEC11;
+
+/*-----------------------------------------------------------------------------
+	0x0098 info_dbg_dec12 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_payload_rptr                  : 9,	//  0: 8
+	i_payload_wptr                  : 9,	//  9:17
+	have_bits                       : 8,	// 18:25
+	next_sft_state                  : 3,	// 26:28
+	error_detection_flag            : 1,	//    29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC12;
+
+/*-----------------------------------------------------------------------------
+	0x009c info_dbg_dec13 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	byte_cnt                        : 9,	//  0: 8
+	byte_offset                     : 5,	//  9:13
+	memory_read_cnt                 : 6,	// 14:19
+	memory_read_length              : 6,	// 20:25
+	o_payload_sft_rdy               : 1,	//    26
+	reserved                        : 5;	// 27:31
+} INFO_DBG_DEC13;
+
+/*-----------------------------------------------------------------------------
+	0x00a0 info_dbg_dec14 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	dec_wptr                        :12,	//  0:11
+	i_idx4x4_wr                     : 4,	// 12:15
+	ycnt                            : 2,	// 16:17
+	xcnt_div2                       : 1,	//    18
+	i_naddr_msb                     : 1,	//    19
+	state                           : 1,	//    20
+	i_bank_last                     : 1,	//    21
+	i_base_waddr                    : 8,	// 22:29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC14;
+
+/*-----------------------------------------------------------------------------
+	0x00a4 info_dbg_dec15 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 2,	//  0: 1
+	state                           : 2,	//  2: 3
+	dec_rptr                        :12,	//  4:15
+	len_128bit                      : 8,	// 16:23
+	reserved                        : 4,	// 24:27
+	y_div16_error                   : 1,	//    28
+	sync_error                      : 1,	//    29
+	last_flag                       : 1,	//    30
+	ready_unpack                    : 1;	//    31
+} INFO_DBG_DEC15;
+
+/*-----------------------------------------------------------------------------
+	0x00a8 info_dbg_dec16 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	next_state                      : 3,	//  0: 2
+	state                           : 3,	//  3: 5
+	buf_state                       : 2,	//  6: 7
+	idx4x4                          : 4,	//  8:11
+	i_blk4x4_idx                    : 4,	// 12:15
+	i_y_div16                       : 8,	// 16:23
+	i_x_div16                       : 8;	// 24:31
+} INFO_DBG_DEC16;
+
+/*-----------------------------------------------------------------------------
+	0x00ac info_dbg_dec17 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_payload_rptr                  : 9,	//  0: 8
+	i_payload_wptr                  : 9,	//  9:17
+	have_bits                       : 8,	// 18:25
+	next_sft_state                  : 3,	// 26:28
+	error_detection_flag            : 1,	//    29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC17;
+
+/*-----------------------------------------------------------------------------
+	0x00b0 info_dbg_dec18 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	byte_cnt                        : 9,	//  0: 8
+	byte_offset                     : 5,	//  9:13
+	memory_read_cnt                 : 6,	// 14:19
+	memory_read_length              : 6,	// 20:25
+	o_payload_sft_rdy               : 1,	//    26
+	reserved                        : 5;	// 27:31
+} INFO_DBG_DEC18;
+
+/*-----------------------------------------------------------------------------
+	0x00b4 info_dbg_dec19 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	dec_wptr                        :12,	//  0:11
+	i_idx4x4_wr                     : 4,	// 12:15
+	ycnt                            : 2,	// 16:17
+	xcnt_div2                       : 1,	//    18
+	i_naddr_msb                     : 1,	//    19
+	state                           : 1,	//    20
+	i_bank_last                     : 1,	//    21
+	i_base_waddr                    : 8,	// 22:29
+	reserved                        : 2;	// 30:31
+} INFO_DBG_DEC19;
+
+/*-----------------------------------------------------------------------------
+	0x00b8 info_dbg_mc0 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pixel_ypos                      :12,	//  0:11
+	pixel_xpos_div2                 :11,	// 12:22
+	i_mc_rd_q_full                  : 1,	//    23
+	o_mc3_rd_q_full                 : 1,	//    24
+	o_mc2_rd_q_full                 : 1,	//    25
+	o_mc1_rd_q_full                 : 1,	//    26
+	o_mc0_rd_q_full                 : 1,	//    27
+	i_mc3_rd_valid                  : 1,	//    28
+	i_mc2_rd_valid                  : 1,	//    29
+	i_mc1_rd_valid                  : 1,	//    30
+	i_mc0_rd_valid                  : 1;	//    31
+} INFO_DBG_MC0;
+
+/*-----------------------------------------------------------------------------
+	0x00bc info_dbg_mc1 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_dec_rptr                      :12,	//  0:11
+	reserved                        : 4,	// 12:15
+	i_dec_wptr                      :12,	// 16:27
+	reserved_1                      : 4;	// 28:31
+} INFO_DBG_MC1;
+
+/*-----------------------------------------------------------------------------
+	0x00c0 info_dbg_mc2 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_dec_rptr                      :12,	//  0:11
+	reserved                        : 4,	// 12:15
+	i_dec_wptr                      :12,	// 16:27
+	reserved_1                      : 4;	// 28:31
+} INFO_DBG_MC2;
+
+/*-----------------------------------------------------------------------------
+	0x00c4 info_dbg_mc3 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_dec_rptr                      :12,	//  0:11
+	reserved                        : 4,	// 12:15
+	i_dec_wptr                      :12,	// 16:27
+	reserved_1                      : 4;	// 28:31
+} INFO_DBG_MC3;
+
+/*-----------------------------------------------------------------------------
+	0x00c8 info_dbg_mc4 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	o_dec_rptr                      :12,	//  0:11
+	reserved                        : 4,	// 12:15
+	i_dec_wptr                      :12,	// 16:27
+	reserved_1                      : 4;	// 28:31
+} INFO_DBG_MC4;
+
+/*-----------------------------------------------------------------------------
+	0x00cc info_dbg_mc5 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	osd_stall_cnt                   ;   	// 31: 0
+} INFO_DBG_MC5;
+
+/*-----------------------------------------------------------------------------
+	0x00d0 ctrl_afbc_10 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	default_value                   ;   	// 31: 0
+} CTRL_AFBC_10;
+
+/*-----------------------------------------------------------------------------
+	0x00d4 ctrl_afbc_11 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	hd_check_timer                  :16,	//  0:15
+	hd_period_value                 :16;	// 16:31
+} CTRL_AFBC_11;
+
+/*-----------------------------------------------------------------------------
+	0x00d8 ctrl_afbc_12 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	pl_check_timer                  :16,	//  0:15
+	pl_period_value                 :16;	// 16:31
+} CTRL_AFBC_12;
+
+/*-----------------------------------------------------------------------------
+	0x00dc ctrl_afbc_13 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reg_afbc0_pl_cmd_info           : 2,	//  0: 1
+	reg_afbc0_pl_mode_cmd_info      : 2,	//  2: 3
+	                                : 1,	//     4 reserved
+	reg_afbc0_pl_start_sel          : 2,	//  5: 6
+	reg_afbc0_pl_mode_step          : 1,	//     7
+	reg_afbc0_hd_cmd_info           : 2,	//  8: 9
+	reg_afbc0_hd_mode_cmd_info      : 2,	// 10:11
+	                                : 1,	//    12 reserved
+	reg_afbc0_hd_start_sel          : 2,	// 13:14
+	reg_afbc0_hd_mode_step          : 1;	//    15
+} CTRL_AFBC_13;
+
+/*-----------------------------------------------------------------------------
+	0x00e0 ctrl_lencon_cmd0 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reg_lencon_sw_reset             : 1,	//     0
+	reg_lencon_ready                : 1,	//     1
+	reg_lencon_start                : 1,	//     2
+	                                : 1,	//     3 reserved
+	reg_lencon_start_yrptr          :18;	//  4:21
+} CTRL_LENCON_CMD0;
+
+/*-----------------------------------------------------------------------------
+	0x00e4 ctrl_lencon_cmd1 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reg_lencon_arid                 : 4,	//  0: 3
+	                                :12,	//  4:15 reserved
+	reg_lencon_stride               : 6;	// 16:21
+} CTRL_LENCON_CMD1;
+
+/*-----------------------------------------------------------------------------
+	0x00e8 ctrl_lencon_cmd2 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reg_lencon_startx               : 6,	//  0: 5
+	                                :10,	//  6:15 reserved
+	reg_lencon_endx                 : 6;	// 16:21
+} CTRL_LENCON_CMD2;
+
+/*-----------------------------------------------------------------------------
+	0x00ec ctrl_lencon_cmd3 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reg_lencon_starty               :11,	//  0:10
+	                                : 5,	// 11:15 reserved
+	reg_lencon_endy                 :11;	// 16:26
+} CTRL_LENCON_CMD3;
+
+/*-----------------------------------------------------------------------------
+	0x00f0 info_lencon_dbg ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	fifo_empty                      : 1,	//     0
+	fifo_full                       : 1,	//     1
+	state                           : 2,	//  2: 3
+	ycnt                            :12,	//  4:15
+	xcnt                            : 6;	// 16:21
+} INFO_LENCON_DBG;
+
+/*-----------------------------------------------------------------------------
+	0x00f4 ctrl_reserved ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	reserved                        ;   	// 31: 0
+} CTRL_RESERVED;
+
+/*-----------------------------------------------------------------------------
+	0x00f8 info_dbg_mc6 ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	dec_empty_cnt                   ;   	// 31: 0
+} INFO_DBG_MC6;
+
+/*-----------------------------------------------------------------------------
+	0x00fc info_reserved ''
+------------------------------------------------------------------------------*/
+typedef struct {
+	UINT32
+	info_reserved                   ;   	// 31: 0
+} INFO_RESERVED;
+
+typedef struct {
+	CTRL_AFBC_0                     	ctrl_afbc_0                     ;	// 0x0000 : ''
+	CTRL_AFBC_1                     	ctrl_afbc_1                     ;	// 0x0004 : ''
+	CTRL_AFBC_2                     	ctrl_afbc_2                     ;	// 0x0008 : ''
+	CTRL_AFBC_3                     	ctrl_afbc_3                     ;	// 0x000c : ''
+	CTRL_AFBC_4                     	ctrl_afbc_4                     ;	// 0x0010 : ''
+	CTRL_AFBC_5                     	ctrl_afbc_5                     ;	// 0x0014 : ''
+	CTRL_AFBC_6                     	ctrl_afbc_6                     ;	// 0x0018 : ''
+	CTRL_AFBC_7                     	ctrl_afbc_7                     ;	// 0x001c : ''
+	CTRL_AFBC_8                     	ctrl_afbc_8                     ;	// 0x0020 : ''
+	CTRL_AFBC_9                     	ctrl_afbc_9                     ;	// 0x0024 : ''
+	CTRL_AFBC_A                     	ctrl_afbc_a                     ;	// 0x0028 : ''
+	CTRL_AFBC_B                     	ctrl_afbc_b                     ;	// 0x002c : ''
+	CTRL_AFBC_C                     	ctrl_afbc_c                     ;	// 0x0030 : ''
+	CTRL_AFBC_D                     	ctrl_afbc_d                     ;	// 0x0034 : ''
+	CTRL_AFBC_E                     	ctrl_afbc_e                     ;	// 0x0038 : ''
+	CTRL_AFBC_F                     	ctrl_afbc_f                     ;	// 0x003c : ''
+	INFO_DBG_HD0                    	info_dbg_hd0                    ;	// 0x0040 : ''
+	INFO_DBG_HD1                    	info_dbg_hd1                    ;	// 0x0044 : ''
+	INFO_DBG_HD2                    	info_dbg_hd2                    ;	// 0x0048 : ''
+	INFO_DBG_HD3                    	info_dbg_hd3                    ;	// 0x004c : ''
+	INFO_DBG_HD4                    	info_dbg_hd4                    ;	// 0x0050 : ''
+	INFO_DBG_HD5                    	info_dbg_hd5                    ;	// 0x0054 : ''
+	INFO_DBG_PL0                    	info_dbg_pl0                    ;	// 0x0058 : ''
+	INFO_DBG_PL1                    	info_dbg_pl1                    ;	// 0x005c : ''
+	INFO_DBG_PL2                    	info_dbg_pl2                    ;	// 0x0060 : ''
+	INFO_DBG_PL3                    	info_dbg_pl3                    ;	// 0x0064 : ''
+	INFO_DBG_DEC00                  	info_dbg_dec00                  ;	// 0x0068 : ''
+	INFO_DBG_DEC01                  	info_dbg_dec01                  ;	// 0x006c : ''
+	INFO_DBG_DEC02                  	info_dbg_dec02                  ;	// 0x0070 : ''
+	INFO_DBG_DEC03                  	info_dbg_dec03                  ;	// 0x0074 : ''
+	INFO_DBG_DEC04                  	info_dbg_dec04                  ;	// 0x0078 : ''
+	INFO_DBG_DEC05                  	info_dbg_dec05                  ;	// 0x007c : ''
+	INFO_DBG_DEC06                  	info_dbg_dec06                  ;	// 0x0080 : ''
+	INFO_DBG_DEC07                  	info_dbg_dec07                  ;	// 0x0084 : ''
+	INFO_DBG_DEC08                  	info_dbg_dec08                  ;	// 0x0088 : ''
+	INFO_DBG_DEC09                  	info_dbg_dec09                  ;	// 0x008c : ''
+	INFO_DBG_DEC10                  	info_dbg_dec10                  ;	// 0x0090 : ''
+	INFO_DBG_DEC11                  	info_dbg_dec11                  ;	// 0x0094 : ''
+	INFO_DBG_DEC12                  	info_dbg_dec12                  ;	// 0x0098 : ''
+	INFO_DBG_DEC13                  	info_dbg_dec13                  ;	// 0x009c : ''
+	INFO_DBG_DEC14                  	info_dbg_dec14                  ;	// 0x00a0 : ''
+	INFO_DBG_DEC15                  	info_dbg_dec15                  ;	// 0x00a4 : ''
+	INFO_DBG_DEC16                  	info_dbg_dec16                  ;	// 0x00a8 : ''
+	INFO_DBG_DEC17                  	info_dbg_dec17                  ;	// 0x00ac : ''
+	INFO_DBG_DEC18                  	info_dbg_dec18                  ;	// 0x00b0 : ''
+	INFO_DBG_DEC19                  	info_dbg_dec19                  ;	// 0x00b4 : ''
+	INFO_DBG_MC0                    	info_dbg_mc0                    ;	// 0x00b8 : ''
+	INFO_DBG_MC1                    	info_dbg_mc1                    ;	// 0x00bc : ''
+	INFO_DBG_MC2                    	info_dbg_mc2                    ;	// 0x00c0 : ''
+	INFO_DBG_MC3                    	info_dbg_mc3                    ;	// 0x00c4 : ''
+	INFO_DBG_MC4                    	info_dbg_mc4                    ;	// 0x00c8 : ''
+	INFO_DBG_MC5                    	info_dbg_mc5                    ;	// 0x00cc : ''
+	CTRL_AFBC_10                    	ctrl_afbc_10                    ;	// 0x00d0 : ''
+	CTRL_AFBC_11                    	ctrl_afbc_11                    ;	// 0x00d4 : ''
+	CTRL_AFBC_12                    	ctrl_afbc_12                    ;	// 0x00d8 : ''
+	CTRL_AFBC_13                    	ctrl_afbc_13                    ;	// 0x00dc : ''
+	CTRL_LENCON_CMD0                	ctrl_lencon_cmd0                ;	// 0x00e0 : ''
+	CTRL_LENCON_CMD1                	ctrl_lencon_cmd1                ;	// 0x00e4 : ''
+	CTRL_LENCON_CMD2                	ctrl_lencon_cmd2                ;	// 0x00e8 : ''
+	CTRL_LENCON_CMD3                	ctrl_lencon_cmd3                ;	// 0x00ec : ''
+	INFO_LENCON_DBG                 	info_lencon_dbg                 ;	// 0x00f0 : ''
+	CTRL_RESERVED                   	ctrl_reserved                   ;	// 0x00f4 : ''
+	INFO_DBG_MC6                    	info_dbg_mc6                    ;	// 0x00f8 : ''
+	INFO_RESERVED                   	info_reserved                   ;	// 0x00fc : ''
+}
+OSD_AFBC_O18_REG_T;
+/* 64 regs, 64 types */
+
+/* 64 regs, 64 types in Total*/
+
+/* from 'O18_PQE_OSD_AFBC_reg_man.csv' 20170603 15:09:52 KST by getregs v2.9 */
+
+/*
+ * @{
+ * Naming for register pointer.
+ * g_osd_afbc_o18_reg : real register of AFBC0_CTRL.
+ * g_osd_afbc_o18_reg_shadow     : shadow register.
+ *
+ * @def AFBC0_CTRL_RdFL: Read  FLushing : Shadow <- Real.
+ * @def AFBC0_CTRL_WrFL: Write FLushing : Shadow -> Real.
+ * @def AFBC0_CTRL_Rd  : Read  whole register(UINT32) from Shadow register.
+ * @def AFBC0_CTRL_Wr  : Write whole register(UINT32) from Shadow register.
+ * @def AFBC0_CTRL_Rd01 ~ AFBC0_CTRL_Rdnn: Read  given '01~nn' fields from Shadow register.
+ * @def AFBC0_CTRL_Wr01 ~ AFBC0_CTRL_Wrnn: Write given '01~nn' fields to   Shadow register.
+ * */
+#define AFBC0_CTRL_RdFL(_r)			((g_osd_afbc_o18_reg_shadow->_r)=(g_osd_afbc_o18_reg->_r))
+#define AFBC0_CTRL_WrFL(_r)			((g_osd_afbc_o18_reg->_r)=(g_osd_afbc_o18_reg_shadow->_r))
+
+#define AFBC0_CTRL_Rd(_r)			*((UINT32*)(&(g_osd_afbc_o18_reg_shadow->_r)))
+#define AFBC0_CTRL_Wr(_r,_v)			((AFBC0_CTRL_Rd(_r))=((UINT32)(_v)))
+
+#define AFBC0_CTRL_Rd01(_r,_f01,_v01)													\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd02(_r,_f01,_v01,_f02,_v02)										\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd03(_r,_f01,_v01,_f02,_v02,_f03,_v03)								\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd04(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04)					\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd05(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05)													\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd06(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06)										\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd07(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07)								\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd08(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08)					\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd09(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09)													\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd10(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10)										\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd11(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11)								\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd12(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12)					\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+									(_v12) = (g_osd_afbc_o18_reg_shadow->_r._f12);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd13(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13)													\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+									(_v12) = (g_osd_afbc_o18_reg_shadow->_r._f12);				\
+									(_v13) = (g_osd_afbc_o18_reg_shadow->_r._f13);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd14(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14)										\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+									(_v12) = (g_osd_afbc_o18_reg_shadow->_r._f12);				\
+									(_v13) = (g_osd_afbc_o18_reg_shadow->_r._f13);				\
+									(_v14) = (g_osd_afbc_o18_reg_shadow->_r._f14);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd15(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14,_f15,_v15)								\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+									(_v12) = (g_osd_afbc_o18_reg_shadow->_r._f12);				\
+									(_v13) = (g_osd_afbc_o18_reg_shadow->_r._f13);				\
+									(_v14) = (g_osd_afbc_o18_reg_shadow->_r._f14);				\
+									(_v15) = (g_osd_afbc_o18_reg_shadow->_r._f15);				\
+								} while(0)
+
+#define AFBC0_CTRL_Rd16(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14,_f15,_v15,_f16,_v16)					\
+								do { 											\
+									(_v01) = (g_osd_afbc_o18_reg_shadow->_r._f01);				\
+									(_v02) = (g_osd_afbc_o18_reg_shadow->_r._f02);				\
+									(_v03) = (g_osd_afbc_o18_reg_shadow->_r._f03);				\
+									(_v04) = (g_osd_afbc_o18_reg_shadow->_r._f04);				\
+									(_v05) = (g_osd_afbc_o18_reg_shadow->_r._f05);				\
+									(_v06) = (g_osd_afbc_o18_reg_shadow->_r._f06);				\
+									(_v07) = (g_osd_afbc_o18_reg_shadow->_r._f07);				\
+									(_v08) = (g_osd_afbc_o18_reg_shadow->_r._f08);				\
+									(_v09) = (g_osd_afbc_o18_reg_shadow->_r._f09);				\
+									(_v10) = (g_osd_afbc_o18_reg_shadow->_r._f10);				\
+									(_v11) = (g_osd_afbc_o18_reg_shadow->_r._f11);				\
+									(_v12) = (g_osd_afbc_o18_reg_shadow->_r._f12);				\
+									(_v13) = (g_osd_afbc_o18_reg_shadow->_r._f13);				\
+									(_v14) = (g_osd_afbc_o18_reg_shadow->_r._f14);				\
+									(_v15) = (g_osd_afbc_o18_reg_shadow->_r._f15);				\
+									(_v16) = (g_osd_afbc_o18_reg_shadow->_r._f16);				\
+								} while(0)
+
+
+#define AFBC0_CTRL_Wr01(_r,_f01,_v01)													\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr02(_r,_f01,_v01,_f02,_v02)										\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr03(_r,_f01,_v01,_f02,_v02,_f03,_v03)								\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr04(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04)					\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr05(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05)													\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr06(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06)										\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr07(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07)								\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr08(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08)					\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr09(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09)													\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr10(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10)										\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr11(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11)								\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr12(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12)					\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f12) = (_v12);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr13(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13)													\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f12) = (_v12);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f13) = (_v13);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr14(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14)										\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f12) = (_v12);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f13) = (_v13);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f14) = (_v14);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr15(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14,_f15,_v15)								\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f12) = (_v12);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f13) = (_v13);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f14) = (_v14);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f15) = (_v15);				\
+								} while(0)
+
+#define AFBC0_CTRL_Wr16(_r,_f01,_v01,_f02,_v02,_f03,_v03,_f04,_v04,					\
+					_f05,_v05,_f06,_v06,_f07,_v07,_f08,_v08,					\
+					_f09,_v09,_f10,_v10,_f11,_v11,_f12,_v12,					\
+					_f13,_v13,_f14,_v14,_f15,_v15,_f16,_v16)					\
+								do { 											\
+									(g_osd_afbc_o18_reg_shadow->_r._f01) = (_v01);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f02) = (_v02);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f03) = (_v03);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f04) = (_v04);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f05) = (_v05);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f06) = (_v06);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f07) = (_v07);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f08) = (_v08);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f09) = (_v09);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f10) = (_v10);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f11) = (_v11);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f12) = (_v12);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f13) = (_v13);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f14) = (_v14);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f15) = (_v15);				\
+									(g_osd_afbc_o18_reg_shadow->_r._f16) = (_v16);				\
+								} while(0)
+
+/** @} *//* end of macro documentation */
+
+extern volatile OSD_AFBC_O18_REG_T*	g_osd_afbc_o18_reg;
+extern OSD_AFBC_O18_REG_T*    			g_osd_afbc_o18_reg_shadow;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif	/* __OSD_AFBC_REG_O18_H__ */
+

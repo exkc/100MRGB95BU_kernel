@@ -1,0 +1,59 @@
+menuconfig EKP_DEBUG
+	bool "EKP Debug & Test Features"
+	default n
+
+if EKP_DEBUG
+
+config EKP_KERNEL_DEBUG_IN_ISE
+	bool "Print kernel data/messages in ISE for debugging (EXPERIMENTAL)"
+	default n
+
+config EKP_DEBUGFS
+	bool "Enable EKP Debug Filesystem"
+	select DEBUG_FS
+	default n
+
+config EKP_DEBUGFS_PTDUMP_CORE
+	def_bool n
+
+config EKP_DEBUGFS_CHECK_PROT_CORE
+	def_bool n
+
+config EKP_DEBUGFS_SYSINFO
+	bool "Export kernel/user information via debugfs"
+	depends on EKP_DEBUGFS
+	default n
+
+config EKP_DEBUGFS_PTDUMP
+	bool "Export kernel/user page-table layout via debugfs"
+	depends on EKP_DEBUGFS_SYSINFO
+	select EKP_DEBUGFS_PTDUMP_CORE
+	default n
+
+config EKP_DEBUGFS_CHECK_PROT
+	bool "Check the attributes for protection of page tables"
+	depends on EKP_DEBUGFS_SYSINFO
+	select EKP_DEBUGFS_PTDUMP_CORE
+	select EKP_DEBUGFS_CHECK_PROT_CORE
+	default n
+
+config EKP_DEBUGFS_TEST_HELPERS
+	bool "Allow to test EKP behaviors"
+	depends on EKP_DEBUGFS
+	default n
+	help
+	  This option creates debugfs entries to test EKP behaviors.
+
+	  *** You MUST __NOT__ enable this on the production kernel. ***
+
+config EKP_DEBUGFS_TEST_AGAINST_ATTACK
+	bool "Test EKP against attacks (!! SECURITY ALERT !!)"
+	depends on EKP_DEBUGFS_TEST_HELPERS
+	default n
+	help
+	  This option creates debugfs entries to test the defense behavior
+	  of EKP against security attacks.
+
+	  *** You MUST __NOT__ enable this on the production kernel. ***
+
+endif # EKP_DEBUG

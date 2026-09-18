@@ -1,0 +1,8 @@
+config EKP_ISE_FIRMWARE
+	string "EKP ISE firmware binary path"
+	default "arch/arm64/ekp/fw/hise.bin"
+	help
+	  This option allows EKP ISE firmware 'blobs' to be built into
+	  the kernel. If you don't specify the location of EKP ISE
+	  firmware binary, EKP won't be enabled.
+

@@ -1,0 +1,159 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T dnr_l_ud_default_o18[] =
+{	
+	{0x3594, 0x01780221},      // DNR_MAX_CTRL
+    {0x3598, 0x00000004},      // DNR_DBAR_CTRL
+    {0x35A0, 0x1800C0A1},      // MNR_CTRL_0
+    {0x35A4, 0x143214FF},      // MNR_CTRL_1
+    {0x35A8, 0x00000000},      // MNR_CTRL_2
+    {0x35AC, 0x80F03061},      // MNR_CTRL_3
+    {0x35B0, 0x03040608},      // MNR_CTRL_4
+    {0x35B4, 0x04060812},      // MNR_CTRL_5
+    {0x35B8, 0x04090A40},      // DETAIL_CTRL
+    {0x35BC, 0x1030C105},      // DC_BNR_CTRL_0
+    {0x35C0, 0x45890102},      // DC_BNR_CTRL_1
+    {0x35C4, 0x15102109},      // DC_BNR_CTRL_2
+    {0x35C8, 0x15254080},      // DC_BNR_CTRL_3
+    {0x35CC, 0x00FFFF00},      // DC_BNR_CTRL_4
+    {0x35D0, 0x004080FF},      // DC_BNR_CTRL_5
+    {0x35D4, 0xC0101080},      // AC_BNR_CTRL_0
+    {0x35D8, 0x0F60C000},      // AC_BNR_CTRL_1
+    {0x35DC, 0x00051040},      // AC_BNR_CTRL_2
+    {0x35E4, 0x00C0E0FF},      // AC_BNR_CTRL_3
+    {0x35E8, 0x60E05000},      // AC_BNR_CTRL_4
+    {0x35F0, 0xFA963201},      // AC_BNR_CTRL_5
+    {0x35F4, 0x00FFC0A0},      // AC_BNR_CTRL_6
+    {0x35F8, 0x80FFA080},      // AC_BNR_CTRL_7
+    {0x3600, 0x40000F20},      // AC_BNR_CTRL_8
+    {0x3604, 0x00108003},      // AC_BNR_CTRL_9
+    {0x3608, 0xFF00FF00},      // AC_BNR_CTRL_10
+    {0x360C, 0xFF00FF00},      // AC_BNR_CTRL_11
+    {0x3610, 0x0A40FFFF},      // AC_BNR_CTRL_12
+    {0x366C, 0x00000000},      // SC_BNR_CTRL_0
+    {0x3670, 0x00000000},      // SC_BNR_CTRL_1
+    {0x3674, 0x00000000},      // SC_BNR_CTRL_2
+    {0x3678, 0x00000000},      // SC_BNR_CTRL_3
+    {0x367C, 0x00000000},      // SC_BNR_CTRL_4
+    {0x3680, 0x00000000},      // SC_BNR_CTRL_5
+    {0x3684, 0x00000000},      // SC_BNR_CTRL_6
+    {0x368C, 0x00000300},      // TEXTURE_CTRL_0
+    {0x369C, 0x00000000},      // AC_BNR_CTRL_13
+    {0x36A0, 0x00000000},      // AC_BNR_CTRL_14
+    {0x36A4, 0x40200500},      // DC_BNR_CTRL_6
+    {0x36A8, 0x05050510},      // DC_BNR_CTRL_7
+    {0x3730, 0x05102030},      // AC_BNR_15
+    {0x3734, 0x204060FF},      // AC_BNR_16
+    {0x3764, 0xB00FF000},      // REG_DECON_CTRL_0
+    {0x3768, 0x00000000},      // REG_DECON_CTRL_1
+    {0x376C, 0x00000FFF},      // REG_DECON_CTRL_2
+    {0x3770, 0x00FFFFFF},      // REG_DECON_CTRL_3
+    {0x3774, 0x13579753},      // REG_DECON_CTRL_4
+    {0x3778, 0x24680864},      // REG_DECON_CTRL_5
+    {0x377C, 0x14703692},      // REG_DECON_CTRL_6
+    {0x3780, 0x800FF026},      // REG_DECON_CTRL_7
+    {0x3784, 0x30000000},      // REG_DECON_CTRL_8
+    {0x3788, 0x00000FFF},      // REG_DECON_CTRL_9
+    {0x378C, 0x00FFFFFF},      // REG_DECON_CTRL_10
+    {0x3790, 0x20304060},      // REG_DC_BNR_CTRL_8
+    {0x3794, 0xFFFFFFFF},      // REG_DC_BNR_CTRL_9
+    {0x3798, 0xFFC0B040},      // REG_DC_BNR_CTRL_10
+    {0x379C, 0x40404040},      // REG_DC_BNR_CTRL_11
+    {0x37A0, 0x13579753},      // REG_DECON_CTRL_11
+    {0x37A4, 0x24680864},      // REG_DECON_CTRL_12
+    {0x37A8, 0x14703692},      // REG_DECON_CTRL_13
+    {0x37AC, 0x00000000},      // REG_DECON_CTRL_14
+    {0x37B0, 0x00000000},      // REG_DECON_CTRL_15
+    {0x37B4, 0x00000000},      // REG_DECON_CTRL_16
+    {0x37B8, 0x8C000000},      // REG_DECON_CTRL_17
+    {0x37BC, 0xFF900001},      // REG_DECON_CTRL_18
+    {0x37C0, 0x20141003},      // REG_DECON_CTRL_19
+    {0x37C4, 0x00206070},      // REG_DECON_CTRL_20
+    {0x37C8, 0x02A0D850},      // REG_DECON_CTRL_21
+    {0x37CC, 0xC703FC80},      // REG_DECON_CTRL_22
+    {0x37D0, 0xC4000030},      // REG_DECON_CTRL_23
+    {0x37D4, 0x0643212C},      // REG_DECON_CTRL_24
+    {0x37D8, 0x190C8384},      // REG_DECON_CTRL_25
+    {0x37DC, 0x3FFBAEEB},      // REG_DECON_CTRL_26
+    {0x37E0, 0x2EBBAFE4},      // REG_DECON_CTRL_27
+    {0x37E4, 0x3FFFFFFF},      // REG_DECON_CTRL_28
+    {0x37E8, 0x00000000},      // REG_DECON_CTRL_29
+    {0x37EC, 0x06030000},      // REG_DECON_CTRL_30
+    {0x37F0, 0x00078064},      // REG_DECON_CTRL_31
+    {0x37F4, 0x00020100},      // REG_DECON_CTRL_32
+    {0x37F8, 0x20000080},      // REG_DECON_CTRL_33
+    {0x37FC, 0x20040200},      // REG_DECON_CTRL_34
+    {0x3800, 0x97530864},      // REG_DECON_CTRL_35
+    {0x3804, 0x12345678},      // REG_DECON_CTRL_36
+    {0x3808, 0x56789012},      // REG_DECON_CTRL_37
+    {0x380C, 0x00000000},      // REG_DECON_CTRL_38
+    {0x3810, 0x00000FFF},      // REG_DECON_CTRL_39
+    {0x3814, 0x00FFFFFF},      // REG_DECON_CTRL_40
+    {0x3818, 0x13579753},      // REG_DECON_CTRL_41
+    {0x381C, 0x24680864},      // REG_DECON_CTRL_42
+    {0x3820, 0x14703692},      // REG_DECON_CTRL_43
+    {0x3824, 0x20020044},      // REG_DECON_CTRL_44
+    {0x3828, 0x00F03C0F},      // REG_DECON_CTRL_45
+    {0x382C, 0x00007832},      // REG_DECON_CTRL_46
+    {0x3830, 0x01E0780A},      // REG_DECON_CTRL_47
+    {0x3834, 0x80A0280A},      // REG_DECON_CTRL_48
+    {0x3838, 0x20202080},      // REG_DECON_CTRL_49
+    {0x383C, 0x80208080},      // REG_DECON_CTRL_50
+    {0x3840, 0x80FFFF00},      // REG_DECON_CTRL_51
+    {0x3844, 0x00200200},      // REG_DECON_CTRL_52
+    {0x3848, 0x00200200},      // REG_DECON_CTRL_53
+    {0x384C, 0x00200200},      // REG_DECON_CTRL_54
+    {0x3850, 0x68032000},      // REG_DECON_CTRL_55
+    {0x3854, 0x000FF0FF},      // REG_DECON_CTRL_56
+    {0x3858, 0x000000FF},      // REG_DECON_CTRL_57
+    {0x385C, 0x96AC4285},      // REG_DECON_CTRL_58
+    {0x3860, 0x03C190C8},      // REG_DECON_CTRL_59
+    {0x3864, 0x19096320},      // REG_DECON_CTRL_60
+    {0x3868, 0x384FA100},      // REG_DECON_CTRL_61
+    {0x386C, 0x10040100},      // REG_DECON_CTRL_62
+    {0x3870, 0x10040100},      // REG_DECON_CTRL_63
+    {0x3874, 0x10008040},      // REG_DECON_CTRL_64
+    {0x3878, 0x06020100},      // REG_DECON_CTRL_65
+    {0x387C, 0x08008000},      // REG_DECON_CTRL_66
+    {0x3880, 0x100C0804},      // REG_DECON_CTRL_67
+    {0x3884, 0x002080FF},      // REG_DECON_CTRL_68
+    {0x3888, 0x34567890},      // REG_DECON_CTRL_69
+    {0x388C, 0x45678901},      // REG_DECON_CTRL_70
+    {0x3890, 0x89012345},      // REG_DECON_CTRL_71
+    {0x3894, 0x80009467},      // REG_DECON_CTRL_72
+    {0x3898, 0x80808080},      // REG_DC_BNR_CTRL_12
+    {0x389C, 0x04080C10},      // REG_DC_BNR_CTRL_13
+    {0x38A0, 0x80C08060},      // REG_DC_BNR_CTRL_14
+    {0x38A4, 0x48404040},      // REG_DC_BNR_CTRL_15
+    {0x38A8, 0xD0002010},      // REG_MNR_CTRL_6
+    {0x38AC, 0x01020408},      // REG_MNR_CTRL_7
+    {0x38B0, 0xFFE0D0C0},      // REG_MNR_CTRL_8
+    {0x38B4, 0x050A1428},      // REG_MNR_CTRL_9
+    {0x38B8, 0xFFC0A080},      // REG_MNR_CTRL_10
+    {0x38C4, 0x80402000},      // REG_PSV_CTRL_0
+    {0x38C8, 0x80402014},      // REG_PSV_CTRL_1
+    {0x38CC, 0x80402010},      // REG_PSV_CTRL_2
+    {0x38D0, 0x4020100A},      // REG_PSV_CTRL_3
+    {0x38D4, 0x80402010},      // REG_PSV_CTRL_4
+    {0x38D8, 0xB0804004},      // REG_PSV_CTRL_5
+    {0x38DC, 0x00000000},      // REG_PSV_CTRL_6
+    {0x38E0, 0x001000A0},      // REG_PSV_CTRL_7
+    {0x38E4, 0xFFC0C080},      // REG_PSV_CTRL_8
+    {0x38E8, 0x00000311},      // REG_PSV_CTRL_9
+    {0x38EC, 0x001E00A0},      // REG_PSV_CTRL_10
+    {0x38F0, 0xC08040FF},      // REG_PSV_CTRL_11
+    {0x38F4, 0xFFFF8080},      // REG_PSV_CTRL_12
+    {0x38F8, 0x00003200},      // REG_PSV_CTRL_13
+};     

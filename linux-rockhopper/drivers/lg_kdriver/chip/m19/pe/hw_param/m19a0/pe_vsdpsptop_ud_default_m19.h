@@ -1,0 +1,50 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+const PE_REG_PARAM_T vsdpsptop_ud_default_m19[] =
+{
+	{0xB220, 0x00000005},	 // REG_PSP_CTRL_00
+	{0xB224, 0x000000FF},	 // REG_PSP_CTRL_01
+	{0xB228, 0x02000200},	 // REG_PSP_CTRL_02
+	{0xB234, 0x00000000},	 // REG_PSP_CTRL_05
+	{0xB238, 0x01000100},	 // REG_PSP_CTRL_06
+	{0xB23C, 0x01800180},	 // REG_PSP_CTRL_07
+	{0xB240, 0x02000220},	 // REG_PSP_CTRL_08
+	{0xB244, 0x028002C0},	 // REG_PSP_CTRL_09
+	{0xB248, 0x03000350},	 // REG_PSP_CTRL_10
+	{0xB24C, 0x038003C0},	 // REG_PSP_CTRL_11
+	{0xB250, 0x03FF03FF},	 // REG_PSP_CTRL_12
+	{0xB254, 0x00000000},	 // REG_PSP_CTRL_13
+	{0xB258, 0x01000100},	 // REG_PSP_CTRL_14
+	{0xB25C, 0x01800180},	 // REG_PSP_CTRL_15
+	{0xB260, 0x020001A0},	 // REG_PSP_CTRL_16
+	{0xB264, 0x02800260},	 // REG_PSP_CTRL_17
+	{0xB268, 0x030002A0},	 // REG_PSP_CTRL_18
+	{0xB26C, 0x03800350},	 // REG_PSP_CTRL_19
+	{0xB270, 0x03FF03FF},	 // REG_PSP_CTRL_20
+	{0xB274, 0xFFFF6000},	 // REG_PSP_CTRL_21
+	{0xB278, 0x60000000},	 // REG_PSP_CTRL_22
+	{0xB27C, 0x00000007},	 // REG_PSP_CTRL_23
+	{0xB280, 0x00000080},	 // REG_PSP_CTRL_24
+	{0xB284, 0x020003FF},	 // REG_PSP_CTRL_25
+	{0xB288, 0xFFFFFFFF},	 // REG_PSP_CTRL_26
+	{0xB28C, 0x10FF20E0},	 // REG_PSP_CTRL_27
+	{0xB290, 0x30D040C0},	 // REG_PSP_CTRL_28
+	{0xB294, 0x00804080},	 // REG_PSP_CTRL_29
+	{0xB298, 0x6080FFA0},	 // REG_PSP_CTRL_30
+	{0xB2A0, 0x00000000},	 // REG_PSP_CTRL_32
+	{0xB2A4, 0x00000000},	 // REG_PSP_CTRL_33
+	{0xB2A8, 0x00000000},	 // REG_PSP_CTRL_34
+	{0xB2AC, 0x00000000},	 // REG_PSP_CTRL_35
+};

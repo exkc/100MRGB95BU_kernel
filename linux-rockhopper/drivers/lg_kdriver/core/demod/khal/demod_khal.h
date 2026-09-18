@@ -1,0 +1,645 @@
+/*
+	SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+	Copyright(c) 2013 by LG Electronics Inc.
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	version 2 as published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+*/
+
+
+/** @file
+ *
+ *  driver interface header for demod device. ( used only within kdriver )
+ *	demod device will teach you how to make device driver with new platform.
+ *
+ *  @author		jinwoo.han (jinwoo.han@lge.com)
+ *  @version	1.0
+ *  @date		2017.04.13
+ *
+ *  @addtogroup lg1150_demod
+ *	@{
+ */
+
+
+#ifndef	_DEMOD_KHAL_H_
+#define _DEMOD_KHAL_H_
+
+/*----------------------------------------------------------------------------------------
+	Control Constants
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+    File Inclusions
+----------------------------------------------------------------------------------------*/
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+/*----------------------------------------------------------------------------------------
+	Macro Definitions
+----------------------------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------------------------
+	Extern Function Prototype Declaration
+----------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+	Extern Variables
+----------------------------------------------------------------------------------------*/
+typedef enum
+{
+	KHAL_OK							= 0,
+	KHAL_NOK						= -1,
+}KHAL_RETURN_VALUE_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TUNE_NORMAL					= 0x10,
+	KHAL_DEMOD_TUNE_MANUAL					= 0x20,
+	KHAL_DEMOD_TUNE_SCAN					= 0x30,
+	KHAL_DEMOD_TUNE_SCAN_START,
+	KHAL_DEMOD_TUNE_SPECIFIC				= 0x40,
+	KHAL_DEMOD_TUNE_SPEC_DVBT_HMLP,						/* DVBT : Hierarchy Mode */
+	KHAL_DEMOD_TUNE_SPEC_DVBC_FIXED_DATA,					/* DVBC : Use Fixed NIT Data */
+	KHAL_DEMOD_TUNE_UNKNOWN					= 0x80,
+	KHAL_DEMOD_TUNE_MODE_MASK				= 0xF0,
+} KHAL_DEMOD_TUNE_MODE_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TRANS_SYS_VSB				= 0x00,
+	KHAL_DEMOD_TRANS_SYS_DVBT,
+	KHAL_DEMOD_TRANS_SYS_DVBT2,
+	KHAL_DEMOD_TRANS_SYS_DTMB,
+	KHAL_DEMOD_TRANS_SYS_ISDBT,
+	KHAL_DEMOD_TRANS_SYS_DVBC,
+	KHAL_DEMOD_TRANS_SYS_DVBC2,
+	KHAL_DEMOD_TRANS_SYS_QAM,
+	KHAL_DEMOD_TRANS_SYS_ISDBC,
+	KHAL_DEMOD_TRANS_SYS_DVBS,
+	KHAL_DEMOD_TRANS_SYS_DVBS2,
+	KHAL_DEMOD_TRANS_SYS_BS,
+	KHAL_DEMOD_TRANS_SYS_CS,
+	KHAL_DEMOD_TRANS_SYS_NTSC,
+	KHAL_DEMOD_TRANS_SYS_PAL,
+	KHAL_DEMOD_TRANS_SYS_ATSC3,
+	KHAL_DEMOD_TRANS_SYS_ALWAYSREADY,					// For low power mode supported
+	KHAL_DEMOD_TRANS_SYS_END,
+	KHAL_DEMOD_TRANS_SYS_UNKNOWN				= 0x1F
+} KHAL_DEMOD_TRANS_SYSTEM_T;
+
+typedef enum
+{
+	KHAL_DEMOD_LOCK_OK					= 0x00,
+	KHAL_DEMOD_LOCK_FAIL,
+	KHAL_DEMOD_LOCK_UNSTABLE,
+	
+	KHAL_DEMOD_LOCK_WEAK					= 0x10,
+	KHAL_DEMOD_LOCK_POOR,
+	KHAL_DEMOD_LOCK_ATV_PROGRESS,
+	KHAL_DEMOD_LOCK_NEVER_LOCK,
+	
+	KHAL_DEMOD_LOCK_UNKNOWN					= 0x80
+} KHAL_DEMOD_LOCK_STATE_T;
+
+typedef enum
+{
+	KHAL_DEMOD_CH_BW_8M					= 0x00,
+	KHAL_DEMOD_CH_BW_7M,
+	KHAL_DEMOD_CH_BW_6M,
+	KHAL_DEMOD_CH_BW_UNKNOWN
+} KHAL_DEMOD_CHANNEL_BW_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TPS_CONST_QPSK				= 0x00,
+	KHAL_DEMOD_TPS_CONST_DQPSK,
+	KHAL_DEMOD_TPS_CONST_QAM_4NR,
+	KHAL_DEMOD_TPS_CONST_QAM_4,
+	KHAL_DEMOD_TPS_CONST_PSK_8,
+	KHAL_DEMOD_TPS_CONST_VSB_8,
+	KHAL_DEMOD_TPS_CONST_QAM_16,
+	KHAL_DEMOD_TPS_CONST_QAM_32,
+	KHAL_DEMOD_TPS_CONST_QAM_64,
+	KHAL_DEMOD_TPS_CONST_QAM_128,
+	KHAL_DEMOD_TPS_CONST_QAM_256,
+	KHAL_DEMOD_TPS_CONST_END,
+	KHAL_DEMOD_TPS_CONST_UNKNOWN				= 0x0F
+} KHAL_DEMOD_TPS_CONSTELLATION_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TPS_CODE_1_2					= 0x00,
+	KHAL_DEMOD_TPS_CODE_1_3,
+	KHAL_DEMOD_TPS_CODE_1_4,
+	KHAL_DEMOD_TPS_CODE_2_3,
+	KHAL_DEMOD_TPS_CODE_3_4,
+	KHAL_DEMOD_TPS_CODE_2_5,
+	KHAL_DEMOD_TPS_CODE_3_5,
+	KHAL_DEMOD_TPS_CODE_4_5,
+	KHAL_DEMOD_TPS_CODE_5_6,
+	KHAL_DEMOD_TPS_CODE_6_7,
+	KHAL_DEMOD_TPS_CODE_7_8,
+	KHAL_DEMOD_TPS_CODE_8_9,
+	KHAL_DEMOD_TPS_CODE_9_10,
+	KHAL_DEMOD_TPS_CODE_END,
+	KHAL_DEMOD_TPS_CODE_UNKNOWN				= 0x0F
+} KHAL_DEMOD_TPS_CODERATE_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TPS_GUARD_1_4				= 0x00,
+	KHAL_DEMOD_TPS_GUARD_1_8,
+	KHAL_DEMOD_TPS_GUARD_1_9,
+	KHAL_DEMOD_TPS_GUARD_1_16,
+	KHAL_DEMOD_TPS_GUARD_1_32,
+	KHAL_DEMOD_TPS_GUARD_1_128,
+	KHAL_DEMOD_TPS_GUARD_19_128,
+	KHAL_DEMOD_TPS_GUARD_19_256,
+	KHAL_DEMOD_TPS_GUARD_420_C,
+	KHAL_DEMOD_TPS_GUARD_420_V,
+	KHAL_DEMOD_TPS_GUARD_595,
+	KHAL_DEMOD_TPS_GUARD_945_C,
+	KHAL_DEMOD_TPS_GUARD_945_V,
+	KHAL_DEMOD_TPS_GUARD_END,
+	KHAL_DEMOD_TPS_GUARD_UNKNOWN				= 0x0F
+} KHAL_DEMOD_TPS_GUARD_INTERVAL_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TPS_CARR_1K					= 0x00,
+	KHAL_DEMOD_TPS_CARR_2K,
+	KHAL_DEMOD_TPS_CARR_4K,
+	KHAL_DEMOD_TPS_CARR_8K,
+	KHAL_DEMOD_TPS_CARR_16K,
+	KHAL_DEMOD_TPS_CARR_32K,
+	KHAL_DEMOD_TPS_CARR_SC,
+	KHAL_DEMOD_TPS_CARR_MC,
+	KHAL_DEMOD_TPS_CARR_END,
+	KHAL_DEMOD_TPS_CARR_UNKNOWN				= 0x0F
+} KHAL_DEMOD_TPS_CARRIER_MODE_T;
+
+typedef enum
+{
+	KHAL_DEMOD_TPS_HIERA_NONE				= 0x00,
+	KHAL_DEMOD_TPS_HIERA_1,
+	KHAL_DEMOD_TPS_HIERA_2,
+	KHAL_DEMOD_TPS_HIERA_4,
+	KHAL_DEMOD_TPS_HIERA_END,
+	KHAL_DEMOD_TPS_HIERA_UNKNOWN				= 0x07
+} KHAL_DEMOD_TPS_HIERARCHY_T;
+
+typedef enum  /* 4 bit */{
+	KHAL_DEMOD_TPS_GUARD_ATSC3_1_192			= 0x00,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_2_384,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_3_512,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_4_768,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_5_1024,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_6_1536,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_7_2048,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_8_2432,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_9_3072,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_10_3648,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_11_4096,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_12_4864,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_END,
+	KHAL_DEMOD_TPS_GUARD_ATSC3_UNKNOWN			= 0x0F
+} KHAL_DEMOD_TPS_GUARD_INTERVAL_ATSC3_T;
+
+typedef enum	/* 4 bit */
+{
+	KHAL_DEMOD_TPS_CODE_ATSC3_2_15				=0x00,
+	KHAL_DEMOD_TPS_CODE_ATSC3_3_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_4_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_5_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_6_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_7_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_8_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_9_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_10_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_11_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_12_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_13_15,
+	KHAL_DEMOD_TPS_CODE_ATSC3_END,
+	KHAL_DEMOD_TPS_CODE_ATSC3_UNKNOWN			= 0x0F
+} KHAL_DEMOD_TPS_CODERATE_ATSC3_T;
+
+typedef enum	/* 4 bit */
+{
+	KHAL_DEMOD_TPS_CONST_ATSC3_QPSK				= 0x00,
+	KHAL_DEMOD_TPS_CONST_ATSC3_QAM_16,
+	KHAL_DEMOD_TPS_CONST_ATSC3_QAM_64,
+	KHAL_DEMOD_TPS_CONST_ATSC3_QAM_256,
+	KHAL_DEMOD_TPS_CONST_ATSC3_QAM_1024,
+	KHAL_DEMOD_TPS_CONST_ATSC3_QAM_4096,
+	KHAL_DEMOD_TPS_CONST_ATSC3_END,
+	KHAL_DEMOD_TPS_CONST_ATSC3_UNKNOWN			= 0x0F
+
+} KHAL_DEMOD_TPS_CONSTELLATION_ATSC3_T;
+
+typedef struct
+{
+	UINT8 PLPCount;								/* count of multiple TS*/
+	UINT8 paPLPID[256];							/* arrary of PLP ID */
+} KHAL_MULTI_TS_INFO_T;
+
+typedef enum
+{
+	KHAL_DEMOD_COUNTRY_GRP_NONE				= 0x00,
+	KHAL_DEMOD_COUNTRY_GRP_EU,
+
+	KHAL_DEMOD_COUNTRY_GRP_END,
+	KHAL_DEMOD_COUNTRY_GRP_UNKNOWN				= 0x0f
+
+} KHAL_DEMOD_COUNTRY_GRP_T;
+
+typedef enum
+{
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_BG				= 0x00,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_I,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_DK,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_L,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_MN,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_LP,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_END,
+	KHAL_DEMOD_AUDIO_SIF_SYSTEM_UNKNOWN			= 0xf0
+} KHAL_DEMOD_AUDIO_SIF_SOUNDSYSTEM_T;
+
+typedef enum 
+{
+	NONE_PLP_ID = 0x00,
+	FULL_PLP_ID,
+	LLS_ONLY_PLP_ID
+} KHAL_DEMOD_ATSC3_MULTI_PLP_ID_SEL_T;
+
+typedef enum
+{
+	KHAL_DEMOD_DVBS_22KHZ_ENVELOPE,
+	KHAL_DEMOD_DVBS_22KHZ_PULSE,
+	KHAL_DEMOD_DVBS_22KHZ_UNKNOWN,
+} KHAL_DEMOD_DVBS_22KHZ_MODE_T;
+
+typedef struct
+{
+	BOOLEAN	bSignalValid;							/*	1 bit */
+	UINT8	strength;
+	UINT8	quality;
+	UINT32	packetError;
+	UINT32	unBER;								/* unit : e-10 */
+	UINT32	unAGC;
+	UINT32	unSNR;
+} KHAL_DEMOD_SIGNAL_STATE_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_ATSC_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_ISDBT_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bSpectrumInv;
+	BOOLEAN							bProfileHP;
+	KHAL_DEMOD_TPS_HIERARCHY_T				hierarchy;
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_DVBT_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+	UINT8							unPLP;
+} KHAL_DEMOD_DVBT2_SET_PARAM_T;
+
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	UINT32							frequency;
+	UINT16							symbolRate;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_DVBC_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	BOOLEAN							bSpectrumInv;
+	UINT32							symbolRate;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+	UINT32							freqKHz;
+	BOOLEAN							bIsBlind_search;
+} KHAL_DEMOD_DVBS_SET_PARAM_T;
+
+typedef struct {
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	BOOLEAN							bSpectrumInv;
+	UINT32							symbolRate;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+	UINT32							freqKHz;
+	BOOLEAN							bIsBlind_search;
+} KHAL_DEMOD_DVBS2_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bM720;			//interleave
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_DTMB_SET_PARAM_T;
+
+typedef struct 
+{
+	UINT8							total_plpCount;		/*number of total PLP */
+	UINT8							selected_plpCount;
+	UINT8							plpID[64];		/* array of PLP ID */;
+} KHAL_DEMOD_ATSC3_MULTI_PLP_ID_T;
+
+typedef struct {
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_CHANNEL_BW_T					eChannelBW;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_ATSC3_SET_PARAM_T;
+
+typedef struct
+{
+	BOOLEAN							bSpectrumInv;
+	BOOLEAN							bProfileHP;
+	KHAL_DEMOD_TPS_HIERARCHY_T				hierarchy;
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_SPECDATA_DVBT_T;
+
+typedef struct
+{
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+	UINT8							unPLP;			// For DVBT2 - PLP ID
+} KHAL_DEMOD_SPECDATA_DVBT2_T;
+
+typedef struct
+{
+	BOOLEAN							bCoChannel;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_SPECDATA_VSB_T;
+
+typedef struct
+{
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+	UINT16							symbolRate;
+} KHAL_DEMOD_SPECDATA_DVBC_T;
+
+typedef struct
+{
+	BOOLEAN							bIsDVBS2;		/* 1 bit */
+	BOOLEAN							bSpectrumInv;		/* 1 bit */
+	UINT32							symbolRate;
+	KHAL_DEMOD_TPS_CODERATE_T					codeRate;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_SPECDATA_DVBS_T;
+
+typedef struct
+{
+	BOOLEAN							bSpectrumInv;
+	UINT8							cableBand;
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;
+} KHAL_DEMOD_SPECDATA_QAM_T;
+
+typedef struct
+{
+	UINT32							ceterFreq;
+	UINT32							tunedFreq;
+	BOOLEAN							bSpectrumInv;
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	KHAL_DEMOD_TUNE_MODE_T					tuneMode;
+	KHAL_DEMOD_CHANNEL_BW_T					channelBW;
+	KHAL_DEMOD_AUDIO_SIF_SOUNDSYSTEM_T			audioSystem;
+} KHAL_DEMOD_ATV_SET_PARAM_T;
+
+typedef struct
+{
+	KHAL_DEMOD_TRANS_SYSTEM_T				transSystem;
+	BOOLEAN							bSpectrumInv;
+	UINT32							ifFreq;
+} KHAL_DEMOD_ATV_CONFIG_PARAM_T;
+
+typedef struct
+{
+	BOOLEAN							bSpectrumInv;		/* 1 bit */
+	BOOLEAN							bProfileHP;		/* 1 bit */
+	KHAL_DEMOD_TPS_HIERARCHY_T				hierarchy;		/* 3 bit */
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;		/* 4 bit */
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;		/* 4 bit */
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;		/* 4 bit */
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;		/* 4 bit */
+
+} KHAL_DEMOD_SPECDATA_ISDBT_T;
+
+typedef struct
+{
+	BOOLEAN							bM720;			/* 1 bit */
+	KHAL_DEMOD_TPS_CARRIER_MODE_T				carrierMode;		/* 4 bit */
+	KHAL_DEMOD_TPS_GUARD_INTERVAL_T				guardInterval;		/* 4 bit */
+	KHAL_DEMOD_TPS_CODERATE_T				codeRate;		/* 4 bit */
+	KHAL_DEMOD_TPS_CONSTELLATION_T				constellation;		/* 4 bit */
+} KHAL_DEMOD_SPECDATA_DTMB_T;
+
+typedef struct 
+{
+	 BOOLEAN bMPLP;
+	 KHAL_DEMOD_TPS_CARRIER_MODE_T carrierMode;
+	 KHAL_DEMOD_TPS_GUARD_INTERVAL_ATSC3_T guardInterval;
+	 KHAL_DEMOD_TPS_CODERATE_ATSC3_T codeRate;
+	 KHAL_DEMOD_TPS_CONSTELLATION_ATSC3_T constellation;
+} KHAL_DEMOD_SPECDATA_ATSC3_T;
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_Initialize(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ChangeTransSystem(KHAL_DEMOD_TRANS_SYSTEM_T transSystem);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_CheckSignalStatus(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetPacketError(UINT32 *pPacketError);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetBER(UINT32 *pBER);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetAGC(UINT32 *pAGC);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetSNR (UINT32 *pSNR);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetSQI(UINT8 *pSQI);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_GetFWVersion(UINT32 *pFWVersion);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_CheckFrequencyOffset(SINT32 *pFreqOffset);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ControlTSMode( BOOLEAN bIsSerial);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ControlOutput(BOOLEAN bEnableOutput);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_Set_Frame_resynchronizaiton(BOOLEAN bEnable);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DebugMenu(void);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ATSC_SetDemod(KHAL_DEMOD_ATSC_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_SetDemod(KHAL_DEMOD_ISDBT_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_CheckSpecialData(KHAL_DEMOD_SPECDATA_ISDBT_T *pSpecData);
+extern BOOLEAN             KHAL_DEMOD_VQI_ISDBT_GetEmergencyAlertFlagStatus(void);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_CheckFrequencyOffset(SINT32 *pFreqOffset);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_CheckSignalStatus(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_ControlOutput(BOOLEAN bEnableOutput);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_Initialize(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_ChangeTransSystem(KHAL_DEMOD_TRANS_SYSTEM_T transSystem);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_ISDBT_ControlTSMode( BOOLEAN bIsSerial);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ISDBT_DebugMenu(void);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_VSB_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_VSB_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_QAM_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_QAM_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_QAM_CheckSpecialData(KHAL_DEMOD_SPECDATA_QAM_T *pSpecData);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_Initialize(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_ChangeTransMedia(KHAL_DEMOD_TRANS_SYSTEM_T transSystem);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_GetPacketError(UINT32 *pPacketError);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_CheckFrequencyOffset(SINT32 *pFreqOffset);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_OperMode(KHAL_DEMOD_TRANS_SYSTEM_T *pOperMode);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_ControlTSMode( BOOLEAN bIsSerial);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_ControlOutput(BOOLEAN bEnableOutput);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_GetCellID(UINT16 *pCellID);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DebugMenu(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_GetTsClkRate(UINT32 *pTsClkRate);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT_SetDemod(KHAL_DEMOD_DVBT_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT_CheckSpecialData(KHAL_DEMOD_SPECDATA_DVBT_T *pSpecData);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT_GetSignalState(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT2_SetDemod(KHAL_DEMOD_DVBT2_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT2_ChangePLP(UINT8 unPLP);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT2_CheckSpecialData(KHAL_DEMOD_SPECDATA_DVBT2_T *pSpecData);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT2_GetSignalState(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBT2_GetMultiPLPInfo(KHAL_MULTI_TS_INFO_T *pPlpInfo);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBC_SetDemod(KHAL_DEMOD_DVBC_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBC_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBC_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBC_CheckSpecialData(KHAL_DEMOD_SPECDATA_DVBC_T *pSpecData);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBC_GetSignalState(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_SetDemod(KHAL_DEMOD_DVBS_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_CheckSpecialData(KHAL_DEMOD_SPECDATA_DVBS_T *pSpecData);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_GetSignalState(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_SetCountryGrp(KHAL_DEMOD_COUNTRY_GRP_T halCountryGrp);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_GetFWVersion(UINT32 *pFWVersion);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_PAL_GetFWVersion(UINT32 *pFWVersion);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_NTSC_GetFWVersion(UINT32 *pFWVersion);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_Send_Diseqc(UINT8 *pCmd, UINT8 u8CmdSize);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_22Khz_Tone(BOOLEAN b22kon);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_ToneMode(KHAL_DEMOD_DVBS_22KHZ_MODE_T mode);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_Send_Tone_Burst(BOOLEAN bTone1);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_Init(UINT32 StartFreqMhz, UINT32 EndFreqMhz);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_GetTunerFreq(UINT32 *TunerCenterFreqMhz, UINT32 *TunerCutOffFreqKhz);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_NextFreq(BOOLEAN *bBlindScanEnd);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_GetStatus(UINT8 *Status, BOOLEAN *bBlindScanLock);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_End(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DVB_DVBS_BlindScan_GetFoundTP(UINT32 *FreqMhz, UINT32 *SymbolRateKhz);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_Initialize(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_ChangeTransSystem(KHAL_DEMOD_TRANS_SYSTEM_T transSystem);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_SetDemod(KHAL_DEMOD_DTMB_SET_PARAM_T paramStruct);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_CheckSpecialData(KHAL_DEMOD_SPECDATA_DTMB_T *pSpecDTMB);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_CheckSignalStatus(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_CheckFrequencyOffset(SINT32 *pFreqOffset);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_ControlTSMode(BOOLEAN bIsSerial);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_ControlOutput(BOOLEAN bEnableOutput);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DTMB_GetFWVersion(UINT32 *pFWVersion);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_GetSQI(UINT8 *pSQI);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_GetPacketError(UINT32 *pPacketError);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_GetBER(UINT32 *pBER);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_GetAGC(UINT32 *pAGC);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_GetSNR(UINT32 *pSNR);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_DTMB_DebugMenu(void);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_SetI2C(void *client);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_VQI_DVB_ISDBT_Initialize(void);
+
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_Initialize(void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_TunePostJob(BOOLEAN *pFinished);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_CheckLock(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_CheckSpecialData(KHAL_DEMOD_SPECDATA_ATSC3_T *pSpecATSC3);   //check!!!
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_CheckFrequencyOffset(SINT32 *pFreqOffset);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetFWVersion(UINT32 *pFWVersion);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetSQI(UINT8 *pSQI);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetPacketError(UINT32 *pPacketError);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetBER(UINT32 *pBER);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetAGC(UINT32 *pAGC);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_GetSNR(UINT32 *pSNR);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_ControlOutput(BOOLEAN bEnableOutput);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_ControlTSMode( BOOLEAN bIsSerial);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_ChangeTransSystem(KHAL_DEMOD_TRANS_SYSTEM_T transSystem);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_CheckSignalStatus(KHAL_DEMOD_SIGNAL_STATE_T *pSignalState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_Monitor(KHAL_DEMOD_LOCK_STATE_T *pLockState);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_Probe(UINT8 portI2C);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_DebugMenu (void);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_Get_MPLP_Info(KHAL_DEMOD_ATSC3_MULTI_PLP_ID_T *pPlpParams, KHAL_DEMOD_ATSC3_MULTI_PLP_ID_SEL_T plpSel);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_PLP_Select(UINT8 plp0_id, UINT8 plp1_id, UINT8 plp2_id, UINT8 plp3_id);
+extern KHAL_RETURN_VALUE_T KHAL_DEMOD_ATSC3_SetDemodExpand(KHAL_DEMOD_ATSC3_SET_PARAM_T paramStruct, UINT8 plp0_id, UINT8 plp1_id, UINT8 plp2_id, UINT8 plp3_id);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* _DEMOD_KHAL_H_ */

@@ -1,0 +1,3412 @@
+/*
+ * SIC LABORATORY, LG ELECTRONICS INC., SEOUL, KOREA
+ * Copyright(c) 2013 by LG Electronics Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+
+
+/** @file
+ *
+ *  main driver implementation for sys device.
+ *	sys device will teach you how to make device driver with new platform.
+ *
+ *  author		ks.hyun (ks.hyun@lge.com)
+ *  version		1.0
+ *  date		2010.12.13
+ *  note		Additional information.
+ *
+ *  @addtogroup lg1150_sys
+ *	@{
+ */
+
+
+/*----------------------------------------------------------------------------------------
+ *	 Control Constants
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 File Inclusions
+ *---------------------------------------------------------------------------------------*/
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/semaphore.h>
+#include <linux/delay.h>
+#include <linux/slab.h>
+#include <asm/io.h>
+
+#include "base_types.h"
+#include "os_util.h"
+#include "sys_drv.h"
+#include "reg_ctrl.h"
+#ifdef INCLUDE_I2C_CHIP_KDRV
+#include "i2c_drv.h"
+#include "i2c_core.h"
+#else
+#include "i2c_kapi.h"
+#endif
+
+#include "ctop_regs.h"
+
+#include "sys_log.h"
+#include "sys_regs.h"
+
+/*----------------------------------------------------------------------------------------
+ *	 Constant Definitions
+ *---------------------------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------------------------
+ *	 Macro Definitions
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 Type Definitions
+ *---------------------------------------------------------------------------------------*/
+typedef struct{
+	UINT8	ch;
+	UINT8	clock;
+} LX_I2C_INTERNAL_T;
+
+typedef struct
+{
+	UINT32				chip;
+	UINT32				num_internals;
+	LX_I2C_INTERNAL_T*	internal;		/* channels should be inited at initial time */
+} LX_REG_CTRL_CFG_T;
+
+typedef struct
+{
+	UINT8				ch;
+	UINT8				inited;
+} LX_I2C_INFO_T;
+
+/*----------------------------------------------------------------------------------------
+ *	 External Function Prototype Declarations
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 External Variables
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 global Functions
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 global Variables
+ *---------------------------------------------------------------------------------------*/
+#ifdef INCLUDE_M17_CHIP_KDRV
+ATOP_CTRL_REG_M17_T	gATOP_CTRL_M17;
+EXPORT_SYMBOL(gATOP_CTRL_M17);
+
+ATOP_CTRL_REG_M17C0_T	gATOP_CTRL_M17C0;
+EXPORT_SYMBOL(gATOP_CTRL_M17C0);
+#endif
+
+#if defined(INCLUDE_M17_CHIP_KDRV) || defined(INCLUDE_M16P_CHIP_KDRV)
+CTOP_CTRL_REG_M17_T	gCTOP_CTRL_M17;
+EXPORT_SYMBOL(gCTOP_CTRL_M17);
+#endif
+
+#ifdef INCLUDE_M19_CHIP_KDRV
+MIP_DIG_CTRL_REG_M19_T	gMIP_DIG_CTRL_M19;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_M19);
+#endif
+
+#ifdef INCLUDE_M19_CHIP_KDRV
+CTOP_CTRL_REG_M19_T	gCTOP_CTRL_M19;
+EXPORT_SYMBOL(gCTOP_CTRL_M19);
+#endif
+
+
+#if defined(INCLUDE_O18_CHIP_KDRV)
+CTOP_CTRL_REG_O18_T gCTOP_CTRL_O18;
+EXPORT_SYMBOL(gCTOP_CTRL_O18);
+#endif
+
+#if defined(INCLUDE_O20_CHIP_KDRV)
+CTOP_CTRL_REG_O20_T gCTOP_CTRL_O20;
+EXPORT_SYMBOL(gCTOP_CTRL_O20);
+#endif
+
+#ifdef INCLUDE_O20_CHIP_KDRV
+MIP_DIG_CTRL_REG_O20_T	gMIP_DIG_CTRL_O20;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_O20);
+#endif
+
+#if defined(INCLUDE_E60_CHIP_KDRV)
+CTOP_CTRL_REG_E60_T gCTOP_CTRL_E60;
+EXPORT_SYMBOL(gCTOP_CTRL_E60);
+#endif
+
+#ifdef INCLUDE_E60_CHIP_KDRV
+MIP_DIG_CTRL_REG_E60_T	gMIP_DIG_CTRL_E60;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_E60);
+#endif
+
+#if defined(INCLUDE_O22_CHIP_KDRV)
+CTOP_CTRL_REG_O22_T gCTOP_CTRL_O22;
+EXPORT_SYMBOL(gCTOP_CTRL_O22);
+#endif
+
+#ifdef INCLUDE_O22_CHIP_KDRV
+MIP_DIG_CTRL_REG_O22_T	gMIP_DIG_CTRL_O22;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_O22);
+#endif
+
+#ifdef INCLUDE_M23_CHIP_KDRV
+CTOP_CTRL_REG_M23_T gCTOP_CTRL_M23;
+EXPORT_SYMBOL(gCTOP_CTRL_M23);
+
+MIP_DIG_CTRL_REG_M23_T	gMIP_DIG_CTRL_M23;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_M23);
+#endif
+
+#ifdef INCLUDE_O24_CHIP_KDRV
+CTOP_CTRL_REG_O24_T gCTOP_CTRL_O24;
+EXPORT_SYMBOL(gCTOP_CTRL_O24);
+
+MIP_DIG_CTRL_REG_O24_T	gMIP_DIG_CTRL_O24;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_O24);
+#endif
+
+#ifdef INCLUDE_O26_CHIP_KDRV
+CTOP_CTRL_REG_O26_T gCTOP_CTRL_O26;
+EXPORT_SYMBOL(gCTOP_CTRL_O26);
+
+MIP_DIG_CTRL_REG_O26_T	gMIP_DIG_CTRL_O26;
+EXPORT_SYMBOL(gMIP_DIG_CTRL_O26);
+#endif
+
+/*----------------------------------------------------------------------------------------
+ *	 Static Function Prototypes Declarations
+ *---------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------
+ *	 Static Variables
+ *---------------------------------------------------------------------------------------*/
+
+#if !(defined BUILD_FEATURE_fpga)
+
+#ifdef INCLUDE_O26_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalO26_A0[] = {
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+
+#ifdef INCLUDE_O24_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalO24_A0[] = {
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalM23_A0[] = {
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalO22_A0[] = {
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalO20_A0[] = {
+	{8, I2C_CLOCK_400KHZ},	// ACE
+	{9, I2C_CLOCK_400KHZ},	// HIDMI PHY
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+#ifdef INCLUDE_E60_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalE60_A0[] = {
+	{8, I2C_CLOCK_400KHZ},	// ACE
+	{9, I2C_CLOCK_400KHZ},	// HIDMI PHY
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+
+#ifdef INCLUDE_O18_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalO18_A0[] = {
+	{8, I2C_CLOCK_400KHZ},	// ACE
+	{9, I2C_CLOCK_400KHZ},	// HIDMI PHY
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+
+#ifdef INCLUDE_M19_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalM19_A0[] = {
+	{8, I2C_CLOCK_400KHZ},	// ACE
+	{9, I2C_CLOCK_400KHZ},	// HIDMI PHY
+//	{2, I2C_CLOCK_400KHZ}	// BE sub PMIC ctrl
+};
+#endif
+
+#ifdef INCLUDE_M17_CHIP_KDRV
+static LX_I2C_INTERNAL_T _stI2cInternalm17_A0[] = {
+	{8, I2C_CLOCK_400KHZ},	// ACE
+	{9, I2C_CLOCK_400KHZ},	// HIDMI PHY
+	{0, I2C_CLOCK_400KHZ}	// CORE REGULATOR
+};
+#endif
+
+#ifdef INCLUDE_I2C_CHIP_KDRV
+static LX_REG_CTRL_CFG_T _stRegCtrlConfigs[] =
+{
+// caution: new chip should be added on bottom index
+#ifdef INCLUDE_M17_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(M17,A0),
+		.num_internals = 3,
+		.internal = _stI2cInternalM17_A0,
+	},
+#endif
+#ifdef INCLUDE_O18_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(O18,A0),
+		.num_internals = 3,
+		.internal = _stI2cInternalO18_A0,
+	},
+#endif
+#ifdef INCLUDE_M19_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(M19,A0),
+		.num_internals = 2,
+		.internal = _stI2cInternalM19_A0,
+	},
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(O20,A0),
+		.num_internals = 3,
+		.internal = _stI2cInternalO20_A0,
+	},
+	{
+		.chip = LX_CHIP_REV(O20,B0),
+		.num_internals = 3,
+		.internal = _stI2cInternalO20_A0,
+	},
+#endif
+#ifdef INCLUDE_E60_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(E60,A0),
+		.num_internals = 3,
+		.internal = _stI2cInternalE60_A0,
+	},
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(O22,A0),
+		.num_internals = 1,
+		.internal = _stI2cInternalO22_A0,
+	},
+#endif
+
+#ifdef INCLUDE_M23_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(M23,A0),
+		.num_internals = 1,
+		.internal = _stI2cInternalM23_A0,
+	},
+#endif
+
+#ifdef INCLUDE_O24_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(O24,A0),
+		.num_internals = 1,
+		.internal = _stI2cInternalO24_A0,
+	},
+#endif
+
+#ifdef INCLUDE_O26_CHIP_KDRV
+	{
+		.chip = LX_CHIP_REV(O26,A0),
+		.num_internals = 1,
+		.internal = _stI2cInternalO26_A0,
+	},
+#endif
+};
+
+static LX_REG_CTRL_CFG_T _stDummyConfig =
+{
+	.num_internals = 0,
+};
+
+static LX_I2C_DEV_HANDLE *_i2c_handle;
+static LX_REG_CTRL_CFG_T *_config = &_stDummyConfig;
+#endif
+
+#endif // BUILD_FEATURE_fpga
+
+static void InitConfig(void)
+{
+#ifdef INCLUDE_I2C_CHIP_KDRV
+	int i;
+	UINT32 chip = lx_chip_rev();
+
+	for(i=0; i < sizeof(_stRegCtrlConfigs)/sizeof(LX_REG_CTRL_CFG_T); i++)
+	{
+		if(chip >= _stRegCtrlConfigs[i].chip) _config = &_stRegCtrlConfigs[i];
+		else break;
+	}
+#endif
+}
+
+
+static inline void _init_ctop_reg_o18(void)
+{
+#if defined(INCLUDE_O18_CHIP_KDRV) && !defined(INCLUDE_KDRV_VER_FPGA)
+
+#define CTOP_O18A0_INIT(_m)	\
+		do { \
+			gCTOP_CTRL_O18.phys.a0._m = (O18_A0_##_m##_TYPE *)ioremap(O18_A0_##_m##_BASE, sizeof(*gCTOP_CTRL_O18.phys.a0._m)); \
+			gCTOP_CTRL_O18.shdw.a0._m = (O18_A0_##_m##_TYPE *)kzalloc(sizeof(*gCTOP_CTRL_O18.shdw.a0._m), GFP_KERNEL); \
+		} while(0)
+
+	CTOP_O18A0_INIT(CTOP_MEU);
+	CTOP_O18A0_INIT(CTOP_SRE);
+	CTOP_O18A0_INIT(CTOP_CCO);
+	CTOP_O18A0_INIT(BMC_SYN);
+	CTOP_O18A0_INIT(CTOP_DPE);
+	CTOP_O18A0_INIT(CTOP_IMX);
+	CTOP_O18A0_INIT(CTOP_TIVG);
+	CTOP_O18A0_INIT(CTOP_ND0);
+	CTOP_O18A0_INIT(CTOP_ME1);
+	CTOP_O18A0_INIT(DPE_CRC);
+	CTOP_O18A0_INIT(CTRL_EMMC);
+	CTOP_O18A0_INIT(CTRL_ME1);
+	CTOP_O18A0_INIT(CTRL_IMX);
+	CTOP_O18A0_INIT(CTRL_ND1);
+	CTOP_O18A0_INIT(CTRL_CCO);
+	CTOP_O18A0_INIT(CTRL_VDEC1);
+	CTOP_O18A0_INIT(CTRL_EDID);
+	CTOP_O18A0_INIT(CTRL_VD0);
+	CTOP_O18A0_INIT(CTRL_TIV);
+	CTOP_O18A0_INIT(CTRL_GSC);
+	CTOP_O18A0_INIT(CTRL_BMC);
+	CTOP_O18A0_INIT(REG_BRIDGE);
+	CTOP_O18A0_INIT(CTRL_GFX);
+	CTOP_O18A0_INIT(VSD_CRC);
+	CTOP_O18A0_INIT(CTRL_MCU);
+	CTOP_O18A0_INIT(CTRL_CPU);
+	CTOP_O18A0_INIT(CTRL_TCON);
+	CTOP_O18A0_INIT(CTRL_ND0);
+	CTOP_O18A0_INIT(CTRL_VSD);
+	CTOP_O18A0_INIT(CTRL_LED);
+	CTOP_O18A0_INIT(CTRL_GEM);
+	CTOP_O18A0_INIT(CTRL_ME0);
+	CTOP_O18A0_INIT(CTRL_CVI);
+	CTOP_O18A0_INIT(CTRL_FMS);
+	CTOP_O18A0_INIT(CTRL_SRE);
+	CTOP_O18A0_INIT(CTRL_AUD);
+	CTOP_O18A0_INIT(CTRL_FMC);
+
+	SYS_DEBUG("NOTE: Done -> init CTOP-reg 'Ax' for O18");
+#endif
+	return;
+}
+
+static inline void _init_ctop_reg_m19(void)
+{
+#if defined(INCLUDE_M19_CHIP_KDRV)
+
+#define CTOP_M19A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(M19_A0_##_m##_TYPE);                                    \
+    unsigned long addr = M19_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_M19.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_M19.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_M19.phys.a0._m = (M19_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_M19.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_M19.shdw.a0._m = (M19_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_M19.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+	CTOP_M19A0_INIT(CTOP_FME0 );
+	CTOP_M19A0_INIT(CTOP_GBM  );
+	CTOP_M19A0_INIT(CTOP_AUD  );
+	CTOP_M19A0_INIT(CTOP_EDID );
+	CTOP_M19A0_INIT(CTOP_BMC  );
+	CTOP_M19A0_INIT(CTOP_GFX  );
+	CTOP_M19A0_INIT(CTOP_FMS  );
+	CTOP_M19A0_INIT(CTOP_DPE  );
+	CTOP_M19A0_INIT(CTOP_ND0  );
+	CTOP_M19A0_INIT(CTOP_IMX  );
+	CTOP_M19A0_INIT(VDEC1_SYN );
+	CTOP_M19A0_INIT(VDEC0_SYN );
+	CTOP_M19A0_INIT(AUD_SYN   );
+	CTOP_M19A0_INIT(M1_SYN    );
+	CTOP_M19A0_INIT(M0_SYN    );
+	CTOP_M19A0_INIT(GFX_SYN   );
+	CTOP_M19A0_INIT(BMC_SYN   );
+	CTOP_M19A0_INIT(FMS_SYN   );
+	CTOP_M19A0_INIT(DPE_SYN   );
+	CTOP_M19A0_INIT(FMC_SYN   );
+	CTOP_M19A0_INIT(CCO_SYN   );
+	CTOP_M19A0_INIT(GSC_SYN   );
+	CTOP_M19A0_INIT(FME0_SYN  );
+	CTOP_M19A0_INIT(ND1_SYN   );
+	CTOP_M19A0_INIT(ND0_SYN   );
+	CTOP_M19A0_INIT(IMX_SYN   );
+	CTOP_M19A0_INIT(CVI_SYN   );
+	CTOP_M19A0_INIT(GBM_SYN   );
+	CTOP_M19A0_INIT(LBM_SYN   );
+	CTOP_M19A0_INIT(PERI_SYN  );
+	CTOP_M19A0_INIT(GPU_SYN   );
+	CTOP_M19A0_INIT(EDID_SYN  );
+	CTOP_M19A0_INIT(EMMC_SYN  );
+	CTOP_M19A0_INIT(GEM_SYN   );
+	CTOP_M19A0_INIT(TI_SYN    );
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN lg1314 \n");
+
+#endif
+
+	return;
+}
+
+static inline void _init_ctop_reg_o20(void)
+{
+#if defined(INCLUDE_O20_CHIP_KDRV)
+
+#define CTOP_O20A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(O20_A0_##_m##_TYPE);                                    \
+    unsigned long addr = O20_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_O20.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_O20.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_O20.phys.a0._m = (O20_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_O20.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_O20.shdw.a0._m = (O20_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_O20.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+
+	CTOP_O20A0_INIT(CTOP_ATG);
+	CTOP_O20A0_INIT(CTOP_BMC);
+	CTOP_O20A0_INIT(CTOP_DPE);
+	CTOP_O20A0_INIT(CTOP_FME1);
+	CTOP_O20A0_INIT(CTOP_FMS);
+	CTOP_O20A0_INIT(CTOP_LBM);
+	CTOP_O20A0_INIT(CTOP_ND0);
+	CTOP_O20A0_INIT(CTOP_ND1);
+	CTOP_O20A0_INIT(CTOP_POR);
+	CTOP_O20A0_INIT(CTOP_VD1);
+	CTOP_O20A0_INIT(CTOP_WOV);
+
+/* CTOP_SYN */
+	CTOP_O20A0_INIT(ATG_SYN);
+	CTOP_O20A0_INIT(BMC_SYN);
+	CTOP_O20A0_INIT(CCO_SYN);
+	CTOP_O20A0_INIT(CPU_SYN);
+	CTOP_O20A0_INIT(CVI_SYN);
+	CTOP_O20A0_INIT(GSC_SYN);
+	CTOP_O20A0_INIT(LBM_SYN);
+	CTOP_O20A0_INIT(WOV_SYN);
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN O20\n");
+
+#endif
+
+	return;
+}
+
+static inline void _init_ctop_reg_o22(void)
+{
+#if defined(INCLUDE_O22_CHIP_KDRV)
+
+#define CTOP_O22A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(O22_A0_##_m##_TYPE);                                    \
+    unsigned long addr = O22_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_O22.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_O22.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_O22.phys.a0._m = (O22_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_O22.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_O22.shdw.a0._m = (O22_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_O22.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+
+/* CTOP_PAD */
+	CTOP_O22A0_INIT(FUNC_IOMUX_CVI);
+	CTOP_O22A0_INIT(FUNC_IOMUX_EDID);
+	CTOP_O22A0_INIT(FUNC_IOMUX_FMS);
+	CTOP_O22A0_INIT(IOMUX_CTRL_IMX);
+	CTOP_O22A0_INIT(FUNC_IOMUX_LGSR);
+	CTOP_O22A0_INIT(FUNC_IOMUX_ME1);
+	CTOP_O22A0_INIT(FUNC_IOMUX_VD0);
+	CTOP_O22A0_INIT(FUNC_IOMUX_WOV);
+
+/* CTOP_SYN */
+	CTOP_O22A0_INIT(BND_CTRL_AON);
+	CTOP_O22A0_INIT(BND_CTRL_BMC);
+	CTOP_O22A0_INIT(BND_CTRL_CPU);
+	CTOP_O22A0_INIT(BND_CTRL_CVI);
+	CTOP_O22A0_INIT(BND_CTRL_DPE);
+	CTOP_O22A0_INIT(BND_CTRL_EDID);
+	CTOP_O22A0_INIT(BND_CTRL_GEM);
+	CTOP_O22A0_INIT(BND_CTRL_HDMI);
+	CTOP_O22A0_INIT(BND_CTRL_HDR);
+	CTOP_O22A0_INIT(BND_CTRL_LBM);
+	CTOP_O22A0_INIT(BND_CTRL_LGSR);
+	CTOP_O22A0_INIT(BND_CTRL_M0);
+	CTOP_O22A0_INIT(BND_CTRL_M1);
+	CTOP_O22A0_INIT(BND_CTRL_ME0);
+	CTOP_O22A0_INIT(BND_CTRL_ME1);
+	CTOP_O22A0_INIT(BND_CTRL_ND0);
+	CTOP_O22A0_INIT(BND_CTRL_VD2);
+	CTOP_O22A0_INIT(BND_CTRL_WOV);
+
+	CTOP_O22A0_INIT(FSC_LGSR);
+	CTOP_O22A0_INIT(BND_CTRL_VD0);
+	CTOP_O22A0_INIT(TSADC_CTRL);
+	CTOP_O22A0_INIT(PVMCON);
+
+	/* CTOP_IPW */
+	CTOP_O22A0_INIT(LED_IPW_TOP);
+	CTOP_O22A0_INIT(AUD_IPW_TOP);
+	CTOP_O22A0_INIT(CCO_IPW_TOP);
+	CTOP_O22A0_INIT(CPU_IPW_TOP);
+	CTOP_O22A0_INIT(CVI_IPW_TOP);
+	CTOP_O22A0_INIT(DBB_IPW_TOP);
+	CTOP_O22A0_INIT(DNE_IPW_TOP);
+	CTOP_O22A0_INIT(DNNR_IPW_TOP);
+	CTOP_O22A0_INIT(DNSR_IPW_TOP);
+	CTOP_O22A0_INIT(DSC_IPW_TOP);
+	CTOP_O22A0_INIT(EDID_IPW_TOP);
+	CTOP_O22A0_INIT(EPHY_IPW_TOP);
+	CTOP_O22A0_INIT(FMC_IPW_TOP);
+	CTOP_O22A0_INIT(FMS_IPW_TOP);
+	CTOP_O22A0_INIT(GSC_IPW_TOP);
+	CTOP_O22A0_INIT(HDMI_IPW_TOP);
+	CTOP_O22A0_INIT(HDR_IPW_TOP);
+	CTOP_O22A0_INIT(ICOD_IPW_TOP);
+	CTOP_O22A0_INIT(IMX_IPW_TOP);
+	CTOP_O22A0_INIT(MCU_IPW_TOP);
+	CTOP_O22A0_INIT(ME0_IPW_TOP);
+	CTOP_O22A0_INIT(ME1_IPW_TOP);
+	CTOP_O22A0_INIT(ND0_IPW_TOP);
+	CTOP_O22A0_INIT(ND1_IPW_TOP);
+	CTOP_O22A0_INIT(SRE_IPW_TOP);
+	CTOP_O22A0_INIT(TCON_IPW_TOP);
+	CTOP_O22A0_INIT(TE_IPW_TOP);
+	CTOP_O22A0_INIT(VD0_IPW_TOP);
+	CTOP_O22A0_INIT(VD1_IPW_TOP);
+	CTOP_O22A0_INIT(VD2_IPW_TOP);
+	CTOP_O22A0_INIT(VD3_IPW_TOP);
+	CTOP_O22A0_INIT(VDEC_MCU_IPW_TOP);
+	CTOP_O22A0_INIT(VDO_IPW_TOP);
+	CTOP_O22A0_INIT(VENC_IPW_TOP);
+	CTOP_O22A0_INIT(VSD_IPW_TOP);
+
+	/* CTOP_CRG */
+	CTOP_O22A0_INIT(SCRG_CTRL_AUD);
+	CTOP_O22A0_INIT(BCRG_CTRL_BMC);
+	CTOP_O22A0_INIT(BCRG_CTRL_CCO);
+	CTOP_O22A0_INIT(BCRG_CTRL_CPU);
+	CTOP_O22A0_INIT(BCRG_CTRL_CVI);
+	CTOP_O22A0_INIT(BCRG_CTRL_DPE);
+	CTOP_O22A0_INIT(BCRG_CTRL_EDID);
+	CTOP_O22A0_INIT(BCRG_CTRL_FMC);
+	CTOP_O22A0_INIT(BCRG_CTRL_FMS);
+	CTOP_O22A0_INIT(BCRG_CTRL_GEM);
+	CTOP_O22A0_INIT(BCRG_CTRL_HDMI);
+	CTOP_O22A0_INIT(BCRG_CTRL_HDR);
+	CTOP_O22A0_INIT(BCRG_CTRL_IMX);
+	CTOP_O22A0_INIT(BCRG_CTRL_LBM);
+	CTOP_O22A0_INIT(BCRG_CTRL_LGSR);
+	CTOP_O22A0_INIT(BCRG_CTRL_M0);
+	CTOP_O22A0_INIT(BCRG_CTRL_M1);
+	CTOP_O22A0_INIT(BCRG_CTRL_ME0);
+	CTOP_O22A0_INIT(BCRG_CTRL_ME1);
+	CTOP_O22A0_INIT(BCRG_CTRL_ND0);
+	CTOP_O22A0_INIT(BCRG_CTRL_ND1);
+	CTOP_O22A0_INIT(BCRG_CTRL_VD0);
+	CTOP_O22A0_INIT(BCRG_CTRL_VD2);
+	CTOP_O22A0_INIT(BCRG_CTRL_VD3);
+	CTOP_O22A0_INIT(BCRG_CTRL_WOV);
+	CTOP_O22A0_INIT(SCRG_CTRL_CCO);
+	CTOP_O22A0_INIT(SCRG_CTRL_CPU);
+	CTOP_O22A0_INIT(SCRG_CTRL_CVI);
+	CTOP_O22A0_INIT(SCRG_CTRL_DBB);
+	CTOP_O22A0_INIT(SCRG_CTRL_DNE);
+	CTOP_O22A0_INIT(SCRG_CTRL_DNNR);
+	CTOP_O22A0_INIT(SCRG_CTRL_DNSR);
+	CTOP_O22A0_INIT(SCRG_CTRL_DSC);
+	CTOP_O22A0_INIT(SCRG_CTRL_EDID);
+	CTOP_O22A0_INIT(SCRG_CTRL_EMMC);
+	CTOP_O22A0_INIT(SCRG_CTRL_EPHY);
+	CTOP_O22A0_INIT(SCRG_CTRL_FMC);
+	CTOP_O22A0_INIT(SCRG_CTRL_FMS);
+	CTOP_O22A0_INIT(SCRG_CTRL_GFX);
+	CTOP_O22A0_INIT(SCRG_CTRL_GSC);
+	CTOP_O22A0_INIT(SCRG_CTRL_HDMI);
+	CTOP_O22A0_INIT(SCRG_CTRL_HDR);
+	CTOP_O22A0_INIT(SCRG_CTRL_ICOD);
+	CTOP_O22A0_INIT(SCRG_CTRL_IMX);
+	CTOP_O22A0_INIT(SCRG_CTRL_LBUS);
+	CTOP_O22A0_INIT(SCRG_CTRL_LED);
+	CTOP_O22A0_INIT(SCRG_CTRL_LNE);
+	CTOP_O22A0_INIT(SCRG_CTRL_M0);
+	CTOP_O22A0_INIT(SCRG_CTRL_M1);
+	CTOP_O22A0_INIT(MCRG_CTRL_BMC);
+	CTOP_O22A0_INIT(MCRG_CTRL_CCO);
+	CTOP_O22A0_INIT(MCRG_CTRL_CPU);
+	CTOP_O22A0_INIT(MCRG_CTRL_CVI);
+	CTOP_O22A0_INIT(MCRG_CTRL_DPE);
+	CTOP_O22A0_INIT(MCRG_CTRL_EDID);
+	CTOP_O22A0_INIT(MCRG_CTRL_FMC);
+	CTOP_O22A0_INIT(MCRG_CTRL_FMS);
+	CTOP_O22A0_INIT(MCRG_CTRL_GEM);
+	CTOP_O22A0_INIT(MCRG_CTRL_HDR);
+	CTOP_O22A0_INIT(MCRG_CTRL_IMX);
+	CTOP_O22A0_INIT(MCRG_CTRL_LBM);
+	CTOP_O22A0_INIT(MCRG_CTRL_LGSR);
+	CTOP_O22A0_INIT(MCRG_CTRL_M0);
+	CTOP_O22A0_INIT(MCRG_CTRL_M1);
+	CTOP_O22A0_INIT(MCRG_CTRL_ME0);
+	CTOP_O22A0_INIT(MCRG_CTRL_ME1);
+	CTOP_O22A0_INIT(MCRG_CTRL_ND0);
+	CTOP_O22A0_INIT(MCRG_CTRL_ND1);
+	CTOP_O22A0_INIT(MCRG_CTRL_VD0);
+	CTOP_O22A0_INIT(MCRG_CTRL_VD1);
+	CTOP_O22A0_INIT(MCRG_CTRL_VD2);
+	CTOP_O22A0_INIT(MCRG_CTRL_VD3);
+	CTOP_O22A0_INIT(MCRG_CTRL_WOV);
+	CTOP_O22A0_INIT(SCRG_CTRL_MCU);
+	CTOP_O22A0_INIT(SCRG_CTRL_ME0);
+	CTOP_O22A0_INIT(SCRG_CTRL_ME1);
+	CTOP_O22A0_INIT(MCRG_CTRL_HDMI);
+	CTOP_O22A0_INIT(SCRG_CTRL_MICOM);
+	CTOP_O22A0_INIT(SCRG_CTRL_ND0);
+	CTOP_O22A0_INIT(SCRG_CTRL_ND1);
+	CTOP_O22A0_INIT(SCRG_CTRL_SRE);
+	CTOP_O22A0_INIT(SCRG_CTRL_VDO);
+	CTOP_O22A0_INIT(SCRG_CTRL_TCON);
+	CTOP_O22A0_INIT(SCRG_CTRL_TE);
+	CTOP_O22A0_INIT(SCRG_CTRL_HS0);
+	CTOP_O22A0_INIT(SCRG_CTRL_SS0);
+	CTOP_O22A0_INIT(SCRG_CTRL_SS1);
+	CTOP_O22A0_INIT(SCRG_CTRL_SS2);
+	CTOP_O22A0_INIT(SCRG_CTRL_VD0);
+	CTOP_O22A0_INIT(SCRG_CTRL_VD1);
+	CTOP_O22A0_INIT(SCRG_CTRL_VD2);
+	CTOP_O22A0_INIT(SCRG_CTRL_VD3);
+	CTOP_O22A0_INIT(SCRG_CTRL_VDEC_MCU);
+	CTOP_O22A0_INIT(SCRG_CTRL_VENC);
+	CTOP_O22A0_INIT(SCRG_CTRL_VSD);
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN O22\n");
+
+#endif
+
+	return;
+}
+
+static inline void _init_ctop_reg_o24(void)
+{
+#if defined(INCLUDE_O24_CHIP_KDRV)
+
+#define CTOP_O24A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(O24_A0_##_m##_TYPE);                                    \
+    unsigned long addr = O24_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_O24.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_O24.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_O24.phys.a0._m = (O24_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_O24.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_O24.shdw.a0._m = (O24_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_O24.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN O24\n");
+
+
+	//
+	//
+	//
+	CTOP_O24A0_INIT(IP_CTRL_AUD);
+	CTOP_O24A0_INIT(IP_CTRL_CCO);
+	CTOP_O24A0_INIT(IP_CTRL_CPU);
+	CTOP_O24A0_INIT(IP_CTRL_CVI);
+	CTOP_O24A0_INIT(IP_CTRL_DBB);
+	CTOP_O24A0_INIT(IP_CTRL_DSC);
+	CTOP_O24A0_INIT(IP_CTRL_EDID);
+	CTOP_O24A0_INIT(IP_CTRL_FMC);
+	CTOP_O24A0_INIT(IP_CTRL_FMS);
+	CTOP_O24A0_INIT(IP_CTRL_GSC);
+	CTOP_O24A0_INIT(IP_CTRL_HDMI);
+	CTOP_O24A0_INIT(IP_CTRL_HDR);
+	CTOP_O24A0_INIT(IP_CTRL_IMX);
+	CTOP_O24A0_INIT(IP_CTRL_LED);
+	CTOP_O24A0_INIT(IP_CTRL_LNX0);
+	CTOP_O24A0_INIT(IP_CTRL_LNX1);
+	CTOP_O24A0_INIT(IP_CTRL_ME0);
+	CTOP_O24A0_INIT(IP_CTRL_ME1);
+	CTOP_O24A0_INIT(IP_CTRL_ND0);
+	CTOP_O24A0_INIT(IP_CTRL_ND1);
+	CTOP_O24A0_INIT(IP_CTRL_SRE);
+	CTOP_O24A0_INIT(IP_CTRL_TCON);
+	CTOP_O24A0_INIT(IP_CTRL_TE);
+	CTOP_O24A0_INIT(IP_CTRL_VD0);
+	CTOP_O24A0_INIT(IP_CTRL_VD1);
+	CTOP_O24A0_INIT(IP_CTRL_VDO);
+	CTOP_O24A0_INIT(IP_CTRL_VSD);
+	CTOP_O24A0_INIT(SB_CTRL_FMGSESB);
+	CTOP_O24A0_INIT(SB_CTRL_LB0SB);
+	CTOP_O24A0_INIT(SB_CTRL_LB1SB);
+	CTOP_O24A0_INIT(SB_CTRL_VD2VMSB);
+	//
+	//
+	//
+	CTOP_O24A0_INIT(BND_CTRL_AUD);
+	CTOP_O24A0_INIT(BND_CTRL_BMC);
+	CTOP_O24A0_INIT(BND_CTRL_CCO);
+	CTOP_O24A0_INIT(BND_CTRL_CPU);
+	CTOP_O24A0_INIT(BND_CTRL_EDID);
+	CTOP_O24A0_INIT(BND_CTRL_EMMC);
+	CTOP_O24A0_INIT(BND_CTRL_GSC);
+	CTOP_O24A0_INIT(BND_CTRL_HDMI);
+	CTOP_O24A0_INIT(BND_CTRL_LNX0);
+	CTOP_O24A0_INIT(BND_CTRL_M0);
+	CTOP_O24A0_INIT(BND_CTRL_M1);
+	CTOP_O24A0_INIT(BND_CTRL_M2);
+	CTOP_O24A0_INIT(BND_CTRL_ND1);
+	CTOP_O24A0_INIT(BND_CTRL_VENC);
+	CTOP_O24A0_INIT(DRG_CTRL);
+	CTOP_O24A0_INIT(MIP_CTRL_TSADC);
+	CTOP_O24A0_INIT(PVMCON_CPU);
+	CTOP_O24A0_INIT(TMUX_CTRL);
+	CTOP_O24A0_INIT(TRG_CTRL);
+	CTOP_O24A0_INIT(CPU_BND_CTRL_WOC);
+	CTOP_O24A0_INIT(MICOM_BND_CTRL_WOC);
+	CTOP_O24A0_INIT(PMCU_BND_CTRL_WOC);
+	CTOP_O24A0_INIT(VMCU_BND_CTRL_WOC);
+	CTOP_O24A0_INIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_INIT(MICOM_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_INIT(PMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_INIT(VMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_INIT(CPU_PW_CTRL);
+	CTOP_O24A0_INIT(MICOM_PW_CTRL);
+	CTOP_O24A0_INIT(PMCU_PW_CTRL);
+	CTOP_O24A0_INIT(VMCU_PW_CTRL);
+	//
+	//
+	//
+	CTOP_O24A0_INIT(IOMUX_CTRL_BMC);
+	CTOP_O24A0_INIT(IOMUX_CTRL_EDID);
+	CTOP_O24A0_INIT(IOMUX_CTRL_LNX1);
+	CTOP_O24A0_INIT(IOMUX_CTRL_VD0);
+	CTOP_O24A0_INIT(IOMUX_CTRL_VD1);
+	CTOP_O24A0_INIT(IOMUX_CTRL_VD2);
+	CTOP_O24A0_INIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_O24A0_INIT(MICOM_IOMUX_CTRL_WOC);
+	CTOP_O24A0_INIT(PMCU_IOMUX_CTRL_WOC);
+	CTOP_O24A0_INIT(VMCU_IOMUX_CTRL_WOC);
+	//
+	//
+	//
+	CTOP_O24A0_INIT(MIP_CTRL_ACODEC);
+	CTOP_O24A0_INIT(MIP_CTRL_ADC);
+	CTOP_O24A0_INIT(MIP_CTRL_C4TX);
+	CTOP_O24A0_INIT(MIP_CTRL_EARC);
+	CTOP_O24A0_INIT(MIP_CTRL_HDMI_DPM);
+	CTOP_O24A0_INIT(CPU_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_INIT(MICOM_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_INIT(PMCU_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_INIT(VMCU_MIP_CTRL_SADC_CPU);
+	//
+	//
+	//
+	CTOP_O24A0_INIT(BCRG_CTRL_AUD);
+	CTOP_O24A0_INIT(BCRG_CTRL_BMC);
+	CTOP_O24A0_INIT(BCRG_CTRL_CCO);
+	CTOP_O24A0_INIT(BCRG_CTRL_CPU);
+	CTOP_O24A0_INIT(BCRG_CTRL_CVI);
+	CTOP_O24A0_INIT(BCRG_CTRL_DNSR);
+	CTOP_O24A0_INIT(BCRG_CTRL_DPE);
+	CTOP_O24A0_INIT(BCRG_CTRL_EDID);
+	CTOP_O24A0_INIT(BCRG_CTRL_EMMC);
+	CTOP_O24A0_INIT(BCRG_CTRL_FMC);
+	CTOP_O24A0_INIT(BCRG_CTRL_FMS);
+	CTOP_O24A0_INIT(BCRG_CTRL_GSC);
+	CTOP_O24A0_INIT(BCRG_CTRL_HDMI);
+	CTOP_O24A0_INIT(BCRG_CTRL_HDR);
+	CTOP_O24A0_INIT(BCRG_CTRL_IMX);
+	CTOP_O24A0_INIT(BCRG_CTRL_LBM);
+	CTOP_O24A0_INIT(BCRG_CTRL_LNX0);
+	CTOP_O24A0_INIT(BCRG_CTRL_LNX1);
+	CTOP_O24A0_INIT(BCRG_CTRL_LNX2);
+	CTOP_O24A0_INIT(BCRG_CTRL_M0);
+	CTOP_O24A0_INIT(BCRG_CTRL_M1);
+	CTOP_O24A0_INIT(BCRG_CTRL_M2);
+	CTOP_O24A0_INIT(BCRG_CTRL_ME0);
+	CTOP_O24A0_INIT(BCRG_CTRL_ME1);
+	CTOP_O24A0_INIT(BCRG_CTRL_ND0);
+	CTOP_O24A0_INIT(BCRG_CTRL_ND1);
+	CTOP_O24A0_INIT(BCRG_CTRL_SRE);
+	CTOP_O24A0_INIT(BCRG_CTRL_VD0);
+	CTOP_O24A0_INIT(BCRG_CTRL_VD1);
+	CTOP_O24A0_INIT(BCRG_CTRL_VD2);
+	CTOP_O24A0_INIT(BCRG_CTRL_VENC);
+	CTOP_O24A0_INIT(MCRG_CTRL_AUD);
+	CTOP_O24A0_INIT(MCRG_CTRL_BMC);
+	CTOP_O24A0_INIT(MCRG_CTRL_CCO);
+	CTOP_O24A0_INIT(MCRG_CTRL_CPU);
+	CTOP_O24A0_INIT(MCRG_CTRL_CVI);
+	CTOP_O24A0_INIT(MCRG_CTRL_DNSR);
+	CTOP_O24A0_INIT(MCRG_CTRL_DPE);
+	CTOP_O24A0_INIT(MCRG_CTRL_EDID);
+	CTOP_O24A0_INIT(MCRG_CTRL_EMMC);
+	CTOP_O24A0_INIT(MCRG_CTRL_FMC);
+	CTOP_O24A0_INIT(MCRG_CTRL_FMS);
+	CTOP_O24A0_INIT(MCRG_CTRL_GSC);
+	CTOP_O24A0_INIT(MCRG_CTRL_HDMI);
+	CTOP_O24A0_INIT(MCRG_CTRL_HDR);
+	CTOP_O24A0_INIT(MCRG_CTRL_IMX);
+	CTOP_O24A0_INIT(MCRG_CTRL_LBM);
+	CTOP_O24A0_INIT(MCRG_CTRL_LNX0);
+	CTOP_O24A0_INIT(MCRG_CTRL_LNX1);
+	CTOP_O24A0_INIT(MCRG_CTRL_LNX2);
+	CTOP_O24A0_INIT(MCRG_CTRL_M0);
+	CTOP_O24A0_INIT(MCRG_CTRL_M1);
+	CTOP_O24A0_INIT(MCRG_CTRL_M2);
+	CTOP_O24A0_INIT(MCRG_CTRL_ME0);
+	CTOP_O24A0_INIT(MCRG_CTRL_ME1);
+	CTOP_O24A0_INIT(MCRG_CTRL_ND0);
+	CTOP_O24A0_INIT(MCRG_CTRL_ND1);
+	CTOP_O24A0_INIT(MCRG_CTRL_SRE);
+	CTOP_O24A0_INIT(MCRG_CTRL_VD0);
+	CTOP_O24A0_INIT(MCRG_CTRL_VD1);
+	CTOP_O24A0_INIT(MCRG_CTRL_VD2);
+	CTOP_O24A0_INIT(MCRG_CTRL_VENC);
+	CTOP_O24A0_INIT(SCRG_CTRL_AUD);
+	CTOP_O24A0_INIT(SCRG_CTRL_CCO);
+	CTOP_O24A0_INIT(SCRG_CTRL_CPU);
+	CTOP_O24A0_INIT(SCRG_CTRL_CVI);
+	CTOP_O24A0_INIT(SCRG_CTRL_DBB);
+	CTOP_O24A0_INIT(SCRG_CTRL_DDR0SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_DDR1SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_DDR2SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_DMCU);
+	CTOP_O24A0_INIT(SCRG_CTRL_DNNR);
+	CTOP_O24A0_INIT(SCRG_CTRL_DNSR);
+	CTOP_O24A0_INIT(SCRG_CTRL_DSC);
+	CTOP_O24A0_INIT(SCRG_CTRL_EDID);
+	CTOP_O24A0_INIT(SCRG_CTRL_EMMC);
+	CTOP_O24A0_INIT(SCRG_CTRL_EPHY);
+	CTOP_O24A0_INIT(SCRG_CTRL_EPUSB);
+	CTOP_O24A0_INIT(SCRG_CTRL_FMC);
+	CTOP_O24A0_INIT(SCRG_CTRL_FMGSESB);
+	CTOP_O24A0_INIT(SCRG_CTRL_FMS);
+	CTOP_O24A0_INIT(SCRG_CTRL_GFX);
+	CTOP_O24A0_INIT(SCRG_CTRL_GPU);
+	CTOP_O24A0_INIT(SCRG_CTRL_GSC);
+	CTOP_O24A0_INIT(SCRG_CTRL_HDMI);
+	CTOP_O24A0_INIT(SCRG_CTRL_HDR);
+	CTOP_O24A0_INIT(SCRG_CTRL_ICOD);
+	CTOP_O24A0_INIT(SCRG_CTRL_ICVESB);
+	CTOP_O24A0_INIT(SCRG_CTRL_IMVDSB);
+	CTOP_O24A0_INIT(SCRG_CTRL_IMX);
+	CTOP_O24A0_INIT(SCRG_CTRL_LB0SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_LB1SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_LB2SB);
+	CTOP_O24A0_INIT(SCRG_CTRL_LBUS);
+	CTOP_O24A0_INIT(SCRG_CTRL_LED);
+	CTOP_O24A0_INIT(SCRG_CTRL_LNX0);
+	CTOP_O24A0_INIT(SCRG_CTRL_LNX1);
+	CTOP_O24A0_INIT(SCRG_CTRL_LNX2);
+	CTOP_O24A0_INIT(SCRG_CTRL_M0);
+	CTOP_O24A0_INIT(SCRG_CTRL_M1);
+	CTOP_O24A0_INIT(SCRG_CTRL_M2);
+	CTOP_O24A0_INIT(SCRG_CTRL_ME0);
+	CTOP_O24A0_INIT(SCRG_CTRL_ME1);
+	CTOP_O24A0_INIT(SCRG_CTRL_MEFMSSB);
+	CTOP_O24A0_INIT(SCRG_CTRL_ND0);
+	CTOP_O24A0_INIT(SCRG_CTRL_ND1);
+	CTOP_O24A0_INIT(SCRG_CTRL_SRE);
+	CTOP_O24A0_INIT(SCRG_CTRL_TCON);
+	CTOP_O24A0_INIT(SCRG_CTRL_TE);
+	CTOP_O24A0_INIT(SCRG_CTRL_USB_SS1);
+	CTOP_O24A0_INIT(SCRG_CTRL_USB_SS2);
+	CTOP_O24A0_INIT(SCRG_CTRL_USB_SS3);
+	CTOP_O24A0_INIT(SCRG_CTRL_USB_SS4);
+	CTOP_O24A0_INIT(SCRG_CTRL_USBSB);
+	CTOP_O24A0_INIT(SCRG_CTRL_VD0);
+	CTOP_O24A0_INIT(SCRG_CTRL_VD1);
+	CTOP_O24A0_INIT(SCRG_CTRL_VD2);
+	CTOP_O24A0_INIT(SCRG_CTRL_VD2VMSB);
+	CTOP_O24A0_INIT(SCRG_CTRL_VDO);
+	CTOP_O24A0_INIT(SCRG_CTRL_VENC);
+	CTOP_O24A0_INIT(SCRG_CTRL_VSD);
+	CTOP_O24A0_INIT(CPU_BCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(MICOM_BCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(PMCU_BCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(VMCU_BCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(CPU_MCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(PMCU_MCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(VMCU_MCRG_CTRL_WOC);
+	CTOP_O24A0_INIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_O24A0_INIT(MICOM_SCRG_CTRL_MICOM);
+	CTOP_O24A0_INIT(CPU_SCRG_CTRL_PMCU);
+	CTOP_O24A0_INIT(PMCU_SCRG_CTRL_PMCU);
+	CTOP_O24A0_INIT(CPU_SCRG_CTRL_VMCU);
+	CTOP_O24A0_INIT(VMCU_SCRG_CTRL_VMCU);
+
+	// etc
+	CTOP_O24A0_INIT(FSC_CTRL);
+
+#endif
+
+	return;
+}
+
+static inline void _init_ctop_reg_o26(void)
+{
+#if defined(INCLUDE_O26_CHIP_KDRV)
+
+#define CTOP_O26A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(O26_A0_##_m##_TYPE);                                    \
+    unsigned long addr = O26_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_NOTI("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_O26.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_O26.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_O26.phys.a0._m = (O26_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_O26.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_O26.shdw.a0._m = (O26_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_O26.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+	CTOP_O26A0_INIT(BND_CTRL_HDMI);
+	CTOP_O26A0_INIT(BND_CTRL_LNX1);
+	CTOP_O26A0_INIT(BND_CTRL_CPU);
+	CTOP_O26A0_INIT(CPU_PW_CTRL);
+	CTOP_O26A0_INIT(PMCU_PW_CTRL);
+	CTOP_O26A0_INIT(VMCU_PW_CTRL);
+	CTOP_O26A0_INIT(MICOM_PW_CTRL);
+	CTOP_O26A0_INIT(BND_CTRL_HDR);
+	CTOP_O26A0_INIT(BND_CTRL_AUD);
+	CTOP_O26A0_INIT(BND_CTRL_LNX0);
+	CTOP_O26A0_INIT(TRG_CTRL);
+	CTOP_O26A0_INIT(BND_CTRL_FMC);
+	CTOP_O26A0_INIT(BND_CTRL_EMMC);
+	CTOP_O26A0_INIT(BND_CTRL_M0);
+	CTOP_O26A0_INIT(BND_CTRL_ND1);
+	CTOP_O26A0_INIT(BND_CTRL_LNX2);
+	CTOP_O26A0_INIT(BND_CTRL_SRE);
+	CTOP_O26A0_INIT(BND_CTRL_ND0);
+	CTOP_O26A0_INIT(BND_CTRL_M1);
+	CTOP_O26A0_INIT(DRG_CTRL);
+	CTOP_O26A0_INIT(BND_CTRL_GSC);
+	CTOP_O26A0_INIT(BND_CTRL_LBM);
+	CTOP_O26A0_INIT(BND_CTRL_ME0);
+	CTOP_O26A0_INIT(BND_CTRL_VD0);
+	CTOP_O26A0_INIT(BND_CTRL_IMX);
+	CTOP_O26A0_INIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_INIT(PMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_INIT(VMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_INIT(MICOM_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_INIT(BND_CTRL_ME1);
+	CTOP_O26A0_INIT(BND_CTRL_CCO);
+	CTOP_O26A0_INIT(BND_CTRL_DNSR);
+	CTOP_O26A0_INIT(BND_CTRL_VENC);
+	CTOP_O26A0_INIT(BND_CTRL_DPE);
+	CTOP_O26A0_INIT(BND_CTRL_BMC);
+	CTOP_O26A0_INIT(BND_CTRL_FMS);
+	CTOP_O26A0_INIT(TMUX_CTRL);
+	CTOP_O26A0_INIT(CPU_BND_CTRL_WOC);
+	CTOP_O26A0_INIT(PMCU_BND_CTRL_WOC);
+	CTOP_O26A0_INIT(VMCU_BND_CTRL_WOC);
+	CTOP_O26A0_INIT(MICOM_BND_CTRL_WOC);
+	CTOP_O26A0_INIT(MIP_DIG_CTRL);
+
+	CTOP_O26A0_INIT(CRC_TOUT);
+	CTOP_O26A0_INIT(CRC_VOUT);
+
+	CTOP_O26A0_INIT(MIP_CTRL_C4TX16);
+	CTOP_O26A0_INIT(MIP_CTRL_HDMI1);
+	CTOP_O26A0_INIT(MIP_CTRL_ADMD_MIP);
+	CTOP_O26A0_INIT(MIP_CTRL_CVBSAFE);
+	CTOP_O26A0_INIT(MIP_CTRL_HDMI3);
+	CTOP_O26A0_INIT(MIP_CTRL_HDMI2);
+	CTOP_O26A0_INIT(MIP_CTRL_ACODEC);
+	CTOP_O26A0_INIT(MIP_CTRL_HDMI_EARC);
+	CTOP_O26A0_INIT(MIP_CTRL_TSADC);
+	CTOP_O26A0_INIT(CPU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_INIT(PMCU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_INIT(VMCU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_INIT(MICOM_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_INIT(MIP_CTRL_HDMI4);
+
+	CTOP_O26A0_INIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_INIT(PMCU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_INIT(VMCU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_INIT(MICOM_IOMUX_CTRL_WOC);
+	CTOP_O26A0_INIT(IOMUX_CTRL_DPE);
+	CTOP_O26A0_INIT(IOMUX_CTRL_ME1);
+	CTOP_O26A0_INIT(IOMUX_CTRL_HDMI);
+	CTOP_O26A0_INIT(IOMUX_CTRL_AUD);
+	CTOP_O26A0_INIT(IOMUX_CTRL_LNX2);
+
+	CTOP_O26A0_INIT(IP_CTRL_HDR);
+	CTOP_O26A0_INIT(IP_CTRL_AUD);
+	CTOP_O26A0_INIT(IP_CTRL_FMC);
+	CTOP_O26A0_INIT(IP_CTRL_NPP);
+	CTOP_O26A0_INIT(IP_CTRL_DBB);
+	CTOP_O26A0_INIT(IP_CTRL_CPU);
+	CTOP_O26A0_INIT(IP_CTRL_CVI);
+	CTOP_O26A0_INIT(IP_CTRL_DSC);
+	CTOP_O26A0_INIT(IP_CTRL_LNX1);
+	CTOP_O26A0_INIT(IP_CTRL_ND0);
+	CTOP_O26A0_INIT(IP_CTRL_HDMI);
+	CTOP_O26A0_INIT(IP_CTRL_ND1);
+	CTOP_O26A0_INIT(IP_CTRL_LBUS);
+	CTOP_O26A0_INIT(IP_CTRL_LNX0);
+	CTOP_O26A0_INIT(IP_CTRL_EDPTX);
+	CTOP_O26A0_INIT(IP_CTRL_SRE);
+	CTOP_O26A0_INIT(IP_CTRL_ME1);
+	CTOP_O26A0_INIT(IP_CTRL_CCO);
+	CTOP_O26A0_INIT(IP_CTRL_GSC);
+	CTOP_O26A0_INIT(IP_CTRL_LED);
+	CTOP_O26A0_INIT(IP_CTRL_ME0);
+	CTOP_O26A0_INIT(IP_CTRL_TCON);
+	CTOP_O26A0_INIT(IP_CTRL_IMX);
+	CTOP_O26A0_INIT(IP_CTRL_FMS);
+	CTOP_O26A0_INIT(CPU_IP_CTRL_EDID);
+	CTOP_O26A0_INIT(MICOM_IP_CTRL_EDID);
+	CTOP_O26A0_INIT(IP_CTRL_VDO);
+	CTOP_O26A0_INIT(IP_CTRL_VSD);
+	CTOP_O26A0_INIT(IP_CTRL_TE);
+
+	CTOP_O26A0_INIT(FSC_CTRL_AUD);
+
+	CTOP_O26A0_INIT(SCRG_CTRL_DBB);
+	CTOP_O26A0_INIT(MCRG_CTRL_ND0);
+	CTOP_O26A0_INIT(SCRG_CTRL_TCON);
+	CTOP_O26A0_INIT(BCRG_CTRL_ND1);
+	CTOP_O26A0_INIT(BCRG_CTRL_LNX0);
+	CTOP_O26A0_INIT(SCRG_CTRL_LB0SB);
+	CTOP_O26A0_INIT(BCRG_CTRL_M1);
+	CTOP_O26A0_INIT(SCRG_CTRL_CVI);
+	CTOP_O26A0_INIT(SCRG_CTRL_USBSB);
+	CTOP_O26A0_INIT(SCRG_CTRL_ICOD);
+	CTOP_O26A0_INIT(SCRG_CTRL_CPU);
+	CTOP_O26A0_INIT(BCRG_CTRL_SRE);
+	CTOP_O26A0_INIT(SCRG_CTRL_AUD);
+	CTOP_O26A0_INIT(MCRG_CTRL_SRE);
+	CTOP_O26A0_INIT(MCRG_CTRL_VENC);
+	CTOP_O26A0_INIT(MCRG_CTRL_DNSR);
+	CTOP_O26A0_INIT(BCRG_CTRL_HDMI);
+	CTOP_O26A0_INIT(SCRG_CTRL_HDR);
+	CTOP_O26A0_INIT(SCRG_CTRL_DNSR0);
+	CTOP_O26A0_INIT(SCRG_CTRL_DNSR1);
+	CTOP_O26A0_INIT(SCRG_CTRL_VENC);
+	CTOP_O26A0_INIT(SCRG_CTRL_NPP);
+	CTOP_O26A0_INIT(BCRG_CTRL_M0);
+	CTOP_O26A0_INIT(SCRG_CTRL_TIVVMSB);
+	CTOP_O26A0_INIT(SCRG_CTRL_IOMMU);
+	CTOP_O26A0_INIT(SCRG_CTRL_FMC);
+	CTOP_O26A0_INIT(PMCU_SCRG_CTRL_PMCU);
+	CTOP_O26A0_INIT(BCRG_CTRL_LNX1);
+	CTOP_O26A0_INIT(SCRG_CTRL_DMCU);
+	CTOP_O26A0_INIT(SCRG_CTRL_TE);
+	CTOP_O26A0_INIT(BCRG_CTRL_ND0);
+	CTOP_O26A0_INIT(MCRG_CTRL_ND1);
+	CTOP_O26A0_INIT(MCRG_CTRL_FMC);
+	CTOP_O26A0_INIT(SCRG_CTRL_FMESB);
+	CTOP_O26A0_INIT(MCRG_CTRL_M1);
+	CTOP_O26A0_INIT(SCRG_CTRL_ND1);
+	CTOP_O26A0_INIT(SCRG_CTRL_GFX);
+	CTOP_O26A0_INIT(SCRG_CTRL_LB1SB);
+	CTOP_O26A0_INIT(MCRG_CTRL_HDR);
+	CTOP_O26A0_INIT(MCRG_CTRL_AUD);
+	CTOP_O26A0_INIT(SCRG_CTRL_SRE);
+	CTOP_O26A0_INIT(BCRG_CTRL_CPU);
+	CTOP_O26A0_INIT(VMCU_SCRG_CTRL_VMCU);
+	CTOP_O26A0_INIT(MCRG_CTRL_CPU);
+	CTOP_O26A0_INIT(BCRG_CTRL_AUD);
+	CTOP_O26A0_INIT(BCRG_CTRL_HDR);
+	CTOP_O26A0_INIT(BCRG_CTRL_EMMC);
+	CTOP_O26A0_INIT(SCRG_CTRL_DSC);
+	CTOP_O26A0_INIT(CPU_SCRG_CTRL_ION0);
+	CTOP_O26A0_INIT(MICOM_SCRG_CTRL_ION0);
+	CTOP_O26A0_INIT(SCRG_CTRL_USB_SS);
+	CTOP_O26A0_INIT(SCRG_CTRL_ND0);
+	CTOP_O26A0_INIT(MCRG_CTRL_M0);
+	CTOP_O26A0_INIT(BCRG_CTRL_LNX2);
+	CTOP_O26A0_INIT(BCRG_CTRL_FMC);
+	CTOP_O26A0_INIT(SCRG_CTRL_ME0);
+	CTOP_O26A0_INIT(SCRG_CTRL_VD0);
+	CTOP_O26A0_INIT(SCRG_CTRL_LED);
+	CTOP_O26A0_INIT(SCRG_CTRL_EMUSB);
+	CTOP_O26A0_INIT(SCRG_CTRL_GSC);
+	CTOP_O26A0_INIT(BCRG_CTRL_DPE);
+	CTOP_O26A0_INIT(MCRG_CTRL_FMS);
+	CTOP_O26A0_INIT(SCRG_CTRL_IMX);
+	CTOP_O26A0_INIT(SCRG_CTRL_DDR0SB);
+	CTOP_O26A0_INIT(SCRG_CTRL_DDR1SB);
+	CTOP_O26A0_INIT(CPU_BCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(PMCU_BCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(VMCU_BCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(MICOM_BCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(BCRG_CTRL_BMC);
+	CTOP_O26A0_INIT(MCRG_CTRL_BMC);
+	CTOP_O26A0_INIT(MCRG_CTRL_EMMC);
+	CTOP_O26A0_INIT(CPU_MCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(PMCU_MCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(VMCU_MCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_O26A0_INIT(BCRG_CTRL_FMS);
+	CTOP_O26A0_INIT(SCRG_CTRL_EMMC);
+	CTOP_O26A0_INIT(SCRG_CTRL_CCO);
+	CTOP_O26A0_INIT(MCRG_CTRL_DPE);
+	CTOP_O26A0_INIT(MCRG_CTRL_LNX2);
+	CTOP_O26A0_INIT(SCRG_CTRL_VD1);
+	CTOP_O26A0_INIT(SCRG_CTRL_ME1);
+	CTOP_O26A0_INIT(SCRG_CTRL_LNX2);
+	CTOP_O26A0_INIT(SCRG_CTRL_LBUS);
+	CTOP_O26A0_INIT(SCRG_CTRL_LNX0);
+	CTOP_O26A0_INIT(SCRG_CTRL_TIVSB);
+	CTOP_O26A0_INIT(BCRG_CTRL_ME0);
+	CTOP_O26A0_INIT(BCRG_CTRL_LBM);
+	CTOP_O26A0_INIT(MCRG_CTRL_VD1);
+	CTOP_O26A0_INIT(MCRG_CTRL_ME1);
+	CTOP_O26A0_INIT(BCRG_CTRL_VD0);
+	CTOP_O26A0_INIT(SCRG_CTRL_VSD);
+	CTOP_O26A0_INIT(MCRG_CTRL_LNX0);
+	CTOP_O26A0_INIT(MCRG_CTRL_CCO);
+	CTOP_O26A0_INIT(BCRG_CTRL_GSC);
+	CTOP_O26A0_INIT(SCRG_CTRL_SRCOSB);
+	CTOP_O26A0_INIT(BCRG_CTRL_IMX);
+	CTOP_O26A0_INIT(SCRG_CTRL_ION1);
+	CTOP_O26A0_INIT(SCRG_CTRL_M1);
+	CTOP_O26A0_INIT(CPU_SCRG_CTRL_EPHY);
+	CTOP_O26A0_INIT(MICOM_SCRG_CTRL_EPHY);
+	CTOP_O26A0_INIT(SCRG_CTRL_M0);
+	CTOP_O26A0_INIT(MCRG_CTRL_HDMI);
+	CTOP_O26A0_INIT(BCRG_CTRL_DNSR);
+	CTOP_O26A0_INIT(BCRG_CTRL_VENC);
+	CTOP_O26A0_INIT(SCRG_CTRL_HDMI);
+	CTOP_O26A0_INIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_O26A0_INIT(MICOM_SCRG_CTRL_MICOM);
+	CTOP_O26A0_INIT(SCRG_CTRL_FMS);
+	CTOP_O26A0_INIT(SCRG_CTRL_EDPTX);
+	CTOP_O26A0_INIT(MCRG_CTRL_IMX);
+	CTOP_O26A0_INIT(CPU_SCRG_CTRL_EDID);
+	CTOP_O26A0_INIT(MICOM_SCRG_CTRL_EDID);
+	CTOP_O26A0_INIT(SCRG_CTRL_VDO);
+	CTOP_O26A0_INIT(MCRG_CTRL_GSC);
+	CTOP_O26A0_INIT(SCRG_CTRL_USB_HS1);
+	CTOP_O26A0_INIT(SCRG_CTRL_USB_HS2);
+	CTOP_O26A0_INIT(SCRG_CTRL_USB_HS3);
+	CTOP_O26A0_INIT(BCRG_CTRL_CCO);
+	CTOP_O26A0_INIT(MCRG_CTRL_LNX1);
+	CTOP_O26A0_INIT(MCRG_CTRL_ME0);
+	CTOP_O26A0_INIT(BCRG_CTRL_VD1);
+	CTOP_O26A0_INIT(MCRG_CTRL_LBM);
+	CTOP_O26A0_INIT(BCRG_CTRL_ME1);
+	CTOP_O26A0_INIT(MCRG_CTRL_VD0);
+	CTOP_O26A0_INIT(SCRG_CTRL_GPU);
+	CTOP_O26A0_INIT(SCRG_CTRL_LNX1);
+	CTOP_O26A0_INIT(ION0_TOP_CTRL);
+	CTOP_O26A0_INIT(ION1_TOP_CTRL);
+	CTOP_O26A0_INIT(ION0_IOMUX_PAD);
+	CTOP_O26A0_INIT(ION0_IOMUX_CORE);
+	CTOP_O26A0_INIT(ION1_IOMUX_PAD);
+	CTOP_O26A0_INIT(ION1_IOMUX_CORE);
+	CTOP_O26A0_INIT(ION0_SRDS12TO3);
+	CTOP_O26A0_INIT(ION0_SRDS32TO1_0);
+	CTOP_O26A0_INIT(ION0_SRDS32TO1_1);
+	CTOP_O26A0_INIT(ION1_SRDS12TO3);
+	CTOP_O26A0_INIT(ION1_SRDS32TO1_0);
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN O26\n");
+#endif
+	return;
+}
+
+static inline void _init_ctop_reg_m23(void)
+{
+#if defined(INCLUDE_M23_CHIP_KDRV)
+
+#define CTOP_M23A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(M23_A0_##_m##_TYPE);                                    \
+    unsigned long addr = M23_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_M23.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_M23.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_M23.phys.a0._m = (M23_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_M23.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_M23.shdw.a0._m = (M23_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_M23.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+	// ipw
+	CTOP_M23A0_INIT(IP_CTRL_AUD);
+	CTOP_M23A0_INIT(IP_CTRL_CCO);
+	CTOP_M23A0_INIT(IP_CTRL_CPU);
+	CTOP_M23A0_INIT(IP_CTRL_CVI);
+	CTOP_M23A0_INIT(IP_CTRL_DBB);
+	CTOP_M23A0_INIT(IP_CTRL_DNE);
+	CTOP_M23A0_INIT(IP_CTRL_EDID0);
+	CTOP_M23A0_INIT(IP_CTRL_EDID1);
+	CTOP_M23A0_INIT(IP_CTRL_FMC);
+	CTOP_M23A0_INIT(IP_CTRL_FMS);
+	CTOP_M23A0_INIT(IP_CTRL_GSC);
+	CTOP_M23A0_INIT(IP_CTRL_HDMI);
+	CTOP_M23A0_INIT(IP_CTRL_HDR);
+	CTOP_M23A0_INIT(IP_CTRL_IMX);
+	CTOP_M23A0_INIT(IP_CTRL_LED);
+	CTOP_M23A0_INIT(IP_CTRL_ME);
+	CTOP_M23A0_INIT(IP_CTRL_ND);
+	CTOP_M23A0_INIT(IP_CTRL_SRE);
+	CTOP_M23A0_INIT(IP_CTRL_TCON);
+	CTOP_M23A0_INIT(IP_CTRL_TE);
+	CTOP_M23A0_INIT(IP_CTRL_VDO);
+	CTOP_M23A0_INIT(IP_CTRL_VSD);
+
+
+	// syn
+	CTOP_M23A0_INIT(BND_CTRL_AUD);
+	CTOP_M23A0_INIT(BND_CTRL_BMC);
+	CTOP_M23A0_INIT(BND_CTRL_CPU);
+	CTOP_M23A0_INIT(BND_CTRL_CVI);
+	CTOP_M23A0_INIT(BND_CTRL_EDID);
+	CTOP_M23A0_INIT(BND_CTRL_FMC);
+	CTOP_M23A0_INIT(BND_CTRL_FMS);
+	CTOP_M23A0_INIT(BND_CTRL_M0);
+	CTOP_M23A0_INIT(BND_CTRL_ME0);
+	CTOP_M23A0_INIT(BND_CTRL_ND0);
+
+	CTOP_M23A0_INIT(CPU_POWER_CTRL);
+	CTOP_M23A0_INIT(MICOM_POWER_CTRL);
+	CTOP_M23A0_INIT(CRG_TOP_CTRL);
+	CTOP_M23A0_INIT(PVMCON_CPU);
+
+	CTOP_M23A0_INIT(TMUX_CTRL);
+	CTOP_M23A0_INIT(MIP_TSADC_CTRL);
+
+	// pad
+	CTOP_M23A0_INIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_M23A0_INIT(IOMUX_CTRL_BMC);
+	CTOP_M23A0_INIT(IOMUX_CTRL_EDID);
+	CTOP_M23A0_INIT(IOMUX_CTRL_VD0);
+	CTOP_M23A0_INIT(IOMUX_CTRL_VD1);
+
+	// mip
+	CTOP_M23A0_INIT(MIP_ACODEC_CTRL_BMC);
+	CTOP_M23A0_INIT(MIP_ADC_CTRL_BMC);
+	CTOP_M23A0_INIT(MIP_CTRL_C4TX);
+	CTOP_M23A0_INIT(MIP_CTRL_EARC);
+
+	// crg_sub
+	CTOP_M23A0_INIT(BCRG_CTRL_AUD);
+	CTOP_M23A0_INIT(BCRG_CTRL_BMC);
+	CTOP_M23A0_INIT(BCRG_CTRL_BUS);
+	CTOP_M23A0_INIT(BCRG_CTRL_CPU);
+	CTOP_M23A0_INIT(BCRG_CTRL_CVI);
+	CTOP_M23A0_INIT(BCRG_CTRL_DPE);
+	CTOP_M23A0_INIT(BCRG_CTRL_EDID);
+	CTOP_M23A0_INIT(BCRG_CTRL_FMC);
+	CTOP_M23A0_INIT(BCRG_CTRL_FMS);
+	CTOP_M23A0_INIT(BCRG_CTRL_M0);
+	CTOP_M23A0_INIT(BCRG_CTRL_ME0);
+	CTOP_M23A0_INIT(BCRG_CTRL_ND0);
+	CTOP_M23A0_INIT(BCRG_CTRL_VD0);
+	CTOP_M23A0_INIT(BCRG_CTRL_VD1);
+	CTOP_M23A0_INIT(CPU_BCRG_CTRL_WOC);
+	CTOP_M23A0_INIT(MICOM_BCRG_CTRL_WOC);
+
+	CTOP_M23A0_INIT(CPU_MCRG_CTRL_WOC);
+	CTOP_M23A0_INIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_M23A0_INIT(MCRG_CTRL_AUD);
+	CTOP_M23A0_INIT(MCRG_CTRL_BMC);
+	CTOP_M23A0_INIT(MCRG_CTRL_BUS);
+	CTOP_M23A0_INIT(MCRG_CTRL_CPU);
+	CTOP_M23A0_INIT(MCRG_CTRL_CVI);
+	CTOP_M23A0_INIT(MCRG_CTRL_DPE);
+	CTOP_M23A0_INIT(MCRG_CTRL_EDID);
+	CTOP_M23A0_INIT(MCRG_CTRL_FMS);
+	CTOP_M23A0_INIT(MCRG_CTRL_M0);
+	CTOP_M23A0_INIT(MCRG_CTRL_ME0);
+	CTOP_M23A0_INIT(MCRG_CTRL_ND0);
+	CTOP_M23A0_INIT(MCRG_CTRL_VD0);
+	CTOP_M23A0_INIT(MCRG_CTRL_VD1);
+
+	CTOP_M23A0_INIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_M23A0_INIT(CPU_SCRG_CTRL_PMCU);
+	CTOP_M23A0_INIT(CPU_SCRG_CTRL_VMCU);
+	CTOP_M23A0_INIT(SCRG_CTRL_AUD);
+	CTOP_M23A0_INIT(SCRG_CTRL_CCO);
+	CTOP_M23A0_INIT(SCRG_CTRL_CPU);
+	CTOP_M23A0_INIT(SCRG_CTRL_CVBSB);
+	CTOP_M23A0_INIT(SCRG_CTRL_CVI);
+	CTOP_M23A0_INIT(SCRG_CTRL_DBB);
+	CTOP_M23A0_INIT(SCRG_CTRL_DDRSB);
+	CTOP_M23A0_INIT(SCRG_CTRL_DNE);
+	CTOP_M23A0_INIT(SCRG_CTRL_EDID0);
+	CTOP_M23A0_INIT(SCRG_CTRL_EDID1);
+	CTOP_M23A0_INIT(SCRG_CTRL_EMMC);
+	CTOP_M23A0_INIT(SCRG_CTRL_EMUSB);
+	CTOP_M23A0_INIT(SCRG_CTRL_EPHY);
+	CTOP_M23A0_INIT(SCRG_CTRL_EPUSB);
+	CTOP_M23A0_INIT(SCRG_CTRL_FMC);
+	CTOP_M23A0_INIT(SCRG_CTRL_FMS);
+	CTOP_M23A0_INIT(SCRG_CTRL_GFX);
+	CTOP_M23A0_INIT(SCRG_CTRL_GSC);
+	CTOP_M23A0_INIT(SCRG_CTRL_HDMI);
+	CTOP_M23A0_INIT(SCRG_CTRL_HDR);
+	CTOP_M23A0_INIT(SCRG_CTRL_ICOD);
+	CTOP_M23A0_INIT(SCRG_CTRL_IMX);
+	CTOP_M23A0_INIT(SCRG_CTRL_LBUS);
+	CTOP_M23A0_INIT(SCRG_CTRL_LED);
+	CTOP_M23A0_INIT(SCRG_CTRL_LNE);
+	CTOP_M23A0_INIT(SCRG_CTRL_M0);
+	CTOP_M23A0_INIT(SCRG_CTRL_ME);
+	CTOP_M23A0_INIT(SCRG_CTRL_ND);
+	CTOP_M23A0_INIT(SCRG_CTRL_PDM);
+	CTOP_M23A0_INIT(SCRG_CTRL_SRE);
+	CTOP_M23A0_INIT(SCRG_CTRL_TCON);
+	CTOP_M23A0_INIT(SCRG_CTRL_TE);
+	CTOP_M23A0_INIT(SCRG_CTRL_TIVSB);
+	CTOP_M23A0_INIT(SCRG_CTRL_USB_HS1);
+	CTOP_M23A0_INIT(SCRG_CTRL_USB_HS2);
+	CTOP_M23A0_INIT(SCRG_CTRL_USB_HS3);
+	CTOP_M23A0_INIT(SCRG_CTRL_VD0);
+	CTOP_M23A0_INIT(SCRG_CTRL_VD1);
+	CTOP_M23A0_INIT(SCRG_CTRL_VDO);
+	CTOP_M23A0_INIT(SCRG_CTRL_VENC);
+	CTOP_M23A0_INIT(SCRG_CTRL_VSD);
+
+	CTOP_M23A0_INIT(CPU_BND_CTRL_WOC);
+	CTOP_M23A0_INIT(MICOM_BND_CTRL_WOC);
+	CTOP_M23A0_INIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_M23A0_INIT(MICOM_CRG_TOP_WOC_CTRL);
+
+	SYS_DEBUG("noti: Done, _init_ctop_reg_ 'Ax' IN M23\n");
+#endif
+
+	return;
+}
+static inline void _init_ctop_reg_e60(void)
+{
+#if defined(INCLUDE_E60_CHIP_KDRV)
+
+#define CTOP_E60A0_INIT(_m)	\
+do {                                                                           \
+    size_t sz = sizeof(E60_A0_##_m##_TYPE);                                    \
+    unsigned long addr = E60_A0_##_m##_BASE;                                   \
+                                                                               \
+    SYS_DEBUG("%s    \t 0x%lX, (%zx,%zx,%zx/%zd)\n",                           \
+            #_m, addr, sz, sizeof(*gCTOP_CTRL_E60.phys.a0._m),                 \
+            sizeof(*gCTOP_CTRL_E60.shdw.a0._m), sz/sizeof(u32) );              \
+                                                                               \
+    gCTOP_CTRL_E60.phys.a0._m = (E60_A0_##_m##_TYPE *)ioremap(addr, sz);       \
+    if (!gCTOP_CTRL_E60.phys.a0._m)                                            \
+            pr_err("%s:map fail\n", #_m);                                      \
+                                                                               \
+    gCTOP_CTRL_E60.shdw.a0._m = (E60_A0_##_m##_TYPE *)kmalloc(sz, GFP_KERNEL); \
+    if (!gCTOP_CTRL_E60.shdw.a0._m)                                            \
+            pr_err("%s:alloc fail\n", #_m);                                    \
+} while(0)
+
+	/* CTOP SYN */
+	CTOP_E60A0_INIT(CTOP_SYN_CVI);
+	CTOP_E60A0_INIT(CTOP_SYN_DBB);
+	CTOP_E60A0_INIT(CTOP_SYN_DPE);
+	CTOP_E60A0_INIT(CTOP_SYN_FMC0);
+	CTOP_E60A0_INIT(CTOP_SYN_FMC1);
+	CTOP_E60A0_INIT(CTOP_SYN_FME0);
+	CTOP_E60A0_INIT(CTOP_SYN_FME1);
+	CTOP_E60A0_INIT(CTOP_SYN_FMS);
+	CTOP_E60A0_INIT(CTOP_SYN_SRE);
+	CTOP_E60A0_INIT(CTOP_SYN_WOV);
+	CTOP_E60A0_INIT(CTOP_SYN_LGSR0);
+	CTOP_E60A0_INIT(CTOP_SYN_EDID);
+
+	/* CRG SUB */
+	CTOP_E60A0_INIT(CRG_SUB_CVI);
+	CTOP_E60A0_INIT(CRG_SUB_DPE);
+	CTOP_E60A0_INIT(CRG_SUB_DBB);
+	CTOP_E60A0_INIT(CRG_SUB_WOV);
+	CTOP_E60A0_INIT(CRG_SUB_HDMI);
+	CTOP_E60A0_INIT(CRG_SUB_IMX2);
+
+	SYS_DEBUG("%s : Done\n", __func__);
+#endif
+
+	return;
+}
+
+static inline void _deinit_ctop_reg_o18(void)
+{
+#if defined(INCLUDE_O18_CHIP_KDRV) && !defined(INCLUDE_KDRV_VER_FPGA)
+
+#define CTOP_O18A0_DEINIT(_m)	\
+			do { \
+				if(gCTOP_CTRL_O18.shdw.a0._m) kfree((void*)gCTOP_CTRL_O18.shdw.a0._m); \
+				if(gCTOP_CTRL_O18.phys.a0._m) iounmap((void *)gCTOP_CTRL_O18.phys.a0._m); \
+			} while(0)
+
+	CTOP_O18A0_DEINIT(CTOP_MEU);
+	CTOP_O18A0_DEINIT(CTOP_SRE);
+	CTOP_O18A0_DEINIT(CTOP_CCO);
+	CTOP_O18A0_DEINIT(BMC_SYN);
+	CTOP_O18A0_DEINIT(CTOP_DPE);
+	CTOP_O18A0_DEINIT(CTOP_IMX);
+	CTOP_O18A0_DEINIT(CTOP_TIVG);
+	CTOP_O18A0_DEINIT(CTOP_ND0);
+	CTOP_O18A0_DEINIT(CTOP_ME1);
+	CTOP_O18A0_DEINIT(DPE_CRC);
+	CTOP_O18A0_DEINIT(CTRL_EMMC);
+	CTOP_O18A0_DEINIT(CTRL_ME1);
+	CTOP_O18A0_DEINIT(CTRL_IMX);
+	CTOP_O18A0_DEINIT(CTRL_ND1);
+	CTOP_O18A0_DEINIT(CTRL_CCO);
+	CTOP_O18A0_DEINIT(CTRL_VDEC1);
+	CTOP_O18A0_DEINIT(CTRL_EDID);
+	CTOP_O18A0_DEINIT(CTRL_VD0);
+	CTOP_O18A0_DEINIT(CTRL_TIV);
+	CTOP_O18A0_DEINIT(CTRL_GSC);
+	CTOP_O18A0_DEINIT(CTRL_BMC);
+	CTOP_O18A0_DEINIT(REG_BRIDGE);
+	CTOP_O18A0_DEINIT(CTRL_GFX);
+	CTOP_O18A0_DEINIT(VSD_CRC);
+	CTOP_O18A0_DEINIT(CTRL_MCU);
+	CTOP_O18A0_DEINIT(CTRL_CPU);
+	CTOP_O18A0_DEINIT(CTRL_TCON);
+	CTOP_O18A0_DEINIT(CTRL_ND0);
+	CTOP_O18A0_DEINIT(CTRL_VSD);
+	CTOP_O18A0_DEINIT(CTRL_LED);
+	CTOP_O18A0_DEINIT(CTRL_GEM);
+	CTOP_O18A0_DEINIT(CTRL_ME0);
+	CTOP_O18A0_DEINIT(CTRL_CVI);
+	CTOP_O18A0_DEINIT(CTRL_FMS);
+	CTOP_O18A0_DEINIT(CTRL_SRE);
+	CTOP_O18A0_DEINIT(CTRL_AUD);
+	CTOP_O18A0_DEINIT(CTRL_FMC);
+
+	SYS_DEBUG("NOTE: Done -> de-init CTOP-reg 'Ax' for O18");
+#endif
+
+	return;
+}
+
+static inline void _deinit_ctop_reg_m19(void)
+{
+#if defined(INCLUDE_M19_CHIP_KDRV)
+
+#define CTOP_M19A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_M19.shdw.a0._m) kfree((void*)gCTOP_CTRL_M19.shdw.a0._m); \
+	if(gCTOP_CTRL_M19.phys.a0._m) iounmap((void *)gCTOP_CTRL_M19.phys.a0._m); \
+} while(0)
+
+	CTOP_M19A0_DEINIT(CTOP_FME0 );
+	CTOP_M19A0_DEINIT(CTOP_GBM  );
+	CTOP_M19A0_DEINIT(CTOP_AUD  );
+	CTOP_M19A0_DEINIT(CTOP_EDID );
+	CTOP_M19A0_DEINIT(CTOP_BMC  );
+	CTOP_M19A0_DEINIT(CTOP_GFX  );
+	CTOP_M19A0_DEINIT(CTOP_FMS  );
+	CTOP_M19A0_DEINIT(CTOP_DPE  );
+	CTOP_M19A0_DEINIT(CTOP_ND0  );
+	CTOP_M19A0_DEINIT(CTOP_IMX  );
+	CTOP_M19A0_DEINIT(VDEC1_SYN );
+	CTOP_M19A0_DEINIT(VDEC0_SYN );
+	CTOP_M19A0_DEINIT(AUD_SYN   );
+	CTOP_M19A0_DEINIT(M1_SYN    );
+	CTOP_M19A0_DEINIT(M0_SYN    );
+	CTOP_M19A0_DEINIT(GFX_SYN   );
+	CTOP_M19A0_DEINIT(BMC_SYN   );
+	CTOP_M19A0_DEINIT(FMS_SYN   );
+	CTOP_M19A0_DEINIT(DPE_SYN   );
+	CTOP_M19A0_DEINIT(FMC_SYN   );
+	CTOP_M19A0_DEINIT(CCO_SYN   );
+	CTOP_M19A0_DEINIT(GSC_SYN   );
+	CTOP_M19A0_DEINIT(FME0_SYN  );
+	CTOP_M19A0_DEINIT(ND1_SYN   );
+	CTOP_M19A0_DEINIT(ND0_SYN   );
+	CTOP_M19A0_DEINIT(IMX_SYN   );
+	CTOP_M19A0_DEINIT(CVI_SYN   );
+	CTOP_M19A0_DEINIT(GBM_SYN   );
+	CTOP_M19A0_DEINIT(LBM_SYN   );
+	CTOP_M19A0_DEINIT(PERI_SYN  );
+	CTOP_M19A0_DEINIT(GPU_SYN   );
+	CTOP_M19A0_DEINIT(EDID_SYN  );
+	CTOP_M19A0_DEINIT(EMMC_SYN  );
+	CTOP_M19A0_DEINIT(GEM_SYN   );
+	CTOP_M19A0_DEINIT(TI_SYN    );
+
+	SYS_DEBUG("noti: Done, _deinit_ctop_reg_ 'Ax' IN lg1314 \n");
+
+#endif
+
+	return;
+}
+
+static inline void _deinit_ctop_reg_o20(void)
+{
+#if defined(INCLUDE_O20_CHIP_KDRV)
+
+#define CTOP_O20A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_O20.shdw.a0._m) kfree((void*)gCTOP_CTRL_O20.shdw.a0._m); \
+	if(gCTOP_CTRL_O20.phys.a0._m) iounmap((void *)gCTOP_CTRL_O20.phys.a0._m); \
+} while(0)
+
+	CTOP_O20A0_DEINIT(CTOP_ATG);
+	CTOP_O20A0_DEINIT(CTOP_BMC);
+	CTOP_O20A0_DEINIT(CTOP_DPE);
+	CTOP_O20A0_DEINIT(CTOP_FME1);
+	CTOP_O20A0_DEINIT(CTOP_FMS);
+	CTOP_O20A0_DEINIT(CTOP_LBM);
+	CTOP_O20A0_DEINIT(CTOP_ND0);
+	CTOP_O20A0_DEINIT(CTOP_ND1);
+	CTOP_O20A0_DEINIT(CTOP_POR);
+	CTOP_O20A0_DEINIT(CTOP_VD1);
+	CTOP_O20A0_DEINIT(CTOP_WOV);
+
+/* CTOP_SYN */
+	CTOP_O20A0_DEINIT(ATG_SYN);
+	CTOP_O20A0_DEINIT(BMC_SYN);
+	CTOP_O20A0_DEINIT(CCO_SYN);
+	CTOP_O20A0_DEINIT(CPU_SYN);
+	CTOP_O20A0_DEINIT(CVI_SYN);
+	CTOP_O20A0_DEINIT(GSC_SYN);
+	CTOP_O20A0_DEINIT(LBM_SYN);
+	CTOP_O20A0_DEINIT(WOV_SYN);
+
+	SYS_DEBUG("noti: Done, _deinit_ctop_reg_ 'Ax' IN O20 \n");
+
+#endif
+
+	return;
+}
+
+
+static inline void _deinit_ctop_reg_o22(void)
+{
+#if defined(INCLUDE_O22_CHIP_KDRV)
+
+#define CTOP_O22A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_O22.shdw.a0._m) kfree((void*)gCTOP_CTRL_O22.shdw.a0._m); \
+	if(gCTOP_CTRL_O22.phys.a0._m) iounmap((void *)gCTOP_CTRL_O22.phys.a0._m); \
+} while(0)
+
+/* CTOP_PAD */
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_CVI);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_EDID);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_FMS);
+	CTOP_O22A0_DEINIT(IOMUX_CTRL_IMX);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_LGSR);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_ME1);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_VD0);
+	CTOP_O22A0_DEINIT(FUNC_IOMUX_WOV);
+
+/* CTOP_SYN */
+	CTOP_O22A0_DEINIT(BND_CTRL_AON);
+	CTOP_O22A0_DEINIT(BND_CTRL_BMC);
+	CTOP_O22A0_DEINIT(BND_CTRL_CPU);
+	CTOP_O22A0_DEINIT(BND_CTRL_CVI);
+	CTOP_O22A0_DEINIT(BND_CTRL_DPE);
+	CTOP_O22A0_DEINIT(BND_CTRL_EDID);
+	CTOP_O22A0_DEINIT(BND_CTRL_GEM);
+	CTOP_O22A0_DEINIT(BND_CTRL_HDMI);
+	CTOP_O22A0_DEINIT(BND_CTRL_HDR);
+	CTOP_O22A0_DEINIT(BND_CTRL_LBM);
+	CTOP_O22A0_DEINIT(BND_CTRL_LGSR);
+	CTOP_O22A0_DEINIT(BND_CTRL_M0);
+	CTOP_O22A0_DEINIT(BND_CTRL_M1);
+	CTOP_O22A0_DEINIT(BND_CTRL_ME0);
+	CTOP_O22A0_DEINIT(BND_CTRL_ME1);
+	CTOP_O22A0_DEINIT(BND_CTRL_ND0);
+	CTOP_O22A0_DEINIT(BND_CTRL_VD2);
+	CTOP_O22A0_DEINIT(BND_CTRL_WOV);
+
+	CTOP_O22A0_DEINIT(FSC_LGSR);
+	CTOP_O22A0_DEINIT(BND_CTRL_VD0);
+	CTOP_O22A0_DEINIT(TSADC_CTRL);
+	CTOP_O22A0_DEINIT(PVMCON);
+
+	/* CTOP_IPW */
+	CTOP_O22A0_DEINIT(LED_IPW_TOP);
+	CTOP_O22A0_DEINIT(AUD_IPW_TOP);
+	CTOP_O22A0_DEINIT(CCO_IPW_TOP);
+	CTOP_O22A0_DEINIT(CPU_IPW_TOP);
+	CTOP_O22A0_DEINIT(CVI_IPW_TOP);
+	CTOP_O22A0_DEINIT(DBB_IPW_TOP);
+	CTOP_O22A0_DEINIT(DNE_IPW_TOP);
+	CTOP_O22A0_DEINIT(DNNR_IPW_TOP);
+	CTOP_O22A0_DEINIT(DNSR_IPW_TOP);
+	CTOP_O22A0_DEINIT(DSC_IPW_TOP);
+	CTOP_O22A0_DEINIT(EDID_IPW_TOP);
+	CTOP_O22A0_DEINIT(EPHY_IPW_TOP);
+	CTOP_O22A0_DEINIT(FMC_IPW_TOP);
+	CTOP_O22A0_DEINIT(FMS_IPW_TOP);
+	CTOP_O22A0_DEINIT(GSC_IPW_TOP);
+	CTOP_O22A0_DEINIT(HDMI_IPW_TOP);
+	CTOP_O22A0_DEINIT(HDR_IPW_TOP);
+	CTOP_O22A0_DEINIT(ICOD_IPW_TOP);
+	CTOP_O22A0_DEINIT(IMX_IPW_TOP);
+	CTOP_O22A0_DEINIT(MCU_IPW_TOP);
+	CTOP_O22A0_DEINIT(ME0_IPW_TOP);
+	CTOP_O22A0_DEINIT(ME1_IPW_TOP);
+	CTOP_O22A0_DEINIT(ND0_IPW_TOP);
+	CTOP_O22A0_DEINIT(ND1_IPW_TOP);
+	CTOP_O22A0_DEINIT(SRE_IPW_TOP);
+	CTOP_O22A0_DEINIT(TCON_IPW_TOP);
+	CTOP_O22A0_DEINIT(TE_IPW_TOP);
+	CTOP_O22A0_DEINIT(VD0_IPW_TOP);
+	CTOP_O22A0_DEINIT(VD1_IPW_TOP);
+	CTOP_O22A0_DEINIT(VD2_IPW_TOP);
+	CTOP_O22A0_DEINIT(VD3_IPW_TOP);
+	CTOP_O22A0_DEINIT(VDEC_MCU_IPW_TOP);
+	CTOP_O22A0_DEINIT(VDO_IPW_TOP);
+	CTOP_O22A0_DEINIT(VENC_IPW_TOP);
+	CTOP_O22A0_DEINIT(VSD_IPW_TOP);
+
+	/* CTOP_CRG */
+	CTOP_O22A0_DEINIT(SCRG_CTRL_AUD);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_BMC);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_CCO);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_CPU);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_CVI);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_DPE);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_EDID);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_FMC);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_FMS);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_GEM);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_HDMI);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_HDR);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_IMX);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_LBM);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_LGSR);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_M0);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_M1);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_ME0);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_ME1);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_ND0);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_ND1);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_VD0);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_VD2);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_VD3);
+	CTOP_O22A0_DEINIT(BCRG_CTRL_WOV);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_CCO);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_CPU);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_CVI);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_DBB);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_DNE);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_DNNR);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_DNSR);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_DSC);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_EDID);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_EMMC);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_EPHY);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_FMC);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_FMS);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_GFX);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_GSC);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_HDMI);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_HDR);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_ICOD);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_IMX);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_LBUS);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_LED);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_LNE);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_M0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_M1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_BMC);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_CCO);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_CPU);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_CVI);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_DPE);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_EDID);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_FMC);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_FMS);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_GEM);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_HDR);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_IMX);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_LBM);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_LGSR);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_M0);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_M1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_ME0);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_ME1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_ND0);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_ND1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_VD0);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_VD1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_VD2);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_VD3);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_WOV);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_MCU);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_ME0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_ME1);
+	CTOP_O22A0_DEINIT(MCRG_CTRL_HDMI);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_MICOM);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_ND0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_ND1);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_SRE);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VDO);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_TCON);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_TE);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_HS0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_SS0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_SS1);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_SS2);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VD0);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VD1);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VD2);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VD3);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VDEC_MCU);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VENC);
+	CTOP_O22A0_DEINIT(SCRG_CTRL_VSD);
+
+	SYS_DEBUG("noti: Done, _deinit_ctop_reg_ 'Ax' IN O22 \n");
+#endif
+	return;
+}
+
+static inline void _deinit_ctop_reg_o24(void)
+{
+#if defined(INCLUDE_O24_CHIP_KDRV)
+
+#define CTOP_O24A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_O24.shdw.a0._m) kfree((void*)gCTOP_CTRL_O24.shdw.a0._m); \
+	if(gCTOP_CTRL_O24.phys.a0._m) iounmap((void *)gCTOP_CTRL_O24.phys.a0._m); \
+} while(0)
+
+	//
+	//
+	//
+	CTOP_O24A0_DEINIT(IP_CTRL_AUD);
+	CTOP_O24A0_DEINIT(IP_CTRL_CCO);
+	CTOP_O24A0_DEINIT(IP_CTRL_CPU);
+	CTOP_O24A0_DEINIT(IP_CTRL_CVI);
+	CTOP_O24A0_DEINIT(IP_CTRL_DBB);
+	CTOP_O24A0_DEINIT(IP_CTRL_DSC);
+	CTOP_O24A0_DEINIT(IP_CTRL_EDID);
+	CTOP_O24A0_DEINIT(IP_CTRL_FMC);
+	CTOP_O24A0_DEINIT(IP_CTRL_FMS);
+	CTOP_O24A0_DEINIT(IP_CTRL_GSC);
+	CTOP_O24A0_DEINIT(IP_CTRL_HDMI);
+	CTOP_O24A0_DEINIT(IP_CTRL_HDR);
+	CTOP_O24A0_DEINIT(IP_CTRL_IMX);
+	CTOP_O24A0_DEINIT(IP_CTRL_LED);
+	CTOP_O24A0_DEINIT(IP_CTRL_LNX0);
+	CTOP_O24A0_DEINIT(IP_CTRL_LNX1);
+	CTOP_O24A0_DEINIT(IP_CTRL_ME0);
+	CTOP_O24A0_DEINIT(IP_CTRL_ME1);
+	CTOP_O24A0_DEINIT(IP_CTRL_ND0);
+	CTOP_O24A0_DEINIT(IP_CTRL_ND1);
+	CTOP_O24A0_DEINIT(IP_CTRL_SRE);
+	CTOP_O24A0_DEINIT(IP_CTRL_TCON);
+	CTOP_O24A0_DEINIT(IP_CTRL_TE);
+	CTOP_O24A0_DEINIT(IP_CTRL_VD0);
+	CTOP_O24A0_DEINIT(IP_CTRL_VD1);
+	CTOP_O24A0_DEINIT(IP_CTRL_VDO);
+	CTOP_O24A0_DEINIT(IP_CTRL_VSD);
+	CTOP_O24A0_DEINIT(SB_CTRL_FMGSESB);
+	CTOP_O24A0_DEINIT(SB_CTRL_LB0SB);
+	CTOP_O24A0_DEINIT(SB_CTRL_LB1SB);
+	CTOP_O24A0_DEINIT(SB_CTRL_VD2VMSB);
+	//
+	//
+	//
+	CTOP_O24A0_DEINIT(BND_CTRL_AUD);
+	CTOP_O24A0_DEINIT(BND_CTRL_BMC);
+	CTOP_O24A0_DEINIT(BND_CTRL_CCO);
+	CTOP_O24A0_DEINIT(BND_CTRL_CPU);
+	CTOP_O24A0_DEINIT(BND_CTRL_EDID);
+	CTOP_O24A0_DEINIT(BND_CTRL_EMMC);
+	CTOP_O24A0_DEINIT(BND_CTRL_GSC);
+	CTOP_O24A0_DEINIT(BND_CTRL_HDMI);
+	CTOP_O24A0_DEINIT(BND_CTRL_LNX0);
+	CTOP_O24A0_DEINIT(BND_CTRL_M0);
+	CTOP_O24A0_DEINIT(BND_CTRL_M1);
+	CTOP_O24A0_DEINIT(BND_CTRL_M2);
+	CTOP_O24A0_DEINIT(BND_CTRL_ND1);
+	CTOP_O24A0_DEINIT(BND_CTRL_VENC);
+	CTOP_O24A0_DEINIT(DRG_CTRL);
+	CTOP_O24A0_DEINIT(MIP_CTRL_TSADC);
+	CTOP_O24A0_DEINIT(PVMCON_CPU);
+	CTOP_O24A0_DEINIT(TMUX_CTRL);
+	CTOP_O24A0_DEINIT(TRG_CTRL);
+	CTOP_O24A0_DEINIT(CPU_BND_CTRL_WOC);
+	CTOP_O24A0_DEINIT(MICOM_BND_CTRL_WOC);
+	CTOP_O24A0_DEINIT(PMCU_BND_CTRL_WOC);
+	CTOP_O24A0_DEINIT(VMCU_BND_CTRL_WOC);
+	CTOP_O24A0_DEINIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_DEINIT(MICOM_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_DEINIT(PMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_DEINIT(VMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O24A0_DEINIT(CPU_PW_CTRL);
+	CTOP_O24A0_DEINIT(MICOM_PW_CTRL);
+	CTOP_O24A0_DEINIT(PMCU_PW_CTRL);
+	CTOP_O24A0_DEINIT(VMCU_PW_CTRL);
+	//
+	//
+	//
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_BMC);
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_EDID);
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_LNX1);
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_VD0);
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_VD1);
+	CTOP_O24A0_DEINIT(IOMUX_CTRL_VD2);
+	CTOP_O24A0_DEINIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_O24A0_DEINIT(MICOM_IOMUX_CTRL_WOC);
+	CTOP_O24A0_DEINIT(PMCU_IOMUX_CTRL_WOC);
+	CTOP_O24A0_DEINIT(VMCU_IOMUX_CTRL_WOC);
+	//
+	//
+	//
+	CTOP_O24A0_DEINIT(MIP_CTRL_ACODEC);
+	CTOP_O24A0_DEINIT(MIP_CTRL_ADC);
+	CTOP_O24A0_DEINIT(MIP_CTRL_C4TX);
+	CTOP_O24A0_DEINIT(MIP_CTRL_EARC);
+	CTOP_O24A0_DEINIT(MIP_CTRL_HDMI_DPM);
+	CTOP_O24A0_DEINIT(CPU_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_DEINIT(MICOM_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_DEINIT(PMCU_MIP_CTRL_SADC_CPU);
+	CTOP_O24A0_DEINIT(VMCU_MIP_CTRL_SADC_CPU);
+	//
+	//
+	//
+	CTOP_O24A0_DEINIT(BCRG_CTRL_AUD);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_BMC);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_CCO);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_CPU);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_CVI);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_DNSR);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_DPE);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_EDID);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_EMMC);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_FMC);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_FMS);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_GSC);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_HDMI);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_HDR);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_IMX);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_LBM);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_LNX0);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_LNX1);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_LNX2);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_M0);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_M1);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_M2);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_ME0);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_ME1);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_ND0);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_ND1);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_SRE);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_VD0);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_VD1);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_VD2);
+	CTOP_O24A0_DEINIT(BCRG_CTRL_VENC);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_AUD);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_BMC);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_CCO);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_CPU);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_CVI);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_DNSR);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_DPE);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_EDID);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_EMMC);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_FMC);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_FMS);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_GSC);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_HDMI);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_HDR);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_IMX);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_LBM);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_LNX0);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_LNX1);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_LNX2);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_M0);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_M1);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_M2);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_ME0);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_ME1);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_ND0);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_ND1);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_SRE);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_VD0);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_VD1);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_VD2);
+	CTOP_O24A0_DEINIT(MCRG_CTRL_VENC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_AUD);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_CCO);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_CPU);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_CVI);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DBB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DDR0SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DDR1SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DDR2SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DMCU);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DNNR);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DNSR);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_DSC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_EDID);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_EMMC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_EPHY);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_EPUSB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_FMC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_FMGSESB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_FMS);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_GFX);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_GPU);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_GSC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_HDMI);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_HDR);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ICOD);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ICVESB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_IMVDSB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_IMX);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LB0SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LB1SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LB2SB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LBUS);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LED);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LNX0);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LNX1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_LNX2);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_M0);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_M1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_M2);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ME0);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ME1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_MEFMSSB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ND0);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_ND1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_SRE);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_TCON);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_TE);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_USB_SS1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_USB_SS2);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_USB_SS3);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_USB_SS4);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_USBSB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VD0);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VD1);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VD2);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VD2VMSB);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VDO);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VENC);
+	CTOP_O24A0_DEINIT(SCRG_CTRL_VSD);
+	CTOP_O24A0_DEINIT(CPU_BCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(MICOM_BCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(PMCU_BCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(VMCU_BCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(CPU_MCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(PMCU_MCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(VMCU_MCRG_CTRL_WOC);
+	CTOP_O24A0_DEINIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_O24A0_DEINIT(MICOM_SCRG_CTRL_MICOM);
+	CTOP_O24A0_DEINIT(CPU_SCRG_CTRL_PMCU);
+	CTOP_O24A0_DEINIT(PMCU_SCRG_CTRL_PMCU);
+	CTOP_O24A0_DEINIT(CPU_SCRG_CTRL_VMCU);
+	CTOP_O24A0_DEINIT(VMCU_SCRG_CTRL_VMCU);
+
+	// etc
+	CTOP_O24A0_DEINIT(FSC_CTRL);
+
+	SYS_DEBUG("noti: Done, _deinit_ctop_reg_ 'Ax' IN O24 \n");
+#endif
+	return;
+}
+
+static inline void _deinit_ctop_reg_o26(void)
+{
+#if defined(INCLUDE_O26_CHIP_KDRV)
+
+#define CTOP_O26A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_O26.shdw.a0._m) kfree((void*)gCTOP_CTRL_O26.shdw.a0._m); \
+	if(gCTOP_CTRL_O26.phys.a0._m) iounmap((void *)gCTOP_CTRL_O26.phys.a0._m); \
+} while(0)
+
+	CTOP_O26A0_DEINIT(BND_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(BND_CTRL_LNX1);
+	CTOP_O26A0_DEINIT(BND_CTRL_CPU);
+	CTOP_O26A0_DEINIT(CPU_PW_CTRL);
+	CTOP_O26A0_DEINIT(PMCU_PW_CTRL);
+	CTOP_O26A0_DEINIT(VMCU_PW_CTRL);
+	CTOP_O26A0_DEINIT(MICOM_PW_CTRL);
+	CTOP_O26A0_DEINIT(BND_CTRL_HDR);
+	CTOP_O26A0_DEINIT(BND_CTRL_AUD);
+	CTOP_O26A0_DEINIT(BND_CTRL_LNX0);
+	CTOP_O26A0_DEINIT(TRG_CTRL);
+	CTOP_O26A0_DEINIT(BND_CTRL_FMC);
+	CTOP_O26A0_DEINIT(BND_CTRL_EMMC);
+	CTOP_O26A0_DEINIT(BND_CTRL_M0);
+	CTOP_O26A0_DEINIT(BND_CTRL_ND1);
+	CTOP_O26A0_DEINIT(BND_CTRL_LNX2);
+	CTOP_O26A0_DEINIT(BND_CTRL_SRE);
+	CTOP_O26A0_DEINIT(BND_CTRL_ND0);
+	CTOP_O26A0_DEINIT(BND_CTRL_M1);
+	CTOP_O26A0_DEINIT(DRG_CTRL);
+	CTOP_O26A0_DEINIT(BND_CTRL_GSC);
+	CTOP_O26A0_DEINIT(BND_CTRL_LBM);
+	CTOP_O26A0_DEINIT(BND_CTRL_ME0);
+	CTOP_O26A0_DEINIT(BND_CTRL_VD0);
+	CTOP_O26A0_DEINIT(BND_CTRL_IMX);
+	CTOP_O26A0_DEINIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_DEINIT(PMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_DEINIT(VMCU_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_DEINIT(MICOM_CRG_TOP_WOC_CTRL);
+	CTOP_O26A0_DEINIT(BND_CTRL_ME1);
+	CTOP_O26A0_DEINIT(BND_CTRL_CCO);
+	CTOP_O26A0_DEINIT(BND_CTRL_DNSR);
+	CTOP_O26A0_DEINIT(BND_CTRL_VENC);
+	CTOP_O26A0_DEINIT(BND_CTRL_DPE);
+	CTOP_O26A0_DEINIT(BND_CTRL_BMC);
+	CTOP_O26A0_DEINIT(BND_CTRL_FMS);
+	CTOP_O26A0_DEINIT(TMUX_CTRL);
+	CTOP_O26A0_DEINIT(CPU_BND_CTRL_WOC);
+	CTOP_O26A0_DEINIT(PMCU_BND_CTRL_WOC);
+	CTOP_O26A0_DEINIT(VMCU_BND_CTRL_WOC);
+	CTOP_O26A0_DEINIT(MICOM_BND_CTRL_WOC);
+	CTOP_O26A0_DEINIT(MIP_DIG_CTRL);
+
+	CTOP_O26A0_DEINIT(CRC_TOUT);
+	CTOP_O26A0_DEINIT(CRC_VOUT);
+
+	CTOP_O26A0_DEINIT(MIP_CTRL_C4TX16);
+	CTOP_O26A0_DEINIT(MIP_CTRL_HDMI1);
+	CTOP_O26A0_DEINIT(MIP_CTRL_ADMD_MIP);
+	CTOP_O26A0_DEINIT(MIP_CTRL_CVBSAFE);
+	CTOP_O26A0_DEINIT(MIP_CTRL_HDMI3);
+	CTOP_O26A0_DEINIT(MIP_CTRL_HDMI2);
+	CTOP_O26A0_DEINIT(MIP_CTRL_ACODEC);
+	CTOP_O26A0_DEINIT(MIP_CTRL_HDMI_EARC);
+	CTOP_O26A0_DEINIT(MIP_CTRL_TSADC);
+	CTOP_O26A0_DEINIT(CPU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_DEINIT(PMCU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_DEINIT(VMCU_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_DEINIT(MICOM_MIP_CTRL_HDMI_DPM);
+	CTOP_O26A0_DEINIT(MIP_CTRL_HDMI4);
+
+	CTOP_O26A0_DEINIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_DEINIT(PMCU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_DEINIT(VMCU_IOMUX_CTRL_WOC);
+	CTOP_O26A0_DEINIT(MICOM_IOMUX_CTRL_WOC);
+	CTOP_O26A0_DEINIT(IOMUX_CTRL_DPE);
+	CTOP_O26A0_DEINIT(IOMUX_CTRL_ME1);
+	CTOP_O26A0_DEINIT(IOMUX_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(IOMUX_CTRL_AUD);
+	CTOP_O26A0_DEINIT(IOMUX_CTRL_LNX2);
+
+	CTOP_O26A0_DEINIT(IP_CTRL_HDR);
+	CTOP_O26A0_DEINIT(IP_CTRL_AUD);
+	CTOP_O26A0_DEINIT(IP_CTRL_FMC);
+	CTOP_O26A0_DEINIT(IP_CTRL_NPP);
+	CTOP_O26A0_DEINIT(IP_CTRL_DBB);
+	CTOP_O26A0_DEINIT(IP_CTRL_CPU);
+	CTOP_O26A0_DEINIT(IP_CTRL_CVI);
+	CTOP_O26A0_DEINIT(IP_CTRL_DSC);
+	CTOP_O26A0_DEINIT(IP_CTRL_LNX1);
+	CTOP_O26A0_DEINIT(IP_CTRL_ND0);
+	CTOP_O26A0_DEINIT(IP_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(IP_CTRL_ND1);
+	CTOP_O26A0_DEINIT(IP_CTRL_LBUS);
+	CTOP_O26A0_DEINIT(IP_CTRL_LNX0);
+	CTOP_O26A0_DEINIT(IP_CTRL_EDPTX);
+	CTOP_O26A0_DEINIT(IP_CTRL_SRE);
+	CTOP_O26A0_DEINIT(IP_CTRL_ME1);
+	CTOP_O26A0_DEINIT(IP_CTRL_CCO);
+	CTOP_O26A0_DEINIT(IP_CTRL_GSC);
+	CTOP_O26A0_DEINIT(IP_CTRL_LED);
+	CTOP_O26A0_DEINIT(IP_CTRL_ME0);
+	CTOP_O26A0_DEINIT(IP_CTRL_TCON);
+	CTOP_O26A0_DEINIT(IP_CTRL_IMX);
+	CTOP_O26A0_DEINIT(IP_CTRL_FMS);
+	CTOP_O26A0_DEINIT(CPU_IP_CTRL_EDID);
+	CTOP_O26A0_DEINIT(MICOM_IP_CTRL_EDID);
+	CTOP_O26A0_DEINIT(IP_CTRL_VDO);
+	CTOP_O26A0_DEINIT(IP_CTRL_VSD);
+	CTOP_O26A0_DEINIT(IP_CTRL_TE);
+
+	CTOP_O26A0_DEINIT(FSC_CTRL_AUD);
+
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DBB);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_ND0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_TCON);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_ND1);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_LNX0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LB0SB);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_M1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_CVI);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_USBSB);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ICOD);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_CPU);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_SRE);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_AUD);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_SRE);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_VENC);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_DNSR);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_HDR);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DNSR0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DNSR1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_VENC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_NPP);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_M0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_TIVVMSB);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_IOMMU);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_FMC);
+	CTOP_O26A0_DEINIT(PMCU_SCRG_CTRL_PMCU);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_LNX1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DMCU);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_TE);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_ND0);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_ND1);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_FMC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_FMESB);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_M1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ND1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_GFX);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LB1SB);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_HDR);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_AUD);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_SRE);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_CPU);
+	CTOP_O26A0_DEINIT(VMCU_SCRG_CTRL_VMCU);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_CPU);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_AUD);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_HDR);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_EMMC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DSC);
+	CTOP_O26A0_DEINIT(CPU_SCRG_CTRL_ION0);
+	CTOP_O26A0_DEINIT(MICOM_SCRG_CTRL_ION0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_USB_SS);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ND0);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_M0);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_LNX2);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_FMC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ME0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_VD0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LED);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_EMUSB);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_GSC);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_DPE);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_FMS);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_IMX);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DDR0SB);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_DDR1SB);
+	CTOP_O26A0_DEINIT(CPU_BCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(PMCU_BCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(VMCU_BCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(MICOM_BCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_BMC);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_BMC);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_EMMC);
+	CTOP_O26A0_DEINIT(CPU_MCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(PMCU_MCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(VMCU_MCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_FMS);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_EMMC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_CCO);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_DPE);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_LNX2);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_VD1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ME1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LNX2);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LBUS);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LNX0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_TIVSB);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_ME0);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_LBM);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_VD1);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_ME1);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_VD0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_VSD);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_LNX0);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_CCO);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_GSC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_SRCOSB);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_IMX);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_ION1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_M1);
+	CTOP_O26A0_DEINIT(CPU_SCRG_CTRL_EPHY);
+	CTOP_O26A0_DEINIT(MICOM_SCRG_CTRL_EPHY);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_M0);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_DNSR);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_VENC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_HDMI);
+	CTOP_O26A0_DEINIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_O26A0_DEINIT(MICOM_SCRG_CTRL_MICOM);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_FMS);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_EDPTX);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_IMX);
+	CTOP_O26A0_DEINIT(CPU_SCRG_CTRL_EDID);
+	CTOP_O26A0_DEINIT(MICOM_SCRG_CTRL_EDID);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_VDO);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_GSC);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_USB_HS1);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_USB_HS2);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_USB_HS3);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_CCO);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_LNX1);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_ME0);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_VD1);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_LBM);
+	CTOP_O26A0_DEINIT(BCRG_CTRL_ME1);
+	CTOP_O26A0_DEINIT(MCRG_CTRL_VD0);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_GPU);
+	CTOP_O26A0_DEINIT(SCRG_CTRL_LNX1);
+	CTOP_O26A0_DEINIT(ION0_TOP_CTRL);
+	CTOP_O26A0_DEINIT(ION1_TOP_CTRL);
+	CTOP_O26A0_DEINIT(ION0_IOMUX_PAD);
+	CTOP_O26A0_DEINIT(ION0_IOMUX_CORE);
+	CTOP_O26A0_DEINIT(ION1_IOMUX_PAD);
+	CTOP_O26A0_DEINIT(ION1_IOMUX_CORE);
+	CTOP_O26A0_DEINIT(ION0_SRDS12TO3);
+	CTOP_O26A0_DEINIT(ION0_SRDS32TO1_0);
+	CTOP_O26A0_DEINIT(ION0_SRDS32TO1_1);
+	CTOP_O26A0_DEINIT(ION1_SRDS12TO3);
+	CTOP_O26A0_DEINIT(ION1_SRDS32TO1_0);
+
+#endif
+	return;
+}
+
+static inline void _deinit_ctop_reg_m23(void)
+{
+#if defined(INCLUDE_M23_CHIP_KDRV)
+
+#define CTOP_M23A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_M23.shdw.a0._m) kfree((void*)gCTOP_CTRL_M23.shdw.a0._m); \
+	if(gCTOP_CTRL_M23.phys.a0._m) iounmap((void *)gCTOP_CTRL_M23.phys.a0._m); \
+} while(0)
+
+	// ipw
+	CTOP_M23A0_DEINIT(IP_CTRL_AUD);
+	CTOP_M23A0_DEINIT(IP_CTRL_CCO);
+	CTOP_M23A0_DEINIT(IP_CTRL_CPU);
+	CTOP_M23A0_DEINIT(IP_CTRL_CVI);
+	CTOP_M23A0_DEINIT(IP_CTRL_DBB);
+	CTOP_M23A0_DEINIT(IP_CTRL_DNE);
+	CTOP_M23A0_DEINIT(IP_CTRL_EDID0);
+	CTOP_M23A0_DEINIT(IP_CTRL_EDID1);
+	CTOP_M23A0_DEINIT(IP_CTRL_FMC);
+	CTOP_M23A0_DEINIT(IP_CTRL_FMS);
+	CTOP_M23A0_DEINIT(IP_CTRL_GSC);
+	CTOP_M23A0_DEINIT(IP_CTRL_HDMI);
+	CTOP_M23A0_DEINIT(IP_CTRL_HDR);
+	CTOP_M23A0_DEINIT(IP_CTRL_IMX);
+	CTOP_M23A0_DEINIT(IP_CTRL_LED);
+	CTOP_M23A0_DEINIT(IP_CTRL_ME);
+	CTOP_M23A0_DEINIT(IP_CTRL_ND);
+	CTOP_M23A0_DEINIT(IP_CTRL_SRE);
+	CTOP_M23A0_DEINIT(IP_CTRL_TCON);
+	CTOP_M23A0_DEINIT(IP_CTRL_TE);
+	CTOP_M23A0_DEINIT(IP_CTRL_VDO);
+	CTOP_M23A0_DEINIT(IP_CTRL_VSD);
+
+
+	// syn
+	CTOP_M23A0_DEINIT(BND_CTRL_AUD);
+	CTOP_M23A0_DEINIT(BND_CTRL_BMC);
+	CTOP_M23A0_DEINIT(BND_CTRL_CPU);
+	CTOP_M23A0_DEINIT(BND_CTRL_CVI);
+	CTOP_M23A0_DEINIT(BND_CTRL_EDID);
+	CTOP_M23A0_DEINIT(BND_CTRL_FMC);
+	CTOP_M23A0_DEINIT(BND_CTRL_FMS);
+	CTOP_M23A0_DEINIT(BND_CTRL_M0);
+	CTOP_M23A0_DEINIT(BND_CTRL_ME0);
+	CTOP_M23A0_DEINIT(BND_CTRL_ND0);
+
+	CTOP_M23A0_DEINIT(CPU_POWER_CTRL);
+	CTOP_M23A0_DEINIT(MICOM_POWER_CTRL);
+	CTOP_M23A0_DEINIT(CRG_TOP_CTRL);
+	CTOP_M23A0_DEINIT(PVMCON_CPU);
+
+	CTOP_M23A0_DEINIT(TMUX_CTRL);
+	CTOP_M23A0_DEINIT(MIP_TSADC_CTRL);
+
+	// pad
+	CTOP_M23A0_DEINIT(CPU_IOMUX_CTRL_WOC);
+	CTOP_M23A0_DEINIT(IOMUX_CTRL_BMC);
+	CTOP_M23A0_DEINIT(IOMUX_CTRL_EDID);
+	CTOP_M23A0_DEINIT(IOMUX_CTRL_VD0);
+	CTOP_M23A0_DEINIT(IOMUX_CTRL_VD1);
+
+	// mip
+	CTOP_M23A0_DEINIT(MIP_ACODEC_CTRL_BMC);
+	CTOP_M23A0_DEINIT(MIP_ADC_CTRL_BMC);
+	CTOP_M23A0_DEINIT(MIP_CTRL_C4TX);
+	CTOP_M23A0_DEINIT(MIP_CTRL_EARC);
+
+	// crg_sub
+	CTOP_M23A0_DEINIT(BCRG_CTRL_AUD);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_BMC);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_BUS);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_CPU);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_CVI);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_DPE);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_EDID);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_FMC);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_FMS);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_M0);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_ME0);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_ND0);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_VD0);
+	CTOP_M23A0_DEINIT(BCRG_CTRL_VD1);
+	CTOP_M23A0_DEINIT(CPU_BCRG_CTRL_WOC);
+	CTOP_M23A0_DEINIT(MICOM_BCRG_CTRL_WOC);
+
+	CTOP_M23A0_DEINIT(CPU_MCRG_CTRL_WOC);
+	CTOP_M23A0_DEINIT(MICOM_MCRG_CTRL_WOC);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_AUD);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_BMC);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_BUS);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_CPU);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_CVI);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_DPE);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_EDID);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_FMS);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_M0);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_ME0);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_ND0);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_VD0);
+	CTOP_M23A0_DEINIT(MCRG_CTRL_VD1);
+
+	CTOP_M23A0_DEINIT(CPU_SCRG_CTRL_MICOM);
+	CTOP_M23A0_DEINIT(CPU_SCRG_CTRL_PMCU);
+	CTOP_M23A0_DEINIT(CPU_SCRG_CTRL_VMCU);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_AUD);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_CCO);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_CPU);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_CVBSB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_CVI);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_DBB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_DDRSB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_DNE);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EDID0);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EDID1);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EMMC);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EMUSB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EPHY);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_EPUSB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_FMC);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_FMS);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_GFX);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_GSC);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_HDMI);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_HDR);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_ICOD);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_IMX);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_LBUS);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_LED);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_LNE);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_M0);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_ME);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_ND);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_PDM);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_SRE);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_TCON);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_TE);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_TIVSB);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_USB_HS1);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_USB_HS2);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_USB_HS3);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_VD0);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_VD1);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_VDO);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_VENC);
+	CTOP_M23A0_DEINIT(SCRG_CTRL_VSD);
+
+	CTOP_M23A0_DEINIT(CPU_BND_CTRL_WOC);
+	CTOP_M23A0_DEINIT(MICOM_BND_CTRL_WOC);
+	CTOP_M23A0_DEINIT(CPU_CRG_TOP_WOC_CTRL);
+	CTOP_M23A0_DEINIT(MICOM_CRG_TOP_WOC_CTRL);
+
+	SYS_DEBUG("noti: Done, _deinit_ctop_reg_ 'Ax' IN M23 \n");
+#endif
+	return;
+}
+
+
+static inline void _deinit_ctop_reg_e60(void)
+{
+#if defined(INCLUDE_E60_CHIP_KDRV)
+
+#define CTOP_E60A0_DEINIT(_m)	\
+do { \
+	if(gCTOP_CTRL_E60.shdw.a0._m) kfree((void*)gCTOP_CTRL_E60.shdw.a0._m); \
+	if(gCTOP_CTRL_E60.phys.a0._m) iounmap((void *)gCTOP_CTRL_E60.phys.a0._m); \
+} while(0)
+
+	/* CTOP SYN */
+	CTOP_E60A0_DEINIT(CTOP_SYN_CVI);
+	CTOP_E60A0_DEINIT(CTOP_SYN_DBB);
+	CTOP_E60A0_DEINIT(CTOP_SYN_DPE);
+	CTOP_E60A0_DEINIT(CTOP_SYN_FMC0);
+	CTOP_E60A0_DEINIT(CTOP_SYN_FMC1);
+	CTOP_E60A0_DEINIT(CTOP_SYN_FME0);
+	CTOP_E60A0_DEINIT(CTOP_SYN_FME1);
+	CTOP_E60A0_DEINIT(CTOP_SYN_FMS);
+	CTOP_E60A0_DEINIT(CTOP_SYN_SRE);
+	CTOP_E60A0_DEINIT(CTOP_SYN_WOV);
+	CTOP_E60A0_DEINIT(CTOP_SYN_LGSR0);
+	CTOP_E60A0_DEINIT(CTOP_SYN_EDID);
+
+	/* CRG SUB */
+	CTOP_E60A0_DEINIT(CRG_SUB_CVI);
+	CTOP_E60A0_DEINIT(CRG_SUB_DPE);
+	CTOP_E60A0_DEINIT(CRG_SUB_DBB);
+	CTOP_E60A0_DEINIT(CRG_SUB_WOV);
+	CTOP_E60A0_DEINIT(CRG_SUB_HDMI);
+	CTOP_E60A0_DEINIT(CRG_SUB_IMX2);
+
+	SYS_DEBUG("%s : Done\n", __func__);
+#endif
+
+	return;
+}
+
+int REG_CTRL_Init(void)
+{
+	//int regs_size;
+	InitConfig();
+
+	if(0){}
+#ifdef INCLUDE_O26_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O26)
+	{
+		_init_ctop_reg_o26();
+		gMIP_DIG_CTRL_O26.phys.addr = (volatile UINT32 *)ioremap(0xC8900000, sizeof(MIP_DIG_REG_O26A0_T));
+		gMIP_DIG_CTRL_O26.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_O26A0_T));
+	}
+#endif
+#ifdef INCLUDE_O24_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O24)
+	{
+		_init_ctop_reg_o24();
+		gMIP_DIG_CTRL_O24.phys.addr = (volatile UINT32 *)ioremap(0xC60E0000, sizeof(MIP_DIG_REG_O24A0_T));
+		gMIP_DIG_CTRL_O24.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_O24A0_T));
+	}
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_M23)
+	{
+		_init_ctop_reg_m23();
+		gMIP_DIG_CTRL_M23.phys.addr = (volatile UINT32 *)ioremap(0xC6130000, sizeof(MIP_DIG_REG_M23A0_T));
+		gMIP_DIG_CTRL_M23.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_M23A0_T));
+	}
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O22)
+	{
+		_init_ctop_reg_o22();
+		gMIP_DIG_CTRL_O22.phys.addr = (volatile UINT32 *)ioremap(0xCA832000, sizeof(MIP_DIG_REG_O22A0_T));
+		gMIP_DIG_CTRL_O22.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_O22A0_T));
+	}
+#endif
+
+#ifdef INCLUDE_E60_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_E60)
+	{
+		_init_ctop_reg_e60();
+		gMIP_DIG_CTRL_E60.phys.addr = (volatile UINT32 *)ioremap(0xC30C0000, sizeof(MIP_DIG_REG_E60_T));
+		gMIP_DIG_CTRL_E60.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_E60_T));
+	}
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O20)
+	{
+		_init_ctop_reg_o20();
+		gMIP_DIG_CTRL_O20.phys.addr = (volatile UINT32 *)ioremap(0xC9208000, sizeof(MIP_DIG_REG_O20_T));
+		gMIP_DIG_CTRL_O20.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_O20_T));
+	}
+#endif
+#ifdef INCLUDE_M19_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_M19)
+	{
+		_init_ctop_reg_m19();
+		gMIP_DIG_CTRL_M19.phys.addr = (volatile UINT32 *)ioremap(0xC910C000, sizeof(MIP_DIG_REG_M19_T));
+		gMIP_DIG_CTRL_M19.shdw.addr = (UINT32 *)OS_KMalloc(sizeof(MIP_DIG_REG_M19_T));
+	}
+#endif
+#ifdef INCLUDE_O18_CHIP_KDRV
+	else if (lx_chip_rev() == LX_CHIP_O18)
+	{
+		_init_ctop_reg_o18();
+	}
+#endif
+
+
+#ifndef PLATFORM_FPGA
+	// Init ACE registers and etc...
+	if(0){}
+#ifdef INCLUDE_O18_CHIP_KDRV
+	else if(lx_chip() == LX_CHIP_O18)	/* O18 */
+	{
+		/*
+		CTOP_CTRL_O18A0_RdFL(CTRL_BMC, crg_bmc01);
+		CTOP_CTRL_O18A0_Wr01(CTRL_BMC, crg_bmc01, swrst_f24m, 0);
+		CTOP_CTRL_O18A0_WrFL(CTRL_BMC, crg_bmc01);
+		*/
+		CTOP_CTRL_O18A0_RdFL(BMC_SYN, bmc_ctr22);
+		CTOP_CTRL_O18A0_Wr01(BMC_SYN, bmc_ctr22, reg_videoafe_biaspdb, 1);
+		CTOP_CTRL_O18A0_WrFL(BMC_SYN, bmc_ctr22);
+		OS_UsecDelay(10);
+		CTOP_CTRL_O18A0_RdFL(BMC_SYN, bmc_ctr34);
+		CTOP_CTRL_O18A0_Wr01(BMC_SYN, bmc_ctr34, reg_reset_n, 1);
+		CTOP_CTRL_O18A0_WrFL(BMC_SYN, bmc_ctr34);
+		CTOP_CTRL_O18A0_RdFL(BMC_SYN, bmc_ctr26);
+		CTOP_CTRL_O18A0_Wr01(BMC_SYN, bmc_ctr26, reg_refpll_pdb, 1);
+		CTOP_CTRL_O18A0_WrFL(BMC_SYN, bmc_ctr26);
+	}
+#endif
+
+#ifdef INCLUDE_I2C_CHIP_KDRV
+	if(_config->num_internals > 0)
+	{
+		int i;
+
+		if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+		{
+			I2C_Init();
+			_i2c_handle = (LX_I2C_DEV_HANDLE*)OS_KMalloc(sizeof(LX_I2C_DEV_HANDLE) * _config->num_internals);
+		}
+
+		for(i=0; i<_config->num_internals; i++)
+		{
+			if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+			{
+				_i2c_handle[i] = I2C_DevOpenPriv(_config->internal[i].ch, 1);
+			}
+
+			if(0){}
+#ifdef INCLUDE_O26_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_O26)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+#endif
+#ifdef INCLUDE_O24_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_O24)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_M23)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_O22)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+
+			}
+#endif
+#ifdef INCLUDE_E60_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_E60)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+
+			}
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_O20)
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+
+			}
+#endif
+#ifdef INCLUDE_M19_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_M19)	/* O18 */
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+#endif
+#ifdef INCLUDE_O18_CHIP_KDRV
+			else if(lx_chip() == LX_CHIP_O18)	/* O18 */
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+#endif
+
+			else
+			{
+				if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+				{
+					I2C_DevSetClock(_i2c_handle[i], _config->internal[i].clock);
+				}
+			}
+		}
+	}
+#endif // INCLUDE_I2C_CHIP_KDRV
+
+
+#endif //PLATFORM_FPGA
+#if 0	// MACRO TEST
+	ACE_REG_H13A0_RdFL(h13a_version_0);
+
+	CTOP_CTRL_H13A0_RdFL(ctr00_reg_rst_sel);
+	CTOP_CTRL_H13A0_Wr01(ctr00_reg_rst_sel,reg_afifo_r,0);
+	CTOP_CTRL_H13A0_WrFL(ctr00_reg_rst_sel);
+
+	CPU_TOP_H13A0_RdFL(cpu0_addr_sw_reg_0);
+	CPU_TOP_H13A0_Wr01(cpu0_addr_sw_reg_0,cpu0_paddr_app_nor_boot,2);
+	CPU_TOP_H13A0_WrFL(cpu0_addr_sw_reg_0);
+#endif
+
+	return 0;
+}
+
+int REG_CTRL_Free(void)
+{
+
+	if(0){}
+#ifdef INCLUDE_O24_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O24)
+	{
+		_deinit_ctop_reg_o24();
+
+		if(gMIP_DIG_CTRL_O24.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_O24.shdw.addr);
+		if(gMIP_DIG_CTRL_O24.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_O24.phys.addr);
+	}
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_M23)
+	{
+		_deinit_ctop_reg_m23();
+
+		if(gMIP_DIG_CTRL_M23.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_M23.shdw.addr);
+		if(gMIP_DIG_CTRL_M23.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_M23.phys.addr);
+	}
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O22)
+	{
+		_deinit_ctop_reg_o22();
+
+		if(gMIP_DIG_CTRL_O22.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_O22.shdw.addr);
+		if(gMIP_DIG_CTRL_O22.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_O22.phys.addr);
+	}
+#endif
+
+#ifdef INCLUDE_E60_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_E60)
+	{
+		_deinit_ctop_reg_e60();
+
+		if(gMIP_DIG_CTRL_E60.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_E60.shdw.addr);
+		if(gMIP_DIG_CTRL_E60.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_E60.phys.addr);
+	}
+#endif
+
+#ifdef INCLUDE_O20_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_O20)
+	{
+		_deinit_ctop_reg_o20();
+
+		if(gMIP_DIG_CTRL_O20.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_O20.shdw.addr);
+		if(gMIP_DIG_CTRL_O20.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_O20.phys.addr);
+	}
+#endif
+
+#ifdef INCLUDE_M19_CHIP_KDRV
+	else if (lx_chip() == LX_CHIP_M19)
+	{
+		_deinit_ctop_reg_m19();
+
+		if(gMIP_DIG_CTRL_M19.shdw.addr)
+			OS_Free((void*)gMIP_DIG_CTRL_M19.shdw.addr);
+		if(gMIP_DIG_CTRL_M19.phys.addr)
+			iounmap((void *)gMIP_DIG_CTRL_M19.phys.addr);
+	}
+#endif
+
+#ifdef INCLUDE_O18_CHIP_KDRV
+	else if(lx_chip() == LX_CHIP_O18)
+	{
+		_deinit_ctop_reg_o18();
+	}
+#endif
+
+	return 0;
+}
+
+
+int REG_WriteI2C(UINT32 idx, UINT8 slave, UINT8 reg, UINT8 data)
+{
+#ifndef PLATFORM_FPGA
+	UINT32 i;
+	int rc = -1;
+
+	UINT32 retry = 1;
+	LX_REG_CTRL_CFG_T lcfg ={};
+
+#ifdef INCLUDE_M17_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M17)       /* M17 */
+	{
+		lcfg.chip = LX_CHIP_REV(m17,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalm17_A0;
+	}
+#endif
+#ifdef INCLUDE_M19_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M19)       /* M19 */
+	{
+		lcfg.chip = LX_CHIP_REV(M19,A0);
+		lcfg.num_internals = 2;
+		lcfg.internal = _stI2cInternalM19_A0;
+	}
+#endif
+#ifdef INCLUDE_O18_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O18)       /* O18 */
+	{
+		lcfg.chip = LX_CHIP_REV(O18,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalO18_A0;
+	}
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O20)       /* O20 */
+	{
+		lcfg.chip = LX_CHIP_REV(O20,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalO20_A0;
+	}
+#endif
+#ifdef INCLUDE_E60_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_E60)       /* E60 */
+	{
+		lcfg.chip = LX_CHIP_REV(E60,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalE60_A0;
+	}
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O22)       /* O22 */
+	{
+		lcfg.chip = LX_CHIP_REV(O22,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalO22_A0;
+	}
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M23)       /* M23 */
+	{
+		lcfg.chip = LX_CHIP_REV(M23,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalM23_A0;
+	}
+#endif
+#ifdef INCLUDE_O24_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O24)       /* O24 */
+	{
+		lcfg.chip = LX_CHIP_REV(O24,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalO24_A0;
+	}
+#endif
+#ifdef INCLUDE_O26_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O26)
+	{
+		lcfg.chip = LX_CHIP_REV(O26,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalO26_A0;
+	}
+#endif
+
+#ifdef INCLUDE_I2C_CHIP_KDRV
+	if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+	{
+		LX_I2C_RW_DATA_T param = { };
+
+		if(idx >= lcfg.num_internals)
+		{
+			SYS_ERROR("Not supported !!!\n");
+			return -1;
+		}
+
+		param.slaveAddr		= slave;
+		param.subAddrSize	= 1;
+		param.subAddr[0]	= reg;
+		param.buf			= &data;
+		param.bufSize		= 1;
+		param.clock			= I2C_CLOCK_INVALID;	//use initial clock
+		param.flag			= 0;
+
+		for(i=0; i<retry; i++)
+		{
+			rc = I2C_DevTransfer(_i2c_handle[idx], &param, I2C_WRITE_MODE);
+			if(rc >= 0) break;
+		}
+
+		if(rc < 0)
+		{
+			LX_I2C_INFO_T *pInfo =NULL;
+			pInfo = (LX_I2C_INFO_T *)(_i2c_handle[idx]);
+			SYS_ERROR("Internal i2c write failed. ch[%d:%d] slave=0x%02x, reg=0x%02x\n",
+				pInfo->ch,pInfo->inited,slave, reg);
+		}
+	}
+#else
+	if (0)
+	{
+		// do nothing
+	}
+#endif
+	else /* I2C_KERNEL_API */
+	{
+		UINT8 sub_addr_size;
+		UINT8 data_size;
+		UINT8 sbuf[SBUF_SIZE];
+		struct i2c_adapter *adap;
+		struct i2c_msg msg[1];
+
+		adap = i2c_get_adapter(lcfg.internal[idx].ch  );
+
+		if (!adap)
+		return -ENODEV;
+
+		sub_addr_size = 1;
+		data_size =	1 ;
+
+		switch (lcfg.internal[idx].clock)
+		{
+			case I2C_CLOCK_50KHZ:  	msg[0].flags = I2C_M_CLK__50KHZ;
+				break;
+			case I2C_CLOCK_100KHZ:  msg[0].flags = I2C_M_CLK_100KHZ;
+				break;
+			case I2C_CLOCK_400KHZ:  msg[0].flags = I2C_M_CLK_400KHZ;
+				break;
+			case I2C_CLOCK_800KHZ:  msg[0].flags = I2C_M_CLK_800KHZ;
+				break;
+			default: 				msg[0].flags = I2C_M_CLK_DEAFULT;
+				break;
+		}
+
+		msg[0].addr = (slave >> 1) & 0x7f;    /* I2C address of chip */
+		msg[0].len = sub_addr_size + data_size;
+		msg[0].buf = (void __force *)sbuf;
+
+		msg[0].buf[0] = reg;
+		msg[0].buf[1] = data;
+
+		for(i=0; i<retry; i++)
+		{
+			rc = i2c_transfer(adap, msg, 1);
+			if(rc >= 0) break;
+		}
+
+		i2c_put_adapter(adap);
+
+		rc = (rc >= 0) ? 1 :rc;
+	}
+
+	if(rc < 0)
+	{
+		SYS_ERROR("Internal i2c write failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+			lcfg.internal[idx].ch ,slave, reg);
+	}
+
+	return rc;
+#else
+	return -1;
+#endif
+}
+
+int REG_ReadI2C(UINT32 idx, UINT8 slave, UINT8 reg, UINT8* data)
+{
+#ifndef PLATFORM_FPGA
+	UINT32 i;
+	int rc = -1;
+	UINT32 retry = 1;
+	LX_REG_CTRL_CFG_T lcfg = {};
+
+#ifdef INCLUDE_M17_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M17)       /* M17 */
+	{
+		lcfg.chip = LX_CHIP_REV(m17,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalm17_A0;
+	}
+#endif
+#ifdef INCLUDE_M19_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M19)       /* M19 */
+	{
+		lcfg.chip = LX_CHIP_REV(M19,A0);
+		lcfg.num_internals = 2;
+		lcfg.internal = _stI2cInternalM19_A0;
+	}
+#endif
+#ifdef INCLUDE_O18_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O18)       /* O18 */
+	{
+		lcfg.chip = LX_CHIP_REV(O18,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalO18_A0;
+	}
+#endif
+#ifdef INCLUDE_O20_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O20)       /* O20 */
+	{
+		lcfg.chip = LX_CHIP_REV(O20,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalO20_A0;
+	}
+#endif
+#ifdef INCLUDE_E60_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_E60)       /* E60 */
+	{
+		lcfg.chip = LX_CHIP_REV(E60,A0);
+		lcfg.num_internals = 3;
+		lcfg.internal = _stI2cInternalE60_A0;
+	}
+#endif
+#ifdef INCLUDE_O22_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O22)       /* O22 */
+	{
+		lcfg.chip = LX_CHIP_REV(O22,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalO22_A0;
+	}
+#endif
+#ifdef INCLUDE_M23_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_M23)       /* M23 */
+	{
+		lcfg.chip = LX_CHIP_REV(M23,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalM23_A0;
+	}
+#endif
+#ifdef INCLUDE_O24_CHIP_KDRV
+	if(lx_chip() == LX_CHIP_O24)       /* O24 */
+	{
+		lcfg.chip = LX_CHIP_REV(O24,A0);
+		lcfg.num_internals = 1;
+		lcfg.internal = _stI2cInternalO24_A0;
+	}
+#endif
+
+//printk("REG_ReadI2C....idx:%d,slave:0x%2x,reg:0x%02x,data:%x\n",idx,slave,reg,data);
+
+#ifdef INCLUDE_I2C_CHIP_KDRV
+	if(lx_i2c_cfg() & LX_I2C_CFG_LEGACY_MODE)
+	{
+		LX_I2C_RW_DATA_T param = { };
+
+		if(idx >= lcfg.num_internals)
+		{
+			SYS_ERROR("Not supported !!!\n");
+			return -1;
+		}
+
+		param.slaveAddr		= slave;
+		param.subAddrSize	= 1;
+		param.subAddr[0]	= reg;
+		param.buf			= data;
+		param.bufSize		= 1;
+		param.clock			= I2C_CLOCK_INVALID;	//use initial clock
+		param.flag			= 0;
+
+		for(i=0; i<retry; i++)
+		{
+			rc = I2C_DevTransfer(_i2c_handle[idx], &param, I2C_READ_MODE);
+			if(rc >= 0) break;
+		}
+
+		if(rc < 0)
+		{
+			LX_I2C_INFO_T *pInfo = NULL;
+			pInfo = (LX_I2C_INFO_T *)(_i2c_handle[idx]);
+			SYS_ERROR("Internal i2c read failed. ch[%d:%d] slave=0x%02x, reg=0x%02x\n",
+				pInfo->ch,pInfo->inited,slave, reg);
+		}
+	}
+#else
+	if (0)
+	{
+		// do nothing
+	}
+#endif
+	else /* I2C_KERNEL_API */
+	{
+		UINT8 sub_addr_size;
+		UINT8 data_size;
+		UINT8 msg_num_index;
+		UINT8 addrbuf[SUBADDR_MAX_SIZE],databuf[SBUF_SIZE];
+		//UINT8*  mbuf = NULL;
+		struct i2c_adapter *adap;
+		struct i2c_msg msg[2];
+
+		adap = i2c_get_adapter(lcfg.internal[idx].ch);
+
+		if (!adap)
+			return -ENODEV;
+
+		sub_addr_size = 1 ;
+		data_size =  1 ;
+
+
+		msg[0].addr = (slave >> 1) & 0x7f;    /* I2C address of chip */
+		msg[0].len = sub_addr_size ;
+		msg[0].buf = (void __force *)addrbuf;
+		msg[0].buf[0] = reg;
+
+
+		msg[1].addr = msg[0].addr;   /* I2C address of chip */
+		msg[1].len= data_size;
+
+		switch (lcfg.internal[idx].clock)
+		{
+			case I2C_CLOCK_50KHZ:	msg[0].flags = I2C_M_CLK__50KHZ;
+									msg[1].flags = I2C_M_RD | I2C_M_CLK__50KHZ;
+			 break;
+			case I2C_CLOCK_100KHZ: 	msg[0].flags = I2C_M_CLK_100KHZ;
+									msg[1].flags = I2C_M_RD | I2C_M_CLK_100KHZ;
+			 break;
+			case I2C_CLOCK_400KHZ: 	msg[0].flags = I2C_M_CLK_400KHZ;
+									msg[1].flags = I2C_M_RD | I2C_M_CLK_400KHZ;
+			 break;
+			case I2C_CLOCK_800KHZ: 	msg[0].flags = I2C_M_CLK_800KHZ;
+									msg[1].flags = I2C_M_RD | I2C_M_CLK_800KHZ;
+			 break;
+			default:
+									msg[0].flags = I2C_M_CLK_DEAFULT;
+									msg[1].flags = I2C_M_RD | I2C_M_CLK_DEAFULT;
+			 break;
+		}
+
+		msg_num_index = 1;
+
+		msg[msg_num_index].buf = (void __force *)databuf;
+
+		for(i=0; i<retry; i++)
+		{
+			rc = i2c_transfer(adap, msg, msg_num_index+1);
+			if(rc >= 0) break;
+		}
+
+		i2c_put_adapter(adap);
+
+		if (rc >= 0)
+		{
+			memcpy(data ,(__u8 *)(msg[msg_num_index].buf),data_size);
+			rc = data_size;
+		}
+		else
+		{
+			SYS_ERROR("Internal i2c write failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+				lcfg.internal[idx].ch,slave, reg);
+		}
+	}
+
+	return rc;
+#else
+	return -1;
+#endif
+}
+
+
+int REG_WriteI2CL(UINT32 idx, UINT8 slave, UINT8 reg, UINT8 *data, UINT8 len)
+{
+#ifndef PLATFORM_FPGA
+	UINT32 i;
+	int rc = -1;
+	LX_REG_CTRL_CFG_T lcfg={};
+	UINT8 sub_addr_size;
+	UINT8 data_size;
+	UINT8 sbuf[SBUF_SIZE];
+	UINT32 retry = 2;
+	struct i2c_adapter *adap;
+	struct i2c_msg msg[1];
+
+#ifdef INCLUDE_O20_CHIP_KDRV
+	lcfg.chip = LX_CHIP_REV(O20,A0);
+	lcfg.num_internals = 3;
+	lcfg.internal = _stI2cInternalO20_A0;
+#endif
+
+	if((data == NULL ) || (len <= 0))
+	{
+		SYS_ERROR("check param\n");
+		return -1;
+	}
+
+	if(lx_chip() == LX_CHIP_O20)       /* O20 */
+	{
+		adap = i2c_get_adapter(lcfg.internal[idx].ch  );
+	}
+	else
+	{
+		adap = i2c_get_adapter(idx);
+	}
+
+	if (!adap)
+		return -ENODEV;
+
+	sub_addr_size = 1;
+	data_size =	len;
+
+	msg[0].flags = I2C_M_CLK_400KHZ;
+	msg[0].addr = (slave >> 1) & 0x7f;    /* I2C address of chip */
+	msg[0].len = sub_addr_size + data_size;
+	msg[0].buf = (void __force *)sbuf;
+
+	msg[0].buf[0] = reg;
+
+	for(i=0; i<len; i++)
+		msg[0].buf[i+1] = data[i];
+
+	for(i=0; i<retry; i++)
+	{
+		rc = i2c_transfer(adap, msg, 1);
+		if(rc >= 0) break;
+	}
+
+	i2c_put_adapter(adap);
+
+	rc = (rc >= 0) ? len :rc;
+
+	if(rc < 0)
+	{
+		if(lx_chip() == LX_CHIP_O20)       /* O22 */
+		{
+			SYS_ERROR("InternaL i2c write failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+			lcfg.internal[idx].ch ,slave, reg);
+		}
+		else
+		{
+			SYS_ERROR("InternaL i2c write failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+			idx ,slave, reg);
+		}
+	}
+
+	return rc;
+#else
+	return -1;
+#endif
+}
+
+int REG_ReadI2CL(UINT32 idx, UINT8 slave, UINT8 reg, UINT8* data ,UINT8 len)
+{
+#ifndef PLATFORM_FPGA
+	UINT32 i;
+	int rc = -1;
+	LX_REG_CTRL_CFG_T lcfg={};
+	UINT8 sub_addr_size;
+	UINT8 data_size;
+	UINT8 msg_num_index;
+	UINT8 addrbuf[SUBADDR_MAX_SIZE],databuf[SBUF_SIZE];
+	UINT32 retry = 2;
+	struct i2c_adapter *adap;
+	struct i2c_msg msg[2];
+
+#ifdef INCLUDE_O20_CHIP_KDRV
+	lcfg.chip = LX_CHIP_REV(O20,A0);
+	lcfg.num_internals = 3;
+	lcfg.internal = _stI2cInternalO20_A0;
+#endif
+
+	if(data == NULL)
+	{
+		SYS_ERROR("check param\n");
+		return -1;
+	}
+
+	if(lx_chip() == LX_CHIP_O20)       /* O20 */
+	{
+		adap = i2c_get_adapter(lcfg.internal[idx].ch);
+	}
+	else
+	{
+		adap = i2c_get_adapter(idx);
+	}
+
+	if (!adap)
+		return -ENODEV;
+
+	sub_addr_size = 1 ;
+	data_size =  len ;
+
+	msg[0].addr = (slave >> 1) & 0x7f;    /* I2C address of chip */
+	msg[0].len = sub_addr_size ;
+	msg[0].buf = (void __force *)addrbuf;
+	msg[0].buf[0] = reg;
+	msg[0].flags = I2C_M_CLK_400KHZ;
+
+
+	msg[1].addr = msg[0].addr;   /* I2C address of chip */
+	msg[1].len= data_size;
+	msg[1].flags = I2C_M_RD | I2C_M_CLK_400KHZ;
+
+	msg_num_index = 1;
+
+	msg[msg_num_index].buf = (void __force *)databuf;
+
+	for(i=0; i<retry; i++)
+	{
+		rc = i2c_transfer(adap, msg, msg_num_index+1);
+		if(rc >= 0) break;
+	}
+
+	i2c_put_adapter(adap);
+
+	if (rc >= 0)
+	{
+		memcpy(data ,(__u8 *)(msg[msg_num_index].buf),data_size);
+		rc = data_size;
+	}
+	else
+	{
+		if(lx_chip() == LX_CHIP_O20)       /* O20 */
+		{
+			SYS_ERROR("InternaL i2c read failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+				lcfg.internal[idx].ch,slave, reg);
+		}
+		else
+		{
+			SYS_ERROR("InternaL i2c read failed. ch[%d] slave=0x%02x, reg=0x%02x\n",
+			idx,slave, reg);
+		}
+	}
+
+	return rc;
+#else
+	return -1;
+#endif
+}
+
+
+int ACE_RegWrite(UINT8 slave, UINT8 reg, UINT8 data)
+{
+#ifndef PLATFORM_FPGA
+	return REG_WriteI2C(0, slave, reg, data);
+#else
+	return -1;
+#endif
+}
+
+int ACE_RegRead(UINT8 slave, UINT8 reg, UINT8* data)
+{
+#ifndef PLATFORM_FPGA
+	return REG_ReadI2C(0, slave, reg, data);
+#else
+	return -1;
+#endif
+}
+
+DEFINE_SPINLOCK(g_ctop_spinlock);
+
+spinlock_t* CTOP_CTRL_GetSpinlock(void)
+{
+	return &g_ctop_spinlock;
+}
+
+EXPORT_SYMBOL(CTOP_CTRL_GetSpinlock);
+
+unsigned long _CTOP_CTRL_EnterCriticalSection(const char *func, int line, const char *key)
+{
+	unsigned long flags = 0;
+
+	spin_lock_irqsave(CTOP_CTRL_GetSpinlock(), flags);
+	SYS_NOTI("CTOP_CTRL_EnterCriticalSection(%s) @%s;%d\n", key, func, line);
+
+	return flags;
+}
+
+EXPORT_SYMBOL(_CTOP_CTRL_EnterCriticalSection);
+
+void _CTOP_CTRL_ExitCriticalSection(const char *func, int line, const char *key, unsigned long flags)
+{
+	SYS_NOTI("CTOP_CTRL_ExitCriticalSection(%s)  @%s;%d\n", key, func, line);
+	spin_unlock_irqrestore(CTOP_CTRL_GetSpinlock(), flags);
+}
+
+EXPORT_SYMBOL(_CTOP_CTRL_ExitCriticalSection);

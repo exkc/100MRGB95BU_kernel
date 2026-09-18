@@ -1,0 +1,10 @@
+
+This package includes linux kernel source code and bsp kernel driver.
+
+All builds are tested on Ubuntu 24.04 LTS.
+ 
+To compile linux kernel and bsp kernel driver, use following command in linux
+shell prompt.
+
+  ./build.sh
+

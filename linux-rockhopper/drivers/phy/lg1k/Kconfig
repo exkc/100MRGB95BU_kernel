@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Phy drivers for LG DTV platforms
+#
+config PHY_LG1K_USB
+	tristate
+	depends on HAS_IOMEM
+	select GENERIC_PHY
+	help
+	  Enable this to support the USB PHY driver for LG DTV SoCs.
+
+config PHY_LG1K_USB2_NSI
+	tristate "LG1K USB 2.0 Nanosilicon PHY driver"
+	depends on HAS_IOMEM
+	depends on USB_OHCI_HCD_PLATFORM || USB_OHCI_HCD_PLATFORM || USB_DWC2
+	select GENERIC_PHY
+	select PHY_LG1K_USB
+	help
+	  Enable this to support the USB 2.0 PHY driver for LG DTV SoCs.
+	  This PHY is based on Nanosilicon USB 2.0 PHY.
+
+config PHY_LG1K_USB3_NSI
+	tristate "LG1K USB 3.0 Nanosilicon PHY driver"
+	depends on HAS_IOMEM
+	depends on USB_XHCI_PLATFORM
+	select GENERIC_PHY
+	select PHY_LG1K_USB
+	help
+	  Enable this to support the USB 3.0 PHY driver for LG DTV SoCs.
+	  This PHY is based on Nanosilicon USB 3.0 PHY.

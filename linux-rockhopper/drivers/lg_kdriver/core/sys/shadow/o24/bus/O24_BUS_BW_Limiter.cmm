@@ -1,0 +1,28 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Generating LIMITER CMM by BUS_PMT
+;; Generating Time : 2023-09-19 20:15:43
+;; Project : O24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 210920 Hoon.Oh Comment updated :  http://clm.lge.com/issue/browse/SICDTV-13178
+;; 210922 Hoon.Oh Comment updated :  http://clm.lge.com/issue/browse/SICDTV-13178
+;;         LNX2 1.5G -> 2G 
+
+;GPU0
+D.S ASD:0xC40F1018 %LONG 0x000008A2		;;Time(us)   5us
+D.S ASD:0xC40F1078 %LONG 0x30002710		;;FIRST LIMITER READ_BW(MB)  2GB
+D.S ASD:0xC40F107C %LONG 0x30002710		;;FIRST LIMITER WRITE_BW(MB) 2GB
+
+;GPU1
+D.S ASD:0xC40F1218 %LONG 0x000008A2		;;Time(us)   5us
+D.S ASD:0xC40F1278 %LONG 0x30002710		;;FIRST LIMITER READ_BW(MB)  2GB
+D.S ASD:0xC40F127C %LONG 0x30002710		;;FIRST LIMITER WRITE_BW(MB) 2GB
+
+;LNX2
+D.S ASD:0xC40F4218 %LONG 0x000008A2		;;Time(us)   5us
+D.S ASD:0xC40F4278 %LONG 0x30002710		;;FIRST LIMITER READ_BW(MB)  2GB
+D.S ASD:0xC40F427C %LONG 0x30002710		;;FIRST LIMITER WRITE_BW(MB)  2GB
+
+
+
+
+
